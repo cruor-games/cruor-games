@@ -1,0 +1,863 @@
+import { DEFAULT_CONFIG, normalizeRoomCount } from "./map-generator.input.js";
+import { LEVEL_VIEW_ALL } from "./map-generator.state.js";
+import { classifyRegion, getContextKey, getPlacementProfile, getPlacementRole, getRegionText, roleDepth } from "./map-generator.profile.js";
+import { getGraphAdjacency } from "./map-generator.graph.js";
+
+const SIZE_PRESETS = {
+  Tiny: { minW: 3, maxW: 4, minH: 3, maxH: 4 },
+  Small: { minW: 4, maxW: 6, minH: 3, maxH: 5 },
+  Medium: { minW: 5, maxW: 8, minH: 4, maxH: 6 },
+  Large: { minW: 7, maxW: 11, minH: 5, maxH: 8 },
+  Huge: { minW: 10, maxW: 14, minH: 7, maxH: 10 },
+};
+
+const ROOM_SIZE_MENU_PRESETS = {
+  Tiny: { w: 3, h: 3 },
+  Small: { w: 5, h: 4 },
+  Medium: { w: 7, h: 5 },
+  Large: { w: 9, h: 7 },
+  Huge: { w: 12, h: 9 },
+};
+
+function hashStringToSeed(...parts) {
+  const text = parts.join("::");
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+function randomInt(rng, min, max) {
+  return Math.floor(rng() * (max - min + 1)) + min;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function rectsOverlapWithMargin(a, b, margin = 2) {
+  return !(a.x + a.w + margin <= b.x || b.x + b.w + margin <= a.x || a.y + a.h + margin <= b.y || b.y + b.h + margin <= a.y);
+}
+
+export function resolveRoomSize(region, rng) {
+  const preset = SIZE_PRESETS[region.size] || SIZE_PRESETS.Medium;
+  let w = randomInt(rng, preset.minW, preset.maxW);
+  let h = randomInt(rng, preset.minH, preset.maxH);
+  const shape = region.preferredShape.toLowerCase();
+
+  if (shape.includes("hall") || shape.includes("corridor")) {
+    w = Math.max(w + 2, h + 3);
+    h = Math.max(3, Math.min(h, 4));
+  }
+
+  if (shape.includes("shaft") || shape.includes("oval") || shape.includes("circular") || shape.includes("circle") || shape.includes("round")) {
+    const d = Math.max(w, h);
+    w = d;
+    h = d;
+  }
+
+  if (shape.includes("library") || shape.includes("archive")) {
+    w = Math.max(w, 7);
+    h = Math.max(h, 5);
+  }
+
+  return { w, h };
+}
+
+export function chooseRoomShape(region, contextKey = "") {
+  const shape = region.preferredShape.toLowerCase();
+  const role = getPlacementRole(region);
+  const text = getRegionText(region);
+
+  if (contextKey === "chapel") {
+    if (role === "final") return "apse";
+    if (role === "connector") return "hall";
+    if (role === "secret" || text.includes("archive") || text.includes("library")) return "archive";
+    return "rect";
+  }
+
+  if (contextKey === "noble-house") {
+    if (role === "secret" || text.includes("archive") || text.includes("library")) return "archive";
+    if (role === "connector" || role === "entrance") return "rect";
+    if (shape.includes("l-shape") || shape.includes("l shape")) return "l-shape";
+    return "rect";
+  }
+
+  if (contextKey === "cave") {
+    if (shape.includes("shaft") || text.includes("well") || text.includes("vertical")) return "shaft";
+    return "cave";
+  }
+
+  if (contextKey === "mine") {
+    if (role === "connector" || shape.includes("hall") || shape.includes("corridor")) return "hall";
+    if (shape.includes("shaft") || text.includes("well") || text.includes("vertical")) return "shaft";
+    if (role === "hazard" || text.includes("collapse")) return "broken";
+    return "notched";
+  }
+
+  if (contextKey === "ruins") {
+    if (role === "connector") return "hall";
+    if (role === "secret" || text.includes("archive") || text.includes("library")) return "archive";
+    return role === "final" ? "broken" : "ruined-rect";
+  }
+
+  if (contextKey === "crypt") {
+    if (role === "secret" || text.includes("archive") || text.includes("library")) return "archive";
+    if (shape.includes("shaft") || shape.includes("oval") || shape.includes("circular") || text.includes("well") || text.includes("vertical")) return "shaft";
+    if (role === "final" || text.includes("ossuary") || text.includes("crypt")) return "alcove";
+    if (role === "connector" || shape.includes("hall") || shape.includes("corridor")) return "hall";
+    if (role === "hazard") return "notched";
+  }
+
+  if (shape.includes("l-shape") || shape.includes("l shape")) return "l-shape";
+  if (shape.includes("notch") || shape.includes("cutout")) return "notched";
+  if (shape.includes("circular") || shape.includes("circle") || shape.includes("round")) return "circle";
+  if (shape.includes("shaft") || shape.includes("oval")) return "shaft";
+  if (shape.includes("irregular") || shape.includes("cave")) return "cave";
+  if (shape.includes("hall") || shape.includes("corridor")) return "hall";
+  if (shape.includes("ritual")) return "ritual";
+  if (shape.includes("archive") || shape.includes("library")) return "archive";
+  return "rect";
+}
+
+export function getPlacementLane(region, profile, seed) {
+  const role = getPlacementRole(region);
+  const base = profile.roleLane[role] ?? 0;
+  const variant = (hashStringToSeed(seed, region.id, "lane") % 3) - 1;
+  if (role === "connector" || role === "entrance" || role === "final") return base + variant * 0.18;
+  return base + variant * 0.42;
+}
+
+export function getPlacementDepth(region, profile, maxDepth, seed) {
+  const role = getPlacementRole(region);
+  const depth = Number.isFinite(region.graphDepth) ? region.graphDepth : roleDepth(region);
+  const normalized = maxDepth <= 0 ? 0 : depth / maxDepth;
+  const bias = profile.roleDepthBias[role] ?? 0;
+  const jitter = ((hashStringToSeed(seed, region.id, "depth-jitter") % 100) / 100 - 0.5) * profile.depthJitter * 0.05;
+  return clamp(normalized * 0.88 + bias * 0.12 + jitter, 0, 1);
+}
+
+export function getPlacedNeighborCentroid(region, placed, adjacency) {
+  const neighbors = adjacency.get(region.id) || [];
+  const points = neighbors
+    .map((neighbor) => placed.find((placedRegion) => placedRegion.id === neighbor.id))
+    .filter(Boolean)
+    .map((placedRegion) => ({
+      x: placedRegion.cellRect.x + placedRegion.cellRect.w / 2,
+      y: placedRegion.cellRect.y + placedRegion.cellRect.h / 2,
+    }));
+  if (points.length === 0) return null;
+  return {
+    x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+    y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+  };
+}
+
+export function getContextualTarget(region, size, config, graph, placed, rng, profile, adjacency, maxDepth) {
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const role = getPlacementRole(region);
+  const depth = getPlacementDepth(region, profile, maxDepth, config.seed);
+  const lane = getPlacementLane(region, profile, config.seed);
+  const centerX = gridW / 2;
+  const centerY = gridH / 2;
+  const usableW = Math.max(8, gridW - size.w - 8);
+  const usableH = Math.max(8, gridH - size.h - 8);
+  const depthX = 4 + depth * usableW;
+  const depthY = 4 + depth * usableH;
+  const lateral = lane * profile.spread;
+  const branch = (((hashStringToSeed(config.seed, region.id, "branch") % 100) / 100) - 0.5) * profile.branchSpread;
+  const jitterX = randomInt(rng, -Math.round(profile.lateralJitter), Math.round(profile.lateralJitter));
+  const jitterY = randomInt(rng, -Math.round(profile.lateralJitter), Math.round(profile.lateralJitter));
+  let target = { x: depthX, y: centerY + lateral + branch * 0.32 };
+
+  if (profile.key === "chapel") {
+    target = { x: depthX, y: centerY + lateral };
+    if (role === "final") target = { x: gridW - size.w - 5, y: centerY - size.h / 2 };
+    if (role === "entrance") target = { x: 4, y: centerY - size.h / 2 };
+    if (role === "secret") target = { x: centerX + depth * usableW * 0.35, y: centerY + profile.spread * 1.65 };
+  }
+
+  if (profile.key === "crypt") {
+    target = { x: depthX, y: centerY + lateral * profile.compactness + branch * 0.18 };
+    if (role === "secret") target = { x: gridW - size.w - 6, y: centerY + profile.spread * 1.35 };
+  }
+
+  if (profile.key === "mine") {
+    target = { x: depthX, y: centerY + lateral + branch };
+    if (role === "connector") target.y = centerY + lane * 2.2 + branch * 0.25;
+    if (role === "hazard") target.y += profile.spread * 0.45;
+  }
+
+  if (profile.key === "cave") {
+    const angleSeed = hashStringToSeed(config.seed, region.id, "cave-angle") / 4294967296;
+    const angle = angleSeed * Math.PI * 2 + depth * Math.PI * 0.85;
+    const radius = 3 + depth * Math.min(gridW, gridH) * 0.36;
+    target = {
+      x: centerX + Math.cos(angle) * radius - size.w / 2 + lane * 0.8,
+      y: centerY + Math.sin(angle) * radius * 0.72 - size.h / 2 + branch * 0.45,
+    };
+    if (role === "entrance") target = { x: 5, y: centerY - size.h / 2 + branch * 0.2 };
+  }
+
+  if (profile.key === "noble-house") {
+    const floorLane = Math.round(lane);
+    const column = Math.round(depth * 4);
+    target = {
+      x: 5 + column * Math.max(6, usableW / 4),
+      y: centerY - size.h / 2 + floorLane * Math.max(4, profile.spread * 0.82),
+    };
+    if (role === "connector") target.y = centerY - size.h / 2;
+    if (role === "secret") target = { x: centerX + usableW * 0.22, y: centerY + profile.spread * 1.5 };
+  }
+
+  if (profile.key === "ruins") {
+    const cluster = hashStringToSeed(config.seed, region.id, "ruin-cluster") % 4;
+    const clusterOffset = [
+      { x: -profile.spread, y: -profile.spread * 0.6 },
+      { x: profile.spread * 0.8, y: -profile.spread * 0.8 },
+      { x: -profile.spread * 0.4, y: profile.spread },
+      { x: profile.spread, y: profile.spread * 0.65 },
+    ][cluster];
+    target = { x: depthX + clusterOffset.x, y: centerY + lateral + clusterOffset.y + branch * 0.28 };
+  }
+
+  const centroid = getPlacedNeighborCentroid(region, placed, adjacency);
+  if (centroid) {
+    const pull = profile.key === "cave" || profile.key === "mine" ? 0.22 : 0.14;
+    target = {
+      x: target.x * (1 - pull) + centroid.x * pull - size.w / 2,
+      y: target.y * (1 - pull) + centroid.y * pull - size.h / 2,
+    };
+  }
+
+  return {
+    x: target.x + jitterX,
+    y: target.y + jitterY,
+  };
+}
+
+export function scorePlacementCandidate(candidate, target, placed, graph, region, profile) {
+  const dx = candidate.x - target.x;
+  const dy = candidate.y - target.y;
+  const overlapCount = placed.filter((room) => rectsOverlapWithMargin(candidate, room.cellRect, 2)).length;
+  const nearCount = placed.filter((room) => rectsOverlapWithMargin(candidate, room.cellRect, 5)).length;
+  const role = getPlacementRole(region);
+  const graphBias = graph.some((edge) => edge.from === region.id || edge.to === region.id) ? -8 : 0;
+  const spacingPenalty = profile.key === "cave" || profile.key === "ruins" ? nearCount * 5 : nearCount * 2;
+  const axisPenalty = (profile.key === "chapel" || profile.key === "crypt") && ["entrance", "connector", "final"].includes(role) ? Math.abs(dy) * 0.35 : 0;
+  return dx * dx + dy * dy + overlapCount * 10000 + spacingPenalty + axisPenalty + graphBias;
+}
+
+export function createPlacedRegion(region, shape, cellRect, config, profileKey, number) {
+  return {
+    ...region,
+    shape,
+    cellRect,
+    placementProfile: profileKey,
+    surfaceKind: profileKey === "cave" ? "cave" : "dungeon",
+    floorCells: [],
+    wallSegments: [],
+    doorAnchors: [],
+    labelPoint: {
+      x: (cellRect.x + cellRect.w / 2) * config.gridSize,
+      y: (cellRect.y + cellRect.h / 2) * config.gridSize,
+    },
+    number,
+  };
+}
+
+export function resolveStructuredRoomSize(region, contextKey, options = {}) {
+  const role = getPlacementRole(region);
+  if (contextKey === "chapel") {
+    if (role === "entrance") return { w: 5, h: 5 };
+    if (role === "connector") return options.primary ? { w: 12 + options.variant, h: 6 + (options.variant % 2) } : { w: 5, h: 4 };
+    if (role === "final") return { w: 7 + (options.variant % 2), h: 7 };
+    if (role === "secret") return { w: 5, h: 4 };
+    if (role === "hazard") return { w: 6, h: 5 };
+    return { w: 5, h: 4 };
+  }
+  if (contextKey === "noble-house") {
+    if (role === "entrance") return { w: 7, h: 5 };
+    if (role === "connector") return { w: 7, h: 4 };
+    if (role === "final") return { w: 8, h: 6 };
+    if (role === "secret") return { w: 5, h: 4 };
+    return { w: 6, h: 5 };
+  }
+  return null;
+}
+
+export function rectsOverlapAny(rect, placed, margin = 0) {
+  return placed.some((region) => rectsOverlapWithMargin(rect, region.cellRect, margin));
+}
+
+export function createChapelSideSlots(naveRect, finalRect, gridW, gridH, variant) {
+  const upperFirst = variant % 2 === 0;
+  const transeptX = Math.max(naveRect.x + 2, finalRect.x - 4);
+  const slots = [
+    { id: "north-chapel-a", x: naveRect.x + 2, y: naveRect.y - 4, w: 5, h: 4, kind: "side" },
+    { id: "south-chapel-a", x: naveRect.x + 2, y: naveRect.y + naveRect.h, w: 5, h: 4, kind: "side" },
+    { id: "north-chapel-b", x: naveRect.x + Math.max(6, Math.floor(naveRect.w / 2)), y: naveRect.y - 4, w: 5, h: 4, kind: "side" },
+    { id: "south-chapel-b", x: naveRect.x + Math.max(6, Math.floor(naveRect.w / 2)), y: naveRect.y + naveRect.h, w: 5, h: 4, kind: "side" },
+    { id: "north-transept", x: transeptX, y: finalRect.y - 5, w: 6, h: 5, kind: "transept" },
+    { id: "south-transept", x: transeptX, y: finalRect.y + finalRect.h, w: 6, h: 5, kind: "transept" },
+    { id: "sacristy", x: finalRect.x + Math.max(0, finalRect.w - 5), y: finalRect.y + finalRect.h, w: 5, h: 4, kind: "sacristy" },
+    { id: "vestry", x: finalRect.x, y: finalRect.y - 4, w: 5, h: 4, kind: "vestry" },
+    { id: "rear-crypt", x: finalRect.x + finalRect.w, y: finalRect.y + Math.floor((finalRect.h - 4) / 2), w: 5, h: 4, kind: "secret" },
+  ].map((slot) => ({
+    ...slot,
+    x: clamp(slot.x, 3, gridW - slot.w - 3),
+    y: clamp(slot.y, 3, gridH - slot.h - 3),
+  }));
+
+  return slots.sort((a, b) => {
+    const aNorth = a.id.includes("north") || a.id.includes("vestry");
+    const bNorth = b.id.includes("north") || b.id.includes("vestry");
+    if (aNorth !== bNorth) return upperFirst ? (aNorth ? -1 : 1) : (aNorth ? 1 : -1);
+    return hashStringToSeed(a.id, variant, "chapel-slot") - hashStringToSeed(b.id, variant, "chapel-slot");
+  });
+}
+
+export function placeRegionInFirstAvailableSlot(region, slots, placed, config, profileKey, shape = "rect") {
+  const role = getPlacementRole(region);
+  const preferred = role === "secret" ? slots.filter((slot) => slot.kind === "secret" || slot.kind === "sacristy") : slots;
+  const candidates = preferred.length > 0 ? preferred : slots;
+  for (const slot of candidates) {
+    const size = resolveStructuredRoomSize(region, "chapel", { primary: false, variant: 0 }) || { w: slot.w, h: slot.h };
+    const cellRect = {
+      x: slot.x,
+      y: slot.y,
+      w: Math.min(size.w, slot.w),
+      h: Math.min(size.h, slot.h),
+    };
+    if (rectsOverlapAny(cellRect, placed, 0)) continue;
+    placed.push(createPlacedRegion(region, shape, cellRect, config, profileKey, placed.length + 1));
+    slots.splice(slots.indexOf(slot), 1);
+    return true;
+  }
+  return false;
+}
+
+export function placeChapelRegions(config, graph, rng, profile) {
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const placed = [];
+  const variant = hashStringToSeed(config.seed, config.roomCount, "chapel-blueprint") % 4;
+  const axisShift = (hashStringToSeed(config.seed, "chapel-axis") % 5) - 2;
+  const centerY = clamp(Math.floor(gridH / 2) + axisShift, 10, gridH - 10);
+  const roleWeight = { entrance: 0, connector: 1, clue: 2, hazard: 3, side: 4, final: 5, secret: 6 };
+  const ordered = [...config.regions].sort((a, b) => (roleWeight[getPlacementRole(a)] ?? 4) - (roleWeight[getPlacementRole(b)] ?? 4) || roleDepth(a) - roleDepth(b) || a.id.localeCompare(b.id));
+  const entrance = ordered.find((region) => getPlacementRole(region) === "entrance") || ordered[0];
+  const finalRoom = [...ordered].reverse().find((region) => getPlacementRole(region) === "final") || ordered[ordered.length - 1];
+  const connector = ordered.find((region) => getPlacementRole(region) === "connector" && region.id !== entrance?.id && region.id !== finalRoom?.id);
+  const naveRegion = connector || ordered.find((region) => region.id !== entrance?.id && region.id !== finalRoom?.id) || entrance;
+  const sideRegions = ordered.filter((region) => ![entrance?.id, finalRoom?.id, naveRegion?.id].includes(region.id));
+  const entranceSize = resolveStructuredRoomSize(entrance, "chapel", { variant, primary: false });
+  const naveSize = resolveStructuredRoomSize(naveRegion, "chapel", { variant, primary: true });
+  const finalSize = resolveStructuredRoomSize(finalRoom, "chapel", { variant, primary: false });
+  const startX = 4 + (variant === 3 ? 2 : 0);
+  const entranceRect = {
+    x: startX,
+    y: centerY - Math.floor(entranceSize.h / 2),
+    ...entranceSize,
+  };
+  const naveRect = {
+    x: entranceRect.x + entranceRect.w,
+    y: centerY - Math.floor(naveSize.h / 2),
+    ...naveSize,
+  };
+  const finalYOffset = variant === 1 ? -1 : variant === 2 ? 1 : 0;
+  const finalRect = {
+    x: naveRect.x + naveRect.w,
+    y: clamp(centerY - Math.floor(finalSize.h / 2) + finalYOffset, 3, gridH - finalSize.h - 3),
+    ...finalSize,
+  };
+
+  if (entrance) placed.push(createPlacedRegion(entrance, "rect", entranceRect, config, profile.key, placed.length + 1));
+  if (naveRegion && naveRegion.id !== entrance?.id && naveRegion.id !== finalRoom?.id) placed.push(createPlacedRegion(naveRegion, "hall", naveRect, config, profile.key, placed.length + 1));
+  if (finalRoom && finalRoom.id !== entrance?.id && finalRoom.id !== naveRegion?.id) placed.push(createPlacedRegion(finalRoom, "apse", finalRect, config, profile.key, placed.length + 1));
+
+  const slots = createChapelSideSlots(naveRect, finalRect, gridW, gridH, variant);
+  sideRegions.forEach((region) => {
+    const role = getPlacementRole(region);
+    const shape = role === "secret" ? "archive" : "rect";
+    const placedInSlot = placeRegionInFirstAvailableSlot(region, slots, placed, config, profile.key, shape);
+    if (placedInSlot) return;
+    const fallbackSize = resolveStructuredRoomSize(region, "chapel", { primary: false, variant }) || { w: 5, h: 4 };
+    for (let attempt = 0; attempt < 80; attempt += 1) {
+      const x = clamp(finalRect.x + finalRect.w + 1 + Math.floor(attempt / 10), 3, gridW - fallbackSize.w - 3);
+      const y = clamp(centerY - 6 + ((attempt % 10) - 5), 3, gridH - fallbackSize.h - 3);
+      const cellRect = { x, y, ...fallbackSize };
+      if (rectsOverlapAny(cellRect, placed, 0)) continue;
+      placed.push(createPlacedRegion(region, shape, cellRect, config, profile.key, placed.length + 1));
+      break;
+    }
+  });
+
+  return config.regions.map((region) => placed.find((placedRegion) => placedRegion.id === region.id)).filter(Boolean);
+}
+
+export function placeNobleHouseRegions(config, graph, rng, profile) {
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const placed = [];
+  const centerX = Math.floor(gridW / 2);
+  const centerY = Math.floor(gridH / 2);
+  const courtyard = { x: centerX - 5, y: centerY - 4, w: 10, h: 8 };
+  const ordered = [...config.regions].sort((a, b) => roleDepth(a) - roleDepth(b) || a.id.localeCompare(b.id));
+  const slots = [
+    { side: "west", x: courtyard.x - 7, y: courtyard.y + 1, w: 7, h: 5 },
+    { side: "north", x: courtyard.x, y: courtyard.y - 5, w: 6, h: 5 },
+    { side: "north", x: courtyard.x + 6, y: courtyard.y - 5, w: 6, h: 5 },
+    { side: "east", x: courtyard.x + courtyard.w, y: courtyard.y, w: 7, h: 5 },
+    { side: "east", x: courtyard.x + courtyard.w, y: courtyard.y + 5, w: 7, h: 5 },
+    { side: "south", x: courtyard.x + 4, y: courtyard.y + courtyard.h, w: 7, h: 5 },
+    { side: "south", x: courtyard.x - 3, y: courtyard.y + courtyard.h, w: 7, h: 5 },
+    { side: "west", x: courtyard.x - 7, y: courtyard.y + 6, w: 7, h: 5 },
+  ];
+  const rolePriority = { entrance: 0, connector: 1, clue: 2, side: 3, hazard: 4, final: 5, secret: 6 };
+  const arranged = [...ordered].sort((a, b) => (rolePriority[getPlacementRole(a)] ?? 3) - (rolePriority[getPlacementRole(b)] ?? 3) || a.id.localeCompare(b.id));
+
+  arranged.forEach((region, index) => {
+    const role = getPlacementRole(region);
+    const slot = slots[index % slots.length];
+    const size = resolveStructuredRoomSize(region, "noble-house") || { w: slot.w, h: slot.h };
+    const cellRect = {
+      x: clamp(slot.x, 3, gridW - size.w - 3),
+      y: clamp(slot.y, 3, gridH - size.h - 3),
+      w: slot.w,
+      h: slot.h,
+    };
+    if (role === "final") {
+      cellRect.x = courtyard.x + courtyard.w;
+      cellRect.y = courtyard.y;
+      cellRect.w = 8;
+      cellRect.h = 6;
+    }
+    if (role === "secret") {
+      cellRect.x = courtyard.x + courtyard.w - 2;
+      cellRect.y = courtyard.y + courtyard.h;
+      cellRect.w = 5;
+      cellRect.h = 4;
+    }
+    placed.push(createPlacedRegion(region, "rect", cellRect, config, profile.key, placed.length + 1));
+  });
+
+  return config.regions.map((region) => placed.find((placedRegion) => placedRegion.id === region.id)).filter(Boolean);
+}
+
+export function resolveCaveRoomSize(region, rng, config = null) {
+  const role = getPlacementRole(region);
+  const preset = SIZE_PRESETS[region.size] || SIZE_PRESETS.Medium;
+  const singleCaveRegion = getContextKey(config?.context || config?.biome) === "cave" && normalizeRoomCount(config?.roomCount, config?.regions?.length || 1) <= 1;
+
+  if (singleCaveRegion) {
+    const gridW = Math.floor((config?.mapWidth || DEFAULT_CONFIG.mapWidth) / (config?.gridSize || DEFAULT_CONFIG.gridSize));
+    const gridH = Math.floor((config?.mapHeight || DEFAULT_CONFIG.mapHeight) / (config?.gridSize || DEFAULT_CONFIG.gridSize));
+    return {
+      w: clamp(randomInt(rng, 21, 29), 14, Math.max(14, gridW - 8)),
+      h: clamp(randomInt(rng, 14, 21), 10, Math.max(10, gridH - 8)),
+    };
+  }
+
+  let w = randomInt(rng, preset.minW + 1, preset.maxW + 2);
+  let h = randomInt(rng, preset.minH + 1, preset.maxH + 2);
+
+  if (role === "connector") {
+    w = randomInt(rng, 4, 6);
+    h = randomInt(rng, 4, 6);
+  }
+
+  if (role === "final" || role === "hazard") {
+    w += randomInt(rng, 1, 3);
+    h += randomInt(rng, 1, 3);
+  }
+
+  if (role === "secret") {
+    w = Math.max(4, w - 1);
+    h = Math.max(4, h - 1);
+  }
+
+  const shapeText = String(region.preferredShape || "").toLowerCase();
+  if (shapeText.includes("shaft") || getRegionText(region).includes("vertical") || getRegionText(region).includes("well")) {
+    const d = clamp(Math.max(w, h), 5, 9);
+    return { w: d, h: d };
+  }
+
+  const average = Math.round((w + h) / 2);
+  w = clamp(Math.round(w * 0.66 + average * 0.34), 4, 12);
+  h = clamp(Math.round(h * 0.66 + average * 0.34), 4, 10);
+  return { w, h };
+}
+
+export function getRectGap(a, b) {
+  const dx = Math.max(0, Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w)));
+  const dy = Math.max(0, Math.max(b.y - (a.y + a.h), a.y - (b.y + b.h)));
+  return dx + dy;
+}
+
+export function getRectIntersectionArea(a, b) {
+  const x1 = Math.max(a.x, b.x);
+  const y1 = Math.max(a.y, b.y);
+  const x2 = Math.min(a.x + a.w, b.x + b.w);
+  const y2 = Math.min(a.y + a.h, b.y + b.h);
+  if (x2 <= x1 || y2 <= y1) return 0;
+  return (x2 - x1) * (y2 - y1);
+}
+
+export function createAdjacentCaveCandidate(anchorRect, size, direction, offset) {
+  const overlapX = Math.max(1, Math.round(Math.min(anchorRect.w, size.w) * 0.28));
+  const overlapY = Math.max(1, Math.round(Math.min(anchorRect.h, size.h) * 0.28));
+  const alignX = anchorRect.x + Math.round((anchorRect.w - size.w) / 2) + offset;
+  const alignY = anchorRect.y + Math.round((anchorRect.h - size.h) / 2) + offset;
+
+  if (direction === "east") return { x: anchorRect.x + anchorRect.w - overlapX, y: alignY, ...size };
+  if (direction === "west") return { x: anchorRect.x - size.w + overlapX, y: alignY, ...size };
+  if (direction === "south") return { x: alignX, y: anchorRect.y + anchorRect.h - overlapY, ...size };
+  if (direction === "north") return { x: alignX, y: anchorRect.y - size.h + overlapY, ...size };
+  if (direction === "south-east") return { x: anchorRect.x + anchorRect.w - overlapX, y: anchorRect.y + anchorRect.h - overlapY, ...size };
+  if (direction === "north-east") return { x: anchorRect.x + anchorRect.w - overlapX, y: anchorRect.y - size.h + overlapY, ...size };
+  if (direction === "south-west") return { x: anchorRect.x - size.w + overlapX, y: anchorRect.y + anchorRect.h - overlapY, ...size };
+  return { x: anchorRect.x - size.w + overlapX, y: anchorRect.y - size.h + overlapY, ...size };
+}
+
+export function isAcceptableCavePlacement(candidate, anchorRect, placed) {
+  const area = Math.max(1, candidate.w * candidate.h);
+  let anchorOverlap = 0;
+  let foreignOverlap = 0;
+
+  placed.forEach((room) => {
+    const overlap = getRectIntersectionArea(candidate, room.cellRect);
+    if (overlap <= 0) return;
+    if (room.cellRect === anchorRect) anchorOverlap += overlap;
+    else foreignOverlap += overlap;
+  });
+
+  return anchorOverlap <= area * 0.46 && foreignOverlap <= area * 0.2;
+}
+
+export function scoreCavePlacementCandidate(candidate, anchorRect, placed, center, gridW, gridH, rng) {
+  const area = Math.max(1, candidate.w * candidate.h);
+  let anchorOverlap = 0;
+  let foreignOverlap = 0;
+
+  placed.forEach((room) => {
+    const overlap = getRectIntersectionArea(candidate, room.cellRect);
+    if (overlap <= 0) return;
+    if (room.cellRect === anchorRect) anchorOverlap += overlap;
+    else foreignOverlap += overlap;
+  });
+
+  const near = placed.filter((room) => getRectGap(candidate, room.cellRect) <= 1).length;
+  const anchorGap = getRectGap(candidate, anchorRect);
+  const candidateCenter = { x: candidate.x + candidate.w / 2, y: candidate.y + candidate.h / 2 };
+  const centerDx = candidateCenter.x - center.x;
+  const centerDy = candidateCenter.y - center.y;
+  const edgePenalty = candidate.x < 2 || candidate.y < 2 || candidate.x + candidate.w > gridW - 2 || candidate.y + candidate.h > gridH - 2 ? 900 : 0;
+  const desiredAnchorOverlap = area * 0.18;
+  const overlapPenalty = Math.abs(anchorOverlap - desiredAnchorOverlap) * 38;
+  return foreignOverlap * 1800 + anchorGap * 2600 + overlapPenalty - near * 220 + centerDx * centerDx + centerDy * centerDy + edgePenalty + rng() * 4;
+}
+
+export function chooseCaveAnchorRegion(region, placed, graph, seed) {
+  const connectedIds = graph
+    .filter((edge) => edge.from === region.id || edge.to === region.id)
+    .map((edge) => edge.from === region.id ? edge.to : edge.from);
+  const connectedPlaced = placed.filter((candidate) => connectedIds.includes(candidate.id));
+  if (connectedPlaced.length > 0) {
+    return connectedPlaced.sort((a, b) => getRectGap(a.cellRect, { x: 0, y: 0, w: 0, h: 0 }) - getRectGap(b.cellRect, { x: 0, y: 0, w: 0, h: 0 }))[hashStringToSeed(seed, region.id, "cave-anchor") % connectedPlaced.length];
+  }
+  return placed[hashStringToSeed(seed, region.id, "fallback-cave-anchor") % placed.length] || null;
+}
+
+export function chooseCavePlacement(region, size, anchor, placed, config, rng, index) {
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const center = { x: gridW * 0.48, y: gridH * 0.5 };
+  const margin = 2;
+  const directionSeed = hashStringToSeed(config.seed, region.id, "cave-direction");
+  const baseDirections = ["east", "south", "north", "west", "south-east", "north-east", "south-west", "north-west"];
+  const directions = [...baseDirections].sort((a, b) => hashStringToSeed(directionSeed, a) - hashStringToSeed(directionSeed, b));
+  const offsets = [0, -1, 1, -2, 2, -3, 3];
+  let best = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  directions.forEach((direction) => {
+    offsets.forEach((offset) => {
+      const raw = createAdjacentCaveCandidate(anchor.cellRect, size, direction, offset);
+      const candidate = {
+        ...raw,
+        x: clamp(raw.x, margin, gridW - size.w - margin),
+        y: clamp(raw.y, margin, gridH - size.h - margin),
+      };
+      const score = scoreCavePlacementCandidate(candidate, anchor.cellRect, placed, center, gridW, gridH, rng);
+      if (score < bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
+    });
+  });
+
+  if (best && isAcceptableCavePlacement(best, anchor.cellRect, placed)) return best;
+
+  const spiralRadius = 2 + Math.floor(index / 2);
+  for (let attempt = 0; attempt < 180; attempt += 1) {
+    const angle = (attempt / 18) * Math.PI * 2 + (directionSeed % 100) / 100;
+    const radius = spiralRadius + Math.floor(attempt / 18);
+    const candidate = {
+      x: clamp(Math.round(center.x + Math.cos(angle) * radius - size.w / 2), margin, gridW - size.w - margin),
+      y: clamp(Math.round(center.y + Math.sin(angle) * radius * 0.78 - size.h / 2), margin, gridH - size.h - margin),
+      ...size,
+    };
+    if (isAcceptableCavePlacement(candidate, anchor.cellRect, placed)) return candidate;
+  }
+
+  return best || { x: margin, y: margin, ...size };
+}
+
+export function placeCaveRegions(config, graph, rng, profile) {
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const placed = [];
+  const rolePriority = { entrance: 0, connector: 1, clue: 2, hazard: 3, side: 4, final: 5, secret: 6 };
+  const ordered = [...config.regions].sort((a, b) => {
+    return (rolePriority[getPlacementRole(a)] ?? 4) - (rolePriority[getPlacementRole(b)] ?? 4) || roleDepth(a) - roleDepth(b) || a.id.localeCompare(b.id);
+  });
+  const singleCaveRegion = ordered.length <= 1;
+
+  if (singleCaveRegion) {
+    const region = ordered[0];
+    if (!region) return [];
+    const size = resolveCaveRoomSize(region, rng, config);
+    const xBias = randomInt(rng, -3, 3);
+    const yBias = randomInt(rng, -2, 2);
+    const cellRect = {
+      x: clamp(Math.round(gridW / 2 - size.w / 2 + xBias), 3, gridW - size.w - 3),
+      y: clamp(Math.round(gridH / 2 - size.h / 2 + yBias), 3, gridH - size.h - 3),
+      ...size,
+    };
+    return [createPlacedRegion(region, "cave", cellRect, config, profile.key, 1)];
+  }
+
+  const adjacency = getGraphAdjacency(graph);
+  const maxDepth = Math.max(1, ...config.regions.map((region) => Number.isFinite(region.graphDepth) ? region.graphDepth : roleDepth(region)));
+  const margin = 3;
+
+  ordered.forEach((region, index) => {
+    const size = resolveCaveRoomSize(region, rng, config);
+    const shape = chooseRoomShape(region, profile.key);
+    const target = getContextualTarget(region, size, config, graph, placed, rng, profile, adjacency, maxDepth);
+    const maxX = Math.max(margin, gridW - size.w - margin);
+    const maxY = Math.max(margin, gridH - size.h - margin);
+    let best = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    for (let attempt = 0; attempt < 520; attempt += 1) {
+      const radius = Math.floor(attempt / 18);
+      const candidate = {
+        x: clamp(Math.round(target.x) + randomInt(rng, -radius - 1, radius + 1), margin, maxX),
+        y: clamp(Math.round(target.y) + randomInt(rng, -radius - 1, radius + 1), margin, maxY),
+        ...size,
+      };
+      const overlap = placed.some((room) => rectsOverlapWithMargin(candidate, room.cellRect, 2));
+      const nearCount = placed.filter((room) => rectsOverlapWithMargin(candidate, room.cellRect, 5)).length;
+      const dx = candidate.x - target.x;
+      const dy = candidate.y - target.y;
+      const score = dx * dx + dy * dy + (overlap ? 100000 : 0) + nearCount * 72 + rng() * 3;
+      if (score < bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
+      if (!overlap && nearCount <= 1 && attempt > 18) break;
+    }
+
+    const cellRect = best || {
+      x: clamp(margin + index * 3, margin, maxX),
+      y: clamp(Math.round(gridH / 2 - size.h / 2), margin, maxY),
+      ...size,
+    };
+    placed.push(createPlacedRegion(region, shape, cellRect, config, profile.key, placed.length + 1));
+  });
+
+  return config.regions.map((region) => placed.find((placedRegion) => placedRegion.id === region.id)).filter(Boolean);
+}
+
+export function placeRegions(config, graph, rng) {
+  const profile = getPlacementProfile(config);
+  if (profile.key === "chapel") return placeChapelRegions(config, graph, rng, profile);
+  if (profile.key === "noble-house") return placeNobleHouseRegions(config, graph, rng, profile);
+  if (profile.key === "cave") return placeCaveRegions(config, graph, rng, profile);
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const margin = 3;
+  const placed = [];
+  const adjacency = getGraphAdjacency(graph);
+  const maxDepth = Math.max(1, ...config.regions.map((region) => Number.isFinite(region.graphDepth) ? region.graphDepth : roleDepth(region)));
+  const orderedRegions = [...config.regions].sort((a, b) => {
+    const roleWeight = { entrance: 0, connector: 1, clue: 2, hazard: 3, side: 4, final: 5, secret: 6 };
+    return (roleWeight[getPlacementRole(a)] ?? 4) - (roleWeight[getPlacementRole(b)] ?? 4) || roleDepth(a) - roleDepth(b) || a.id.localeCompare(b.id);
+  });
+
+  orderedRegions.forEach((region, index) => {
+    const size = resolveRoomSize(region, rng);
+    const shape = chooseRoomShape(region, profile.key);
+    const maxX = Math.max(margin, gridW - size.w - margin);
+    const maxY = Math.max(margin, gridH - size.h - margin);
+    const target = getContextualTarget(region, size, config, graph, placed, rng, profile, adjacency, maxDepth);
+    let best = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    for (let attempt = 0; attempt < 420; attempt += 1) {
+      const radius = Math.floor(attempt / 14);
+      const candidate = {
+        id: region.id,
+        x: clamp(Math.round(target.x) + randomInt(rng, -radius - 1, radius + 1), margin, maxX),
+        y: clamp(Math.round(target.y) + randomInt(rng, -radius - 1, radius + 1), margin, maxY),
+        w: size.w,
+        h: size.h,
+      };
+      const score = scorePlacementCandidate(candidate, target, placed, graph, region, profile);
+      if (score < bestScore) {
+        best = candidate;
+        bestScore = score;
+      }
+      if (!placed.some((room) => rectsOverlapWithMargin(candidate, room.cellRect, 2))) break;
+    }
+
+    const cellRect = best;
+    placed.push({
+      ...region,
+      shape,
+      cellRect,
+      placementProfile: profile.key,
+      surfaceKind: profile.key === "cave" ? "cave" : "dungeon",
+      floorCells: [],
+      wallSegments: [],
+      doorAnchors: [],
+      labelPoint: {
+        x: (cellRect.x + cellRect.w / 2) * config.gridSize,
+        y: (cellRect.y + cellRect.h / 2) * config.gridSize,
+      },
+      number: index + 1,
+    });
+  });
+
+  return config.regions.map((region) => placed.find((placedRegion) => placedRegion.id === region.id)).filter(Boolean);
+}
+
+export function applyManualRoomPositions(regions, config) {
+  const manualPositions = config.manualRoomPositions || {};
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+
+  return regions.map((region) => {
+    const position = manualPositions[region.id];
+    if (!position) return region;
+    const cellRect = {
+      ...region.cellRect,
+      x: clamp(Math.round(position.x), 1, Math.max(1, gridW - region.cellRect.w - 1)),
+      y: clamp(Math.round(position.y), 1, Math.max(1, gridH - region.cellRect.h - 1)),
+    };
+    return {
+      ...region,
+      cellRect,
+      labelPoint: {
+        x: (cellRect.x + cellRect.w / 2) * config.gridSize,
+        y: (cellRect.y + cellRect.h / 2) * config.gridSize,
+      },
+    };
+  });
+}
+
+export function resizeRoomAroundCenter(region, sizePreset, config) {
+  const size = ROOM_SIZE_MENU_PRESETS[sizePreset];
+  if (!size) return region;
+  const gridW = Math.floor(config.mapWidth / config.gridSize);
+  const gridH = Math.floor(config.mapHeight / config.gridSize);
+  const centerX = region.cellRect.x + region.cellRect.w / 2;
+  const centerY = region.cellRect.y + region.cellRect.h / 2;
+  const cellRect = {
+    ...region.cellRect,
+    w: size.w,
+    h: size.h,
+    x: clamp(Math.round(centerX - size.w / 2), 1, Math.max(1, gridW - size.w - 1)),
+    y: clamp(Math.round(centerY - size.h / 2), 1, Math.max(1, gridH - size.h - 1)),
+  };
+  return {
+    ...region,
+    size: sizePreset,
+    cellRect,
+    labelPoint: {
+      x: (cellRect.x + cellRect.w / 2) * config.gridSize,
+      y: (cellRect.y + cellRect.h / 2) * config.gridSize,
+    },
+  };
+}
+
+export function applyRoomSizeOverrides(regions, config) {
+  const styles = config.manualRoomStyles || {};
+  return regions.map((region) => {
+    const sizePreset = styles[region.id]?.sizePreset;
+    if (!sizePreset) return region;
+    const resized = resizeRoomAroundCenter(region, sizePreset, config);
+    const overlaps = regions.some((otherRegion) => otherRegion.id !== region.id && rectsOverlapWithMargin(resized.cellRect, otherRegion.cellRect, 0));
+    return overlaps ? region : resized;
+  });
+}
+
+export function applyRoomStyleOverrides(regions, config) {
+  const styles = config.manualRoomStyles || {};
+  return regions.map((region) => {
+    const style = styles[region.id];
+    if (!style) return region;
+    const shape = style.shape || region.shape;
+    return {
+      ...region,
+      shape,
+      roomType: style.roomType || region.roomType || "none",
+      shapeOptions: {
+        sizePreset: style.sizePreset || null,
+        roomType: style.roomType || "none",
+        notch: Boolean(style.notch),
+        ruined: Boolean(style.ruined),
+      },
+    };
+  });
+}
+
+export function formatMapLevel(level) {
+  const numeric = Number(level);
+  if (!Number.isFinite(numeric)) return "All";
+  if (numeric > 0) return `+${numeric}`;
+  return String(numeric);
+}
+
+export function getRegionLevel(region) {
+  return Number.isFinite(region?.level) ? region.level : 0;
+}
+
+export function getAvailableMapLevels(generatedMap) {
+  const levels = new Set();
+  (generatedMap?.regions || []).forEach((region) => levels.add(getRegionLevel(region)));
+  (generatedMap?.corridors || []).forEach((corridor) => {
+    if (Number.isFinite(corridor.level)) levels.add(corridor.level);
+    if (Number.isFinite(corridor.fromLevel)) levels.add(corridor.fromLevel);
+    if (Number.isFinite(corridor.toLevel)) levels.add(corridor.toLevel);
+  });
+  return Array.from(levels).sort((a, b) => a - b);
+}
+
+export function normalizeLevelView(value, availableLevels = []) {
+  if (value === LEVEL_VIEW_ALL || value === null || typeof value === "undefined") return LEVEL_VIEW_ALL;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return LEVEL_VIEW_ALL;
+  const rounded = Math.round(parsed);
+  if (availableLevels.length > 0 && !availableLevels.includes(rounded)) return LEVEL_VIEW_ALL;
+  return rounded;
+}
+
+export function hasRenderableGeometry(generatedMap) {
+  return Boolean(generatedMap?.regions?.length || generatedMap?.corridors?.length || generatedMap?.dungeonMask?.floorCells?.length);
+}

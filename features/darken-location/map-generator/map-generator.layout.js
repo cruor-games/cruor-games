@@ -1,6 +1,6 @@
 import { DEFAULT_CONFIG, normalizeRoomCount } from "./map-generator.input.js";
 import { LEVEL_VIEW_ALL } from "./map-generator.state.js";
-import { classifyRegion, getContextKey, getPlacementProfile, getPlacementRole, getRegionText, roleDepth } from "./map-generator.profile.js";
+import { classifyRegion, getContextKey, getPlacementProfile, getPlacementRole, getRegionSurfaceProfile, getRegionText, roleDepth } from "./map-generator.profile.js";
 import { getGraphAdjacency } from "./map-generator.graph.js";
 
 const SIZE_PRESETS = {
@@ -252,12 +252,13 @@ export function scorePlacementCandidate(candidate, target, placed, graph, region
 }
 
 export function createPlacedRegion(region, shape, cellRect, config, profileKey, number) {
+  const surfaceKind = getRegionSurfaceProfile(region, profileKey);
   return {
     ...region,
     shape,
     cellRect,
     placementProfile: profileKey,
-    surfaceKind: profileKey === "cave" ? "cave" : "dungeon",
+    surfaceKind,
     floorCells: [],
     wallSegments: [],
     doorAnchors: [],
@@ -732,7 +733,7 @@ export function placeRegions(config, graph, rng) {
       shape,
       cellRect,
       placementProfile: profile.key,
-      surfaceKind: profile.key === "cave" ? "cave" : "dungeon",
+      surfaceKind: getRegionSurfaceProfile(region, profile.key),
       floorCells: [],
       wallSegments: [],
       doorAnchors: [],

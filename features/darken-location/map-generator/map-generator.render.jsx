@@ -24,6 +24,7 @@ import {
   isOrganicCorridor,
   isValidPoint,
   getBoundaryCells,
+  getFinalConnectionAnchors,
   getDoorBoundaryCells,
   getAnchorHandlePoint,
   getSnappedCirclePortalCellFromAnchor,
@@ -41,6 +42,14 @@ import {
   getCorridorEndpointCell,
   getWallSegmentAdjacentCells,
 } from "./map-generator.corridors.js";
+import {
+  createCaveMapSurfaceFromCaveSurface as createGeometryCaveMapSurfaceFromCaveSurface,
+  finalizeCaveGeometry as finalizeGeometryCaveGeometry,
+} from "./map-generator.geometry.js";
+import {
+  createCaveAccessBoundaryAnchor,
+  getCaveAccessBounds,
+} from "./map-generator.details.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -82,6 +91,18 @@ function roundTo(value, decimals = 2) {
 
 export const SVG_STYLE = `
 .paper{fill:#dccaa6}.paper-texture{opacity:.75}.map-grid line{stroke:rgba(58,46,32,.17);stroke-width:1;vector-effect:non-scaling-stroke}.map-grid circle{fill:rgba(58,46,32,.22)}.floor-grid line{stroke:rgba(29,25,21,.16);stroke-width:1.05;vector-effect:non-scaling-stroke}.floor-grid circle{fill:rgba(29,25,21,.18)}.grid-style-dotted line{display:none}.grid-style-dashed line{stroke-linecap:round}.floor-fill{fill:#efe4ca;stroke:none}.floor-speckle circle{fill:rgba(29,25,21,.12)}.floor-grain path{fill:none;stroke:rgba(29,25,21,.11);stroke-width:.7;stroke-linecap:round;vector-effect:non-scaling-stroke}.room-floor-accent{fill:rgba(255,248,226,.26);stroke:none}.corridor-floor-accent{fill:rgba(116,91,57,.075);stroke:none}.organic-floor-accent{fill:rgba(29,25,21,.06);stroke:rgba(29,25,21,.18);stroke-width:1.15;vector-effect:non-scaling-stroke}.shape-detail{fill:none;stroke:rgba(29,25,21,.2);stroke-width:1.05;stroke-linecap:round;vector-effect:non-scaling-stroke}.ritual-floor-ring{fill:none;stroke:rgba(29,25,21,.18);stroke-width:1.25;vector-effect:non-scaling-stroke}.corridor-centerline{fill:none;stroke:rgba(29,25,21,.18);stroke-width:1.1;stroke-dasharray:2 8;stroke-linecap:round;vector-effect:non-scaling-stroke}.external-hatching-underlay .halo-buffer{fill:none;stroke:#dccaa6;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:1}.external-hatching path{fill:none;stroke:rgba(42,33,24,.28);stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.wall-shadow path{stroke:rgba(42,33,24,.32);stroke-width:7.2;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.wall-main path{stroke:#1d1915;stroke-width:4.05;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.wall-sketch path{stroke:rgba(29,25,21,.32);stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.wall-breaks path{fill:none;stroke:#1d1915;stroke-width:1.45;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.wall-breaks .crack{stroke:rgba(29,25,21,.58);stroke-width:1.1}.door-cuts .door-opening{stroke:#efe4ca;stroke-width:7;stroke-linecap:square;vector-effect:non-scaling-stroke}.door-cuts .secret-door-opening{stroke:#efe4ca;stroke-width:5;stroke-linecap:square;stroke-dasharray:4 4;vector-effect:non-scaling-stroke}.door-symbols .door-wall-line{stroke:#1d1915;stroke-width:4.1;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.door-symbols .door-wall-sketch{stroke:rgba(29,25,21,.3);stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.door-symbols .door-panel{fill:#efe4ca;stroke:#1d1915;stroke-width:2.25;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.door-symbols .secret-door-panel{stroke-dasharray:3 3}.door-symbols .locked-door-panel{stroke-width:2.35}.door-symbols .locked-door-mark line{stroke:#1d1915;stroke-width:2.05;stroke-linecap:round;vector-effect:non-scaling-stroke}.door-symbols .stair-mark__main path{fill:none;stroke:#1d1915;stroke-width:3.05;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.door-symbols .stair-mark__sketch path{fill:none;stroke:rgba(29,25,21,.3);stroke-width:1.05;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.corridor-overpass-patches .overpass-corridor-floor{fill:#efe4ca;stroke:none;pointer-events:none}.corridor-overpass-patches .overpass-corridor-walls path{stroke:#1d1915;stroke-width:4.05;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.corridor-overpass-patches .overpass-corridor-wall-sketch path{stroke:rgba(29,25,21,.32);stroke-width:1.15;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.map-accesses .map-access-line,.map-accesses .map-access-head-line{fill:none;stroke:#1d1915;stroke-width:3.05;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.map-accesses .map-access-stem-sketch,.map-accesses .map-access-head-sketch{fill:none;stroke:rgba(29,25,21,.3);stroke-width:1.05;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.map-accesses .map-access-label{fill:#1d1915;font-size:8px;font-weight:900;font-family:Inter,ui-sans-serif,system-ui;letter-spacing:.08em;paint-order:stroke;stroke:#efe4ca;stroke-width:2.5px;stroke-linejoin:round}.corridor-junctions .junction-wall-line{stroke:#1d1915;stroke-width:4.0;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.corridor-junctions .junction-wall-sketch{stroke:rgba(29,25,21,.3);stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round;fill:none;vector-effect:non-scaling-stroke}.corridor-junctions .junction-door-panel{fill:#efe4ca;stroke:#1d1915;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.props rect,.props circle,.props path,.props line,.props polygon,.props ellipse{fill:none;stroke:rgba(29,25,21,.62);stroke-width:1.35;vector-effect:non-scaling-stroke}.props .prop-fill{fill:rgba(29,25,21,.045)}.props .prop-light-fill{fill:rgba(255,248,226,.16)}.props .prop-fog{fill:rgba(255,248,226,.22);stroke:rgba(29,25,21,.18);stroke-width:1.05}.props .prop-water{fill:rgba(143,161,150,.24);stroke:rgba(29,25,21,.28);stroke-width:1.1}.props .prop-pit{fill:rgba(29,25,21,.12);stroke:rgba(29,25,21,.62);stroke-width:1.4}.props .prop-rubble{fill:rgba(29,25,21,.06)}.props .prop-bones{stroke:rgba(29,25,21,.7);stroke-width:1.15}.props .prop-crack{stroke:rgba(29,25,21,.5);stroke-width:1.05}.props .prop-stairs line{stroke-width:1.05}.props .prop-altar,.props .prop-tomb,.props .prop-shelf{fill:rgba(29,25,21,.045)}.labels circle{fill:#efe4ca;stroke:#1d1915;stroke-width:2}.labels text{fill:#1d1915;font-size:13px;font-weight:800;font-family:ui-serif,Georgia,serif}.labels .room-name{font-size:12px;font-family:Inter,ui-sans-serif,system-ui;font-weight:700;paint-order:stroke;stroke:#efe4ca;stroke-width:4px;stroke-linejoin:round}.editor-overlays path{fill:rgba(122,67,36,0);stroke:rgba(122,67,36,0);stroke-width:0;vector-effect:non-scaling-stroke}.room-hover-highlight{pointer-events:none}.editor-overlays .room-hover-highlight__halo path,.editor-overlays .room-hover-highlight__halo line{fill:none;stroke:rgba(214,184,98,.32);stroke-width:8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.editor-overlays .room-hover-highlight__edge path,.editor-overlays .room-hover-highlight__edge line{fill:none;stroke:rgba(255,231,143,.92);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.corridor-hover-highlight{pointer-events:none}.editor-overlays .corridor-hover-highlight__halo{fill:none;stroke:rgba(214,184,98,.34);stroke-width:9;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.editor-overlays .corridor-hover-highlight__line{fill:none;stroke:rgba(255,231,143,.95);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}.editor-overlays .room-drag-handle{cursor:move;pointer-events:all}.editor-overlays .room-drag-handle:hover{fill:rgba(122,67,36,0)}.editor-overlays .room-drag-handle.is-dragging{fill:rgba(122,67,36,0);stroke:rgba(29,25,21,0);stroke-width:0}.wall-hover-zone{stroke:rgba(122,67,36,0);stroke-width:14;stroke-linecap:square;fill:none;cursor:crosshair;pointer-events:stroke}.wall-hover-zone:hover{stroke:rgba(122,67,36,0)}.endpoint-handle{fill:#1d1915;stroke:#efe4ca;stroke-width:2;cursor:grab;pointer-events:all}.endpoint-handle.is-dragging{fill:#7a4324;cursor:grabbing}.waypoint-handle{fill:#efe4ca;stroke:#1d1915;stroke-width:1.5;cursor:grab;pointer-events:all}.waypoint-handle.is-junction{fill:#d6b862;stroke:#1d1915;stroke-width:2.2}.waypoint-handle.is-dragging{fill:#7a4324;stroke:#efe4ca;cursor:grabbing}.corridor-hover-zone{fill:rgba(122,67,36,0);stroke:none;cursor:crosshair;pointer-events:all}.corridor-hover-zone:hover{fill:rgba(122,67,36,.12)}.corridor-hover-zone.is-junction:hover{fill:rgba(214,184,98,.22);stroke:rgba(214,184,98,.54);stroke-width:1.2;vector-effect:non-scaling-stroke}.corridor-add-handle{fill:#efe4ca;stroke:#7a4324;stroke-width:2;cursor:crosshair;pointer-events:all}.corridor-add-handle:hover{fill:#7a4324;stroke:#efe4ca}.corridor-add-handle.is-junction{fill:#d6b862;stroke:#1d1915;stroke-width:2.4}.corridor-add-handle.is-junction:hover{fill:#1d1915;stroke:#d6b862}.wall-connect-handle{fill:#7a4324;stroke:#efe4ca;stroke-width:2;cursor:crosshair;pointer-events:all}.wall-connect-handle:hover{fill:#1d1915}.map-access-handle{fill:#efe4ca;stroke:#1d1915;stroke-width:2.1;cursor:grab;pointer-events:all}.map-access-handle:hover{fill:#d6b862}.map-access-handle.is-dragging{fill:#7a4324;stroke:#efe4ca;cursor:grabbing}.map-access-handle__icon{fill:none;stroke:#1d1915;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}.connection-preview{stroke:#7a4324;stroke-width:2.4;stroke-dasharray:7 5;stroke-linecap:round;fill:none;vector-effect:non-scaling-stroke;pointer-events:none}.connection-preview__endpoint{fill:#efe4ca;stroke:#7a4324;stroke-width:2;pointer-events:none}.circular-room-surface-cover{pointer-events:none}.level-layer--faded{opacity:.26}.level-layer--active{opacity:1}
+`;
+
+export const EDITOR_CAVE_STYLE = `
+.editor-overlays .cave-zone-overlay path{fill:rgba(214,184,98,.11);stroke:none;pointer-events:none}
+.editor-overlays .cave-zone-overlay--hovered path{fill:rgba(214,184,98,.18)}
+.editor-overlays .cave-zone-overlay--selected path{fill:rgba(255,231,143,.23)}
+.cave-zone-overlay__node{fill:rgba(239,228,202,.78);stroke:rgba(29,25,21,.48);stroke-width:1.4;pointer-events:none}
+.cave-zone-overlay__label{fill:#1d1915;font-size:8px;font-weight:900;font-family:Inter,ui-sans-serif,system-ui;pointer-events:none;paint-order:stroke;stroke:#efe4ca;stroke-width:2px;stroke-linejoin:round}
+.editor-overlays .cave-tunnel-trace{fill:none;stroke:rgba(122,67,36,.34);stroke-width:4.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 8;vector-effect:non-scaling-stroke;pointer-events:none}
+.editor-overlays .cave-tunnel-trace--active{stroke:rgba(255,231,143,.78);stroke-width:6.2}
+.cave-passage-handle{fill:rgba(239,228,202,.86);stroke:#7a4324;stroke-width:2;cursor:grab;pointer-events:all}
+.cave-passage-handle.is-dragging{fill:#7a4324;stroke:#efe4ca;cursor:grabbing}
 `;
 
 export const HEX_CAVE_DIRECTIONS = [
@@ -962,7 +983,7 @@ export function buildCorridorsVisualFloorPath(corridors, generatedMap, gridSize)
 }
 
 export function isOrganicRegionSurface(region) {
-  return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.placementProfile === "cave";
+  return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid" || region?.placementProfile === "cave";
 }
 
 export function buildCircleRoomPath(region, gridSize) {
@@ -1083,6 +1104,9 @@ export function getCircleCompositeSquareCells(generatedMap, region) {
 }
 
 export function createCellMaskRegionSurface(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
+  const storedRegionSurface = generatedMap?.finalGeometry?.regions?.[region.id];
+  if (storedRegionSurface) return storedRegionSurface;
+
   const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
@@ -1109,6 +1133,9 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
 }
 
 export function createCircleCompositeRegionSurface(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
+  const storedRegionSurface = generatedMap?.finalGeometry?.regions?.[region.id];
+  if (storedRegionSurface) return storedRegionSurface;
+
   const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const circlePath = buildCircleRoomPath(region, gridSize);
@@ -1157,33 +1184,96 @@ export function isUsableSvgPath(path) {
   return typeof path === "string" && path.trim().length > 0 && !/(NaN|undefined|null)/i.test(path);
 }
 
+export function createCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface) {
+  const { config, dungeonMask } = generatedMap;
+  return {
+    kind: "map-surface",
+    geometryKind: caveSurface.geometryKind || caveSurface.kind || "hex-cave-map",
+    surfaceKind: "cave",
+    gridSize: config.gridSize,
+    caveSurface,
+    floorCells: caveSurface.floorCells || dungeonMask.floorCells || [],
+    roomFloorCells: dungeonMask.roomFloorCells || [],
+    corridorFloorCells: dungeonMask.corridorFloorCells || [],
+    visualFloorPath: caveSurface.visualFloorPath,
+    clipPath: caveSurface.clipPath || caveSurface.visualFloorPath,
+    externalWallSegments: caveSurface.boundarySegments || [],
+    internalWallSegments: [],
+    wallSegments: caveSurface.boundarySegments || [],
+    doorSegments: dungeonMask.doorSegments || [],
+    mapAccesses: dungeonMask.mapAccesses || [],
+  };
+}
+
+export function createFinalCaveRegionSurface(region, generatedMap, caveSurface) {
+  const baseSurface = region.shape === "circle"
+    ? createCircleCompositeRegionSurface(region, generatedMap, generatedMap.config.gridSize)
+    : createCellMaskRegionSurface(region, generatedMap, generatedMap.config.gridSize);
+  if (!isPureCaveMap(generatedMap) || generatedMap.regions.length !== 1) return baseSurface;
+
+  const boundarySegments = caveSurface.boundarySegments || baseSurface.boundarySegments || [];
+  return {
+    ...baseSurface,
+    finalGeometry: true,
+    kind: caveSurface.kind || baseSurface.kind,
+    geometryKind: caveSurface.geometryKind || baseSurface.geometryKind,
+    surfaceKind: "cave",
+    floorCells: caveSurface.floorCells || baseSurface.floorCells,
+    visualFloorCells: caveSurface.visualFloorCells || caveSurface.floorCells || baseSurface.floorCells,
+    visualFloorPath: caveSurface.visualFloorPath || baseSurface.visualFloorPath,
+    clipPath: caveSurface.clipPath || caveSurface.visualFloorPath || baseSurface.clipPath,
+    hoverPath: caveSurface.visualFloorPath || baseSurface.hoverPath,
+    hoverSegments: boundarySegments,
+    wallArcPath: caveSurface.wallPath || caveSurface.visualFloorPath || baseSurface.wallArcPath,
+    wallPath: caveSurface.wallPath || baseSurface.wallPath,
+    sketchPath: caveSurface.sketchPath || baseSurface.sketchPath,
+    wallSegments: boundarySegments,
+    boundarySegments,
+    labelPoint: region.labelPoint,
+  };
+}
+
+export function finalizeCaveGeometry(generatedMap) {
+  if (!isPureCaveMap(generatedMap)) return null;
+
+  const hexCaveSurface = createHexCaveSurface(generatedMap);
+  const caveSurface = isUsableSvgPath(hexCaveSurface.visualFloorPath)
+    ? hexCaveSurface
+    : createCellBasedCaveSurface(generatedMap);
+  const mapSurface = createCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface);
+  const regions = Object.fromEntries(generatedMap.regions.map((region) => [
+    region.id,
+    createFinalCaveRegionSurface(region, generatedMap, caveSurface),
+  ]));
+  const corridors = Object.fromEntries((generatedMap.corridors || []).map((corridor) => [
+    corridor.id,
+    createCorridorSurface(corridor, generatedMap, generatedMap.config.gridSize),
+  ]));
+
+  return {
+    kind: "final-cave-geometry",
+    surfaceKind: "cave",
+    mapSurface,
+    caveSurface,
+    regions,
+    corridors,
+  };
+}
+
 export function getMapSurface(generatedMap) {
   const { config, dungeonMask, regions, corridors = [] } = generatedMap;
   const gridSize = config.gridSize;
 
   if (isPureCaveMap(generatedMap)) {
-    const hexCaveSurface = createHexCaveSurface(generatedMap);
-    const caveSurface = isUsableSvgPath(hexCaveSurface.visualFloorPath) ? hexCaveSurface : createCellBasedCaveSurface(generatedMap);
+    const finalGeometry = generatedMap.finalGeometry?.mapSurface ? generatedMap.finalGeometry : finalizeGeometryCaveGeometry(generatedMap);
+    const caveSurface = finalGeometry?.caveSurface || finalGeometry?.mapSurface?.caveSurface || createHexCaveSurface(generatedMap);
     const regionSurfaces = regions.map((region) => getRegionSurface(region, generatedMap, gridSize));
     const corridorSurfaces = corridors.map((corridor) => createCorridorSurface(corridor, generatedMap, gridSize));
     return {
-      kind: "map-surface",
-      geometryKind: "hex-cave-map",
-      surfaceKind: "cave",
-      gridSize,
+      ...createGeometryCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface),
       caveSurface,
       regionSurfaces,
       corridorSurfaces,
-      floorCells: caveSurface.floorCells || dungeonMask.floorCells || [],
-      roomFloorCells: dungeonMask.roomFloorCells || [],
-      corridorFloorCells: dungeonMask.corridorFloorCells || [],
-      visualFloorPath: caveSurface.visualFloorPath,
-      clipPath: caveSurface.clipPath,
-      externalWallSegments: caveSurface.boundarySegments || [],
-      internalWallSegments: [],
-      wallSegments: caveSurface.boundarySegments || [],
-      doorSegments: dungeonMask.doorSegments || [],
-      mapAccesses: dungeonMask.mapAccesses || [],
     };
   }
 
@@ -1376,6 +1466,7 @@ export function renderShapeDetails(region, gridSize) {
 }
 
 export function renderRegionClipPaths(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return null;
   return generatedMap.regions.map((region) => {
     const shape = getRegionCompositeShape(region, generatedMap, generatedMap.config.gridSize);
     return (
@@ -1386,9 +1477,64 @@ export function renderRegionClipPaths(generatedMap) {
   });
 }
 
+export function getMapAccessCenter(access) {
+  if (access?.wallGap) {
+    return {
+      x: (access.wallGap.x1 + access.wallGap.x2) / 2,
+      y: (access.wallGap.y1 + access.wallGap.y2) / 2,
+    };
+  }
+  if (access?.floorExtension?.inner) return access.floorExtension.inner;
+  if (access?.end) return access.end;
+  return { x: 0, y: 0 };
+}
+
+export function getMapAccessBasis(access) {
+  const normal = normalizeDirectionVector(access?.normal || { x: 1, y: 0 });
+  const tangent = normalizeDirectionVector(access?.tangent || { x: -normal.y, y: normal.x });
+  return { normal, tangent };
+}
+
+export function createMapAccessOrganicFloorPath(access, config) {
+  if (!access?.caveAccessBoundary && !access?.floorExtension) return "";
+  const g = config.gridSize;
+  const center = getMapAccessCenter(access);
+  const { normal, tangent } = getMapAccessBasis(access);
+  const seed = access.id || `${center.x}:${center.y}`;
+  const mouthHalf = g * 0.7;
+  const outerHalf = g * 0.44;
+  const innerDepth = g * 0.22;
+  const outerDepth = g * 1.18;
+  const jitter = (index, amount) => ((hashStringToSeed(config.seed, seed, index, "access-organic-floor") % 1000) / 1000 - 0.5) * amount;
+  const p = (along, outward, tangentJitter = 0, normalJitter = 0) => ({
+    x: center.x + tangent.x * (along + tangentJitter) + normal.x * (outward + normalJitter),
+    y: center.y + tangent.y * (along + tangentJitter) + normal.y * (outward + normalJitter),
+  });
+  const points = [
+    p(-mouthHalf, -innerDepth, jitter(1, g * 0.08), jitter(2, g * 0.06)),
+    p(-outerHalf, outerDepth * 0.42, jitter(3, g * 0.12), jitter(4, g * 0.08)),
+    p(-outerHalf * 0.92, outerDepth, jitter(5, g * 0.14), jitter(6, g * 0.09)),
+    p(outerHalf * 0.92, outerDepth, jitter(7, g * 0.14), jitter(8, g * 0.09)),
+    p(outerHalf, outerDepth * 0.42, jitter(9, g * 0.12), jitter(10, g * 0.08)),
+    p(mouthHalf, -innerDepth, jitter(11, g * 0.08), jitter(12, g * 0.06)),
+  ];
+  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points.slice(1).map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ")} Z`;
+}
+
+export function getMapAccessFloorExtensionPath(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return "";
+  const accesses = generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || [];
+  return accesses
+    .map((access) => createMapAccessOrganicFloorPath(access, generatedMap.config) || access?.floorExtension?.path || "")
+    .filter(Boolean)
+    .join(" ");
+}
+
 export function renderDungeonFloorClipPath(generatedMap) {
   const mapSurface = getMapSurface(generatedMap);
-  const clipPath = mapSurface.clipPath || mapSurface.visualFloorPath || buildVisualFloorPath(generatedMap);
+  const baseClipPath = mapSurface.clipPath || mapSurface.visualFloorPath || buildVisualFloorPath(generatedMap);
+  const accessExtensionPath = getMapAccessFloorExtensionPath(generatedMap);
+  const clipPath = [baseClipPath, accessExtensionPath].filter(Boolean).join(" ");
   return (
     <clipPath id="clip-dungeon-floor">
       <path d={clipPath} fillRule="nonzero" />
@@ -2320,23 +2466,194 @@ export function renderMapAccessArrowHead(tip, tail, config, keyPrefix) {
   ));
 }
 
+export function getRenderableMapAccesses(generatedMap) {
+  return generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || [];
+}
+
+export function renderMapAccessFloorExtensions(generatedMap) {
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.floorExtension?.path || access?.caveAccessBoundary);
+  if (accesses.length === 0) return null;
+  return (
+    <g className="map-access-floor-extensions">
+      {accesses.map((access, index) => {
+        const d = createMapAccessOrganicFloorPath(access, generatedMap.config) || access.floorExtension?.path;
+        if (!d) return null;
+        return (
+          <path
+            key={`map-access-floor-extension-${access.id || index}`}
+            className="map-access-floor-extension"
+            d={d}
+            fillRule="nonzero"
+          />
+        );
+      })}
+    </g>
+  );
+}
+
+export function createMapAccessWallMouthMaskPath(access, config) {
+  if (!access?.wallGap) return "";
+  const g = config.gridSize;
+  const center = getMapAccessCenter(access);
+  const { normal, tangent } = getMapAccessBasis(access);
+  const halfWidth = g * 0.95;
+  const halfDepth = g * 0.82;
+  const points = [
+    { x: center.x - tangent.x * halfWidth - normal.x * halfDepth, y: center.y - tangent.y * halfWidth - normal.y * halfDepth },
+    { x: center.x + tangent.x * halfWidth - normal.x * halfDepth, y: center.y + tangent.y * halfWidth - normal.y * halfDepth },
+    { x: center.x + tangent.x * halfWidth + normal.x * halfDepth, y: center.y + tangent.y * halfWidth + normal.y * halfDepth },
+    { x: center.x - tangent.x * halfWidth + normal.x * halfDepth, y: center.y - tangent.y * halfWidth + normal.y * halfDepth },
+  ];
+  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points.slice(1).map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ")} Z`;
+}
+
+export function renderCaveWallAccessMask(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return null;
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.wallGap);
+  if (accesses.length === 0) return null;
+  const { config } = generatedMap;
+  return (
+    <mask id="cave-wall-access-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={config.mapWidth} height={config.mapHeight}>
+      <rect x={0} y={0} width={config.mapWidth} height={config.mapHeight} fill="white" />
+      {accesses.map((access, index) => {
+        const d = createMapAccessWallMouthMaskPath(access, config);
+        return d ? <path key={`cave-wall-access-mask-gap-${access.id || index}`} d={d} fill="black" /> : null;
+      })}
+    </mask>
+  );
+}
+
+export function renderMapAccessWallGaps(generatedMap) {
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.wallGap);
+  if (accesses.length === 0) return null;
+  return (
+    <g className="map-access-wall-gaps">
+      {accesses.map((access, index) => (
+        <line
+          key={`map-access-wall-gap-${access.id || index}`}
+          className="map-access-wall-gap"
+          x1={access.wallGap.x1}
+          y1={access.wallGap.y1}
+          x2={access.wallGap.x2}
+          y2={access.wallGap.y2}
+        />
+      ))}
+    </g>
+  );
+}
+
+export function getMapAccessTunnelWallSegments(access, config = DEFAULT_CONFIG) {
+  if (!access?.floorExtension && !access?.caveAccessBoundary) return [];
+  const g = config.gridSize;
+  const center = getMapAccessCenter(access);
+  const { normal, tangent } = getMapAccessBasis(access);
+  const seed = access.id || `${center.x}:${center.y}`;
+  const jitter = (index, amount) => ((hashStringToSeed(config.seed, seed, index, "access-organic-wall") % 1000) / 1000 - 0.5) * amount;
+  const point = (along, outward, tangentJitter = 0, normalJitter = 0) => ({
+    x: center.x + tangent.x * (along + tangentJitter) + normal.x * (outward + normalJitter),
+    y: center.y + tangent.y * (along + tangentJitter) + normal.y * (outward + normalJitter),
+  });
+  const mouthHalf = g * 0.7;
+  const outerHalf = g * 0.44;
+  const innerDepth = g * 0.04;
+  const outerDepth = g * 1.12;
+  const left = [
+    point(-mouthHalf, innerDepth, jitter(1, g * 0.08), jitter(2, g * 0.05)),
+    point(-mouthHalf * 0.78, g * 0.42, jitter(3, g * 0.16), jitter(4, g * 0.1)),
+    point(-outerHalf * 1.05, outerDepth, jitter(5, g * 0.12), jitter(6, g * 0.08)),
+  ];
+  const right = [
+    point(mouthHalf, innerDepth, jitter(7, g * 0.08), jitter(8, g * 0.05)),
+    point(mouthHalf * 0.78, g * 0.42, jitter(9, g * 0.16), jitter(10, g * 0.1)),
+    point(outerHalf * 1.05, outerDepth, jitter(11, g * 0.12), jitter(12, g * 0.08)),
+  ];
+  return [left, right].map((points, index) => ({ points, id: `${seed}:side:${index}` }));
+}
+
+export function createOrganicAccessWallPath(points, config, seed, layer = "main") {
+  if (!Array.isArray(points) || points.length < 2) return "";
+  const rng = createSeededRng(hashStringToSeed(config.seed, seed, layer, "organic-access-wall-path"));
+  const output = [];
+  points.forEach((point, index) => {
+    if (index === 0) {
+      output.push(point);
+      return;
+    }
+    const previous = points[index - 1];
+    const dx = point.x - previous.x;
+    const dy = point.y - previous.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const tangent = { x: dx / length, y: dy / length };
+    const normal = { x: -tangent.y, y: tangent.x };
+    const steps = Math.max(2, Math.ceil(length / (config.gridSize * 0.38)));
+    for (let step = 1; step <= steps; step += 1) {
+      const t = step / steps;
+      const endpointFactor = step === steps ? 0.28 : 1;
+      const roughness = layer === "sketch" ? 1.35 : 0.86;
+      output.push({
+        x: previous.x + dx * t + normal.x * (rng() - 0.5) * roughness * endpointFactor + tangent.x * (rng() - 0.5) * 0.36 * endpointFactor,
+        y: previous.y + dy * t + normal.y * (rng() - 0.5) * roughness * endpointFactor + tangent.y * (rng() - 0.5) * 0.36 * endpointFactor,
+      });
+    }
+  });
+  return output.map((point, index) => `${index === 0 ? "M" : "L"}${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ");
+}
+
+export function renderMapAccessTunnelWalls(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return null;
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.floorExtension?.points);
+  if (accesses.length === 0) return null;
+  const segments = accesses.flatMap((access, accessIndex) =>
+    getMapAccessTunnelWallSegments(access, generatedMap.config).map((wall, segmentIndex) => ({
+      access,
+      accessIndex,
+      wall,
+      segmentIndex,
+    }))
+  );
+  if (segments.length === 0) return null;
+  return (
+    <>
+      <g className="map-access-tunnel-walls">
+        {segments.map((item) => (
+          <path
+            key={`map-access-tunnel-wall-${item.access.id || item.accessIndex}-${item.segmentIndex}`}
+            d={createOrganicAccessWallPath(item.wall.points, generatedMap.config, item.wall.id, "main")}
+          />
+        ))}
+      </g>
+      <g className="map-access-tunnel-wall-sketch">
+        {segments.map((item) => (
+          <path
+            key={`map-access-tunnel-wall-sketch-${item.access.id || item.accessIndex}-${item.segmentIndex}`}
+            d={createOrganicAccessWallPath(item.wall.points, generatedMap.config, item.wall.id, "sketch")}
+          />
+        ))}
+      </g>
+    </>
+  );
+}
+
 export function renderMapAccessSymbols(generatedMap) {
-  const accesses = generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || [];
+  const accesses = getRenderableMapAccesses(generatedMap);
   if (accesses.length === 0) return null;
   const { config } = generatedMap;
   return (
     <g className="map-accesses">
       {accesses.map((access, index) => {
-        const labelPoint = {
-          x: access.start.x + access.normal.x * config.gridSize * 0.32,
-          y: access.start.y + access.normal.y * config.gridSize * 0.32,
+        const start = access.displayStart || access.start;
+        const end = access.displayEnd || access.end;
+        const normal = access.displayNormal || access.normal;
+        const labelPoint = access.displayLabelPoint || {
+          x: start.x + normal.x * config.gridSize * 0.32,
+          y: start.y + normal.y * config.gridSize * 0.32,
         };
         return (
           <g key={access.id || `map-access-${index}`} className={`map-access map-access--${access.type}`}>
-            <path className="map-access-stem-sketch" d={createRoughWallPath({ x1: access.start.x, y1: access.start.y, x2: access.end.x, y2: access.end.y }, config, `map-access-stem-sketch-${access.id || index}`, "door-sketch")} />
-            <path className="map-access-line" d={createRoughWallPath({ x1: access.start.x, y1: access.start.y, x2: access.end.x, y2: access.end.y }, config, `map-access-stem-${access.id || index}`, "door")} />
-            {renderMapAccessArrowHead(access.end, access.start, config, `map-access-head-${access.id || index}`)}
-            {access.doubleHeaded && renderMapAccessArrowHead(access.start, access.end, config, `map-access-head-back-${access.id || index}`)}
+            <path className="map-access-stem-sketch" d={createRoughWallPath({ x1: start.x, y1: start.y, x2: end.x, y2: end.y }, config, `map-access-stem-sketch-${access.id || index}`, "door-sketch")} />
+            <path className="map-access-line" d={createRoughWallPath({ x1: start.x, y1: start.y, x2: end.x, y2: end.y }, config, `map-access-stem-${access.id || index}`, "door")} />
+            {renderMapAccessArrowHead(end, start, config, `map-access-head-${access.id || index}`)}
+            {access.doubleHeaded && renderMapAccessArrowHead(start, end, config, `map-access-head-back-${access.id || index}`)}
             {access.label && <text className="map-access-label" x={labelPoint.x} y={labelPoint.y} textAnchor="middle">{access.label}</text>}
           </g>
         );
@@ -2612,7 +2929,7 @@ export function renderHexCaveUnifiedSurface(generatedMap, mapSurface, gridStyle 
   const caveSurface = mapSurface.caveSurface || createHexCaveSurface(generatedMap);
   const floorPath = caveSurface.visualFloorPath;
   const wallPath = caveSurface.wallPath || floorPath;
-  const sketchPath = createHexCavePathFromSegments(caveSurface.boundarySegments || [], generatedMap.config, "sketch") || wallPath;
+  const sketchPath = caveSurface.sketchPath || wallPath;
   return (
     <>
       <path className="floor-fill" d={floorPath} fillRule="nonzero" />
@@ -2900,10 +3217,40 @@ export function getCellRegionOwnerMap(regions) {
   return owners;
 }
 
-export function getWallConnectionZones(region, regions, gridSize) {
+export function getWallConnectionZones(region, regions, gridSize, generatedMap = null) {
+  if (isPureCaveMap(generatedMap)) {
+    const segments = generatedMap?.finalGeometry?.caveSurface?.boundarySegments || [];
+    if (!Array.isArray(segments) || segments.length === 0) return [];
+    const bounds = getCaveAccessBounds(segments, generatedMap);
+    return segments
+      .map((segment, index) => {
+        const point = { x: (segment.x1 + segment.x2) / 2, y: (segment.y1 + segment.y2) / 2 };
+        const owner = regions
+          .map((candidate) => {
+            const dx = candidate.labelPoint.x - point.x;
+            const dy = candidate.labelPoint.y - point.y;
+            return { region: candidate, score: dx * dx + dy * dy };
+          })
+          .sort((a, b) => a.score - b.score)[0]?.region || region;
+        if (owner.id !== region.id) return null;
+        const anchor = createCaveAccessBoundaryAnchor(segment, generatedMap, index, bounds);
+        return {
+          id: `cave-boundary:${owner.id}:${index}`,
+          regionId: owner.id,
+          adjacentRegionId: null,
+          adjacentAnchor: null,
+          anchor,
+          point,
+          ...segment,
+        };
+      })
+      .filter(Boolean);
+  }
   const ownerByCell = getCellRegionOwnerMap(regions);
-  return getBoundaryCells(region).map((anchor) => {
-    const segment = getSharedEdgeSegment(anchor.cell, anchor.outsideCell, gridSize);
+  const finalAnchors = getFinalConnectionAnchors(generatedMap, region);
+  const anchors = finalAnchors.length > 0 ? finalAnchors : getBoundaryCells(region);
+  return anchors.map((anchor) => {
+    const segment = anchor.segment || getSharedEdgeSegment(anchor.cell, anchor.outsideCell, gridSize);
     const point = getAnchorHandlePoint(anchor, gridSize);
     const adjacentRegionId = ownerByCell.get(cellKey(anchor.outsideCell.x, anchor.outsideCell.y));
     const adjacentAnchor = adjacentRegionId && adjacentRegionId !== region.id
@@ -3041,6 +3388,7 @@ export function renderCrossLevelCorridorOverpasses(generatedMap) {
 
 export function renderRoomHoverHighlight(region, generatedMap) {
   if (!region) return null;
+  if (isPureCaveMap(generatedMap)) return null;
 
   const shape = getRegionCompositeShape(region, generatedMap, generatedMap.config.gridSize);
   const pathOnlyHighlight = Boolean(shape.hoverPath) && (shape.surfaceKind === "cave" || shape.geometryKind === "organic-cell-mask" || isPureCaveMap(generatedMap));
@@ -3104,6 +3452,82 @@ export function renderCorridorHoverHighlight(corridor, gridSize) {
   );
 }
 
+export function getCaveEditorZonePath(region, generatedMap, gridSize) {
+  const surface = getRegionSurface(region, generatedMap);
+  return surface?.hoverPath || surface?.visualFloorPath || buildOrganicCellBoundaryPath(region, generatedMap, gridSize) || buildFloorPath(region.floorCells || [], gridSize);
+}
+
+export function renderCaveEditorZoneOverlays(generatedMap, editorOptions = {}) {
+  if (!isPureCaveMap(generatedMap)) return null;
+  const { regions, config } = generatedMap;
+  const { draggingRegionId, hoveredRegionId } = editorOptions;
+  return (
+    <g className="cave-zone-overlays" aria-hidden="true">
+      {regions.map((region) => {
+        const d = getCaveEditorZonePath(region, generatedMap, config.gridSize);
+        if (!d) return null;
+        const point = region.labelPoint || {
+          x: region.x + region.w / 2,
+          y: region.y + region.h / 2,
+        };
+        const classes = [
+          "cave-zone-overlay",
+          hoveredRegionId === region.id ? "cave-zone-overlay--hovered" : "",
+          draggingRegionId === region.id ? "cave-zone-overlay--selected" : "",
+        ].filter(Boolean).join(" ");
+        return (
+          <g key={`cave-zone-${region.id}`} className={classes}>
+            <path d={d} fillRule="nonzero" />
+            <circle className="cave-zone-overlay__node" cx={point.x} cy={point.y} r={8} />
+            <text className="cave-zone-overlay__label" x={point.x} y={point.y + 3.2} textAnchor="middle">{region.number || ""}</text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export function renderCaveTunnelTraces(generatedMap, activeCorridorId = null) {
+  if (!isPureCaveMap(generatedMap)) return null;
+  const { corridors, config } = generatedMap;
+  const tunnelCorridors = corridors.filter(isOrganicCorridor);
+  if (tunnelCorridors.length === 0) return null;
+  return (
+    <g className="cave-tunnel-traces" aria-hidden="true">
+      {tunnelCorridors.map((corridor) => {
+        const d = corridorPathD(corridor, config.gridSize);
+        if (!d) return null;
+        const classes = [
+          "cave-tunnel-trace",
+          corridor.id === activeCorridorId ? "cave-tunnel-trace--active" : "",
+        ].filter(Boolean).join(" ");
+        return <path key={`cave-tunnel-trace-${corridor.id}`} className={classes} d={d} />;
+      })}
+    </g>
+  );
+}
+
+export function getCavePassageHandles(generatedMap) {
+  if (!isPureCaveMap(generatedMap)) return [];
+  const { corridors, config } = generatedMap;
+  return corridors.flatMap((corridor) => {
+    if (!isOrganicCorridor(corridor)) return [];
+    return [
+      { corridor, endpoint: "from", anchor: corridor.fromAnchor },
+      { corridor, endpoint: "to", anchor: corridor.toAnchor },
+    ];
+  }).filter((item) => item.anchor).map((item) => {
+    const point = getAnchorHandlePoint(item.anchor, config.gridSize);
+    return {
+      id: `${item.corridor.id}:${item.endpoint}`,
+      corridor: item.corridor,
+      endpoint: item.endpoint,
+      x: point.x,
+      y: point.y,
+    };
+  });
+}
+
 export function renderEditorOverlays(generatedMap, editorOptions = {}) {
   const { regions, corridors, config } = generatedMap;
   const {
@@ -3111,6 +3535,7 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
     hoveredRegionId,
     draggingCorridorHandle,
     draggingMapAccessId,
+    mapAccessDragPreview,
     hoveredCorridorId,
     hoverWallHandle,
     connectionDraft,
@@ -3137,10 +3562,11 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
     onMapAccessPointerDown,
     onMapAccessContextMenu,
   } = editorOptions;
-  const wallConnectionZones = regions.flatMap((region) => getWallConnectionZones(region, regions, config.gridSize));
+  const wallConnectionZones = regions.flatMap((region) => getWallConnectionZones(region, regions, config.gridSize, generatedMap));
   const corridorInsertionZones = corridors.flatMap((corridor) => getCorridorInsertionZones(corridor, config.gridSize));
   const junctionByCell = new Map(getCorridorIntersectionCells(corridors).map((junction) => [junction.key, junction]));
   const endpointHandles = corridors.flatMap((corridor) => {
+    if (isPureCaveMap(generatedMap) && isOrganicCorridor(corridor)) return [];
     if (corridor.isRoomLink && corridor.fromAnchor) {
       return [{ corridor, endpoint: "shared", anchor: corridor.fromAnchor }];
     }
@@ -3169,18 +3595,24 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
       y: (cell.y + 0.5) * config.gridSize,
     }));
   });
-  const accessHandles = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).map((access) => ({
-    access,
-    id: access.id,
-    regionId: access.regionId,
-    x: (access.wallGap.x1 + access.wallGap.x2) / 2,
-    y: (access.wallGap.y1 + access.wallGap.y2) / 2,
-  }));
+  const accessHandles = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).map((access) => {
+    const preview = mapAccessDragPreview?.id === access.id ? mapAccessDragPreview : null;
+    return {
+      access,
+      id: access.id,
+      regionId: access.regionId,
+      x: preview?.x ?? access.displayPoint?.x ?? ((access.displayWallGap || access.wallGap).x1 + (access.displayWallGap || access.wallGap).x2) / 2,
+      y: preview?.y ?? access.displayPoint?.y ?? ((access.displayWallGap || access.wallGap).y1 + (access.displayWallGap || access.wallGap).y2) / 2,
+    };
+  });
   const highlightedRegion = regions.find((region) => region.id === (draggingRegionId || hoveredRegionId));
   const activeCorridorId = draggingCorridorHandle?.split(":")[0] || editorOptions.hoverCorridorHandle?.corridor?.id || hoveredCorridorId;
   const highlightedCorridor = corridors.find((corridor) => corridor.id === activeCorridorId);
+  const cavePassageHandles = getCavePassageHandles(generatedMap);
   return (
     <g className="editor-overlays">
+      {renderCaveEditorZoneOverlays(generatedMap, { draggingRegionId, hoveredRegionId })}
+      {renderCaveTunnelTraces(generatedMap, activeCorridorId)}
       {renderRoomHoverHighlight(highlightedRegion, generatedMap)}
       {renderCorridorHoverHighlight(highlightedCorridor, config.gridSize)}
       {regions.map((region) => (
@@ -3286,6 +3718,18 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
           onContextMenu={(event) => onDoorContextMenu?.(event, handle)}
         />
       ))}
+      {cavePassageHandles.map((handle) => (
+        <circle
+          key={`cave-passage-${handle.id}`}
+          className={draggingCorridorHandle === handle.id ? "cave-passage-handle is-dragging" : "cave-passage-handle"}
+          cx={handle.x}
+          cy={handle.y}
+          r={5.5}
+          onPointerEnter={(event) => editorOptions.onCorridorHandlePointerEnter?.(event, handle)}
+          onPointerLeave={(event) => editorOptions.onCorridorHandlePointerLeave?.(event, handle)}
+          onPointerDown={(event) => onDoorPointerDown?.(event, handle)}
+        />
+      ))}
       {waypointHandles.map((handle) => {
         const cell = { x: Math.floor(handle.x / config.gridSize), y: Math.floor(handle.y / config.gridSize) };
         const isJunction = junctionByCell.has(cellKey(cell.x, cell.y));
@@ -3332,7 +3776,7 @@ export function MapSvg({ generatedMap, showGrid, gridStyle, showEditor, showName
       onPointerCancel={editorOptions.onEditorPointerUp}
     >
       <defs>
-        <style>{SVG_STYLE}</style>
+        <style>{`${SVG_STYLE}${EDITOR_CAVE_STYLE}`}</style>
         <filter id="paperNoise">
           <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
           <feColorMatrix type="saturate" values="0" />
@@ -3342,6 +3786,7 @@ export function MapSvg({ generatedMap, showGrid, gridStyle, showEditor, showName
         </filter>
         {renderRegionClipPaths(generatedMap)}
         {renderDungeonFloorClipPath(generatedMap)}
+        {renderCaveWallAccessMask(generatedMap)}
       </defs>
       <rect className="paper" x="0" y="0" width={config.mapWidth} height={config.mapHeight} />
       <rect className="paper-texture" x="0" y="0" width={config.mapWidth} height={config.mapHeight} filter="url(#paperNoise)" />

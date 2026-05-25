@@ -199,6 +199,53 @@ export function getPlacementRole(region) {
   return "side";
 }
 
+export function normalizeRegionSurfaceKind(surfaceKind, fallback = "structure") {
+  if (surfaceKind === "cave" || surfaceKind === "hybrid" || surfaceKind === "structure") return surfaceKind;
+  if (surfaceKind === "dungeon" || surfaceKind === "structured" || surfaceKind === "room") return "structure";
+  if (surfaceKind === "organic-cave" || surfaceKind === "natural") return "cave";
+  return fallback;
+}
+
+export function getRegionSurfaceProfile(region, contextKey = "crypt") {
+  const explicit = normalizeRegionSurfaceKind(region?.surfaceKind || region?.generationKind || region?.surface?.kind, null);
+  if (explicit) return explicit;
+
+  const flags = getRegionSemanticFlags(region || {});
+  const text = `${getRegionText(region || {})} ${region?.name || ""} ${region?.roomType || ""} ${region?.shape || ""}`.toLowerCase();
+
+  if (contextKey === "cave") return "cave";
+  if (contextKey === "mine") {
+    if (flags.archive || flags.ritual || text.includes("office") || text.includes("workshop") || text.includes("barrack")) return "structure";
+    if (flags.vertical || flags.ruined || text.includes("shaft") || text.includes("support") || text.includes("rail")) return "hybrid";
+    return "cave";
+  }
+  if (contextKey === "ruins") {
+    if (text.includes("cave") || text.includes("cavern") || text.includes("sinkhole") || text.includes("undercroft")) return "cave";
+    if (flags.ruined || flags.hazard || flags.water || text.includes("collapsed")) return "hybrid";
+    return "structure";
+  }
+  if (contextKey === "crypt") {
+    if (text.includes("cave") || text.includes("natural") || text.includes("fissure")) return "cave";
+    if (flags.ruined || flags.hazard || flags.water || text.includes("collapsed")) return "hybrid";
+    return "structure";
+  }
+  return "structure";
+}
+
+export function getCorridorSurfaceProfile(config, fromRegion, toRegion, edge = null) {
+  const contextKey = getContextKey(config?.context || config?.biome);
+  const fromSurface = getRegionSurfaceProfile(fromRegion, contextKey);
+  const toSurface = getRegionSurfaceProfile(toRegion, contextKey);
+  const edgeText = `${edge?.type || ""} ${edge?.reason || ""} ${edge?.label || ""}`.toLowerCase();
+
+  if (contextKey === "cave") return "natural-tunnel";
+  if (contextKey === "mine") return "mine-tunnel";
+  if (edgeText.includes("collapse") || edgeText.includes("rubble") || edgeText.includes("breach")) return "collapsed-transition";
+  if (fromSurface === "cave" && toSurface === "cave") return "natural-tunnel";
+  if (fromSurface !== toSurface || fromSurface === "hybrid" || toSurface === "hybrid") return "collapsed-transition";
+  return "structure";
+}
+
 export function getMapAccessIntent(region, contextKey) {
   const flags = classifyRegion(region);
   const text = getRegionText(region);

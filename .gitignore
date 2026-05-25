@@ -55,3 +55,4 @@ build/
 *.tgz
 postcss.config.js
 asset-files/
+reference/

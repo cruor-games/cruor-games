@@ -4,8 +4,8 @@ import { buildCorridorGraph, adaptGeneratedGraphForContext, annotateRegionsWithG
 import { placeRegions, applyManualRoomPositions, applyRoomSizeOverrides, applyRoomStyleOverrides } from "./map-generator.layout.js";
 import { buildAllRoomMasks, applyCircleDoorRoomExtensions, buildDungeonMask } from "./map-generator.mask.js";
 import { routeCorridors, applyLevelMetadata } from "./map-generator.corridors.js";
-import { createMapAccesses, createProps } from "./map-generator.details.js";
-import { computeContentBounds } from "./map-generator.render.jsx";
+import { createMapAccesses, createProps, reconcileMapAccessesWithFinalGeometry } from "./map-generator.details.js";
+import { computeContentBounds, finalizeCaveGeometry } from "./map-generator.geometry.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -49,7 +49,7 @@ export function generateMap(rawConfig, manualOverrides = {}) {
   const corridors = leveledMap.corridors;
   const baseDungeonMask = buildDungeonMask(routedRegions, corridors, graphConfig.gridSize);
   const contentBounds = computeContentBounds(baseDungeonMask.floorCells, graphConfig.gridSize, { x: 0, y: 0, width: graphConfig.mapWidth, height: graphConfig.mapHeight });
-  const provisionalMap = {
+  const baseMap = {
     seed: graphConfig.seed,
     config: graphConfig,
     graph: routingGraph,
@@ -60,13 +60,24 @@ export function generateMap(rawConfig, manualOverrides = {}) {
     corridors,
     dungeonMask: baseDungeonMask,
   };
-  const mapAccesses = createMapAccesses(provisionalMap);
+  const anchorGeometry = finalizeCaveGeometry(baseMap);
+  const accessAnchorMap = anchorGeometry ? { ...baseMap, finalGeometry: anchorGeometry } : baseMap;
+  const mapAccesses = createMapAccesses(accessAnchorMap);
   const dungeonMask = { ...baseDungeonMask, mapAccesses };
-  const props = createProps({ config: graphConfig, regions: routedRegions, corridors, dungeonMask });
+  const geometryMap = { ...baseMap, dungeonMask, mapAccesses };
+  const finalGeometry = finalizeCaveGeometry(geometryMap);
+  const finalMapAccesses = finalGeometry
+    ? reconcileMapAccessesWithFinalGeometry({ ...geometryMap, finalGeometry })
+    : mapAccesses;
+  const finalDungeonMask = { ...baseDungeonMask, mapAccesses: finalMapAccesses };
+  const provisionalMap = finalGeometry
+    ? { ...geometryMap, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses, finalGeometry }
+    : { ...geometryMap, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses };
+  const props = createProps({ config: graphConfig, regions: routedRegions, corridors, dungeonMask: finalDungeonMask });
   return {
     ...provisionalMap,
-    dungeonMask,
-    mapAccesses,
+    dungeonMask: finalDungeonMask,
+    mapAccesses: finalMapAccesses,
     props,
   };
 }

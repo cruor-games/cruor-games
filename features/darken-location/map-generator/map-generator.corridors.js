@@ -1,9 +1,10 @@
 import { resolveDoorType, resolveStairTransition } from "./map-generator.state.js";
-import { classifyRegion, getContextKey, getPlacementProfile, getPlacementRole, getRegionSemanticFlags } from "./map-generator.profile.js";
+import { classifyRegion, getContextKey, getCorridorSurfaceProfile, getPlacementProfile, getPlacementRole, getRegionSemanticFlags } from "./map-generator.profile.js";
 import {
   cellKey,
   parseCellKey,
   getCellNeighbors,
+  getLargestConnectedCellSet,
   getCircleGeometryFromRegion,
   getCircularAnchorData,
   createCircleDoorRoomExtensionAnchor,
@@ -120,7 +121,78 @@ export function getBoundaryCells(region) {
   return boundary;
 }
 
-export function getDoorBoundaryCells(region) {
+export function getFinalRegionGeometry(generatedMap, region) {
+  if (!generatedMap?.finalGeometry || !region?.id) return null;
+  return generatedMap.finalGeometry.regions?.[region.id] || null;
+}
+
+export function getFinalBoundarySegments(generatedMap, region) {
+  const regionGeometry = getFinalRegionGeometry(generatedMap, region);
+  if (!regionGeometry?.finalGeometry) return [];
+  const segments = regionGeometry.boundarySegments || [];
+  return Array.isArray(segments) ? segments.filter((segment) => Number.isFinite(segment.x1) && Number.isFinite(segment.y1) && Number.isFinite(segment.x2) && Number.isFinite(segment.y2)) : [];
+}
+
+export function createFinalAnchorFromSegment(segment, region, generatedMap, index = 0) {
+  const gridSize = generatedMap?.config?.gridSize || 1;
+  const mid = {
+    x: (segment.x1 + segment.x2) / 2,
+    y: (segment.y1 + segment.y2) / 2,
+  };
+  const center = generatedMap?.contentBounds
+    ? {
+      x: generatedMap.contentBounds.x + generatedMap.contentBounds.width / 2,
+      y: generatedMap.contentBounds.y + generatedMap.contentBounds.height / 2,
+    }
+    : region?.labelPoint || {
+      x: (region.cellRect.x + region.cellRect.w / 2) * gridSize,
+      y: (region.cellRect.y + region.cellRect.h / 2) * gridSize,
+    };
+  const tangent = {
+    x: segment.x2 - segment.x1,
+    y: segment.y2 - segment.y1,
+  };
+  const tangentLength = Math.hypot(tangent.x, tangent.y) || 1;
+  const candidateA = { x: tangent.y / tangentLength, y: -tangent.x / tangentLength };
+  const candidateB = { x: -candidateA.x, y: -candidateA.y };
+  const outwardVector = { x: mid.x - center.x, y: mid.y - center.y };
+  const normal = (candidateA.x * outwardVector.x + candidateA.y * outwardVector.y) >= (candidateB.x * outwardVector.x + candidateB.y * outwardVector.y)
+    ? candidateA
+    : candidateB;
+  const side = Math.abs(normal.x) > Math.abs(normal.y)
+    ? normal.x >= 0 ? "east" : "west"
+    : normal.y >= 0 ? "south" : "north";
+  const cell = {
+    x: clamp(Math.floor(mid.x / gridSize), 0, Math.max(0, Math.floor((generatedMap?.config?.mapWidth || mid.x + gridSize) / gridSize) - 1)),
+    y: clamp(Math.floor(mid.y / gridSize), 0, Math.max(0, Math.floor((generatedMap?.config?.mapHeight || mid.y + gridSize) / gridSize) - 1)),
+  };
+  const outsideCell = {
+    x: clamp(Math.floor((mid.x + normal.x * gridSize * 0.75) / gridSize), 0, Math.max(0, Math.floor((generatedMap?.config?.mapWidth || mid.x + gridSize) / gridSize) - 1)),
+    y: clamp(Math.floor((mid.y + normal.y * gridSize * 0.75) / gridSize), 0, Math.max(0, Math.floor((generatedMap?.config?.mapHeight || mid.y + gridSize) / gridSize) - 1)),
+  };
+  return {
+    regionId: region.id,
+    regionShape: region.shape,
+    side,
+    cell,
+    outsideCell,
+    normal,
+    finalGeometry: true,
+    finalBoundaryIndex: index,
+    segment: { x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2 },
+    point: mid,
+  };
+}
+
+export function getFinalConnectionAnchors(generatedMap, region) {
+  const regionGeometry = getFinalRegionGeometry(generatedMap, region);
+  if (Array.isArray(regionGeometry?.connectionAnchors) && regionGeometry.connectionAnchors.length > 0) return regionGeometry.connectionAnchors;
+  return getFinalBoundarySegments(generatedMap, region).map((segment, index) => createFinalAnchorFromSegment(segment, region, generatedMap, index));
+}
+
+export function getDoorBoundaryCells(region, generatedMap = null) {
+  const finalAnchors = getFinalConnectionAnchors(generatedMap, region);
+  if (finalAnchors.length > 0) return finalAnchors;
   if (region.shape !== "circle" || !Array.isArray(region.circleExtensionCells) || region.circleExtensionCells.length === 0) return getBoundaryCells(region);
   const extensionCells = getCircleExtensionCellKeys(region);
   const baseFloorCells = region.floorCells.filter((cell) => !extensionCells.has(cellKey(cell.x, cell.y)));
@@ -240,8 +312,8 @@ export function isDoorOrientationCompatibleWithLocalWall(anchor) {
   return getDoorSegmentOrientationFromSide(anchor.side) === tangentOrientation;
 }
 
-export function chooseDoorAnchorForRegion(region, targetRegion, rng, forbiddenOutsideCells = null, profile = {}) {
-  const rawBoundary = getDoorBoundaryCells(region).filter((anchor) => !forbiddenOutsideCells?.has(cellKey(anchor.outsideCell.x, anchor.outsideCell.y)));
+export function chooseDoorAnchorForRegion(region, targetRegion, rng, forbiddenOutsideCells = null, profile = {}, generatedMap = null) {
+  const rawBoundary = getDoorBoundaryCells(region, generatedMap).filter((anchor) => !forbiddenOutsideCells?.has(cellKey(anchor.outsideCell.x, anchor.outsideCell.y)));
   const compatibleBoundary = rawBoundary.filter(isDoorOrientationCompatibleWithLocalWall);
   const boundary = compatibleBoundary.length > 0 ? compatibleBoundary : rawBoundary;
   if (boundary.length === 0) return null;
@@ -300,7 +372,11 @@ export function getSharedBoundaryConnections(from, to, gridSize) {
 }
 
 export function anchorsMatch(a, b) {
-  return Boolean(a && b) && a.side === b.side && a.cell.x === b.cell.x && a.cell.y === b.cell.y;
+  if (!a || !b) return false;
+  if (a.finalGeometry && b.finalGeometry && Number.isInteger(a.finalBoundaryIndex) && Number.isInteger(b.finalBoundaryIndex)) {
+    return a.finalBoundaryIndex === b.finalBoundaryIndex;
+  }
+  return a.side === b.side && a.cell.x === b.cell.x && a.cell.y === b.cell.y;
 }
 
 export function getClosestSharedRoomConnectionToPoint(from, to, point, gridSize) {
@@ -342,8 +418,8 @@ export function corridorEndpointKey(corridorId, endpoint) {
   return `${corridorId}:${endpoint}`;
 }
 
-export function getClosestBoundaryAnchorToPoint(region, point, gridSize) {
-  const rawBoundary = getDoorBoundaryCells(region);
+export function getClosestBoundaryAnchorToPoint(region, point, gridSize, generatedMap = null) {
+  const rawBoundary = getDoorBoundaryCells(region, generatedMap);
   const compatibleBoundary = rawBoundary.filter(isDoorOrientationCompatibleWithLocalWall);
   const boundary = compatibleBoundary.length > 0 ? compatibleBoundary : rawBoundary;
   if (boundary.length === 0) return null;
@@ -358,6 +434,13 @@ export function getClosestBoundaryAnchorToPoint(region, point, gridSize) {
 }
 
 export function getAnchorHandlePoint(anchor, gridSize) {
+  if (anchor?.point) return { x: anchor.point.x, y: anchor.point.y };
+  if (anchor?.segment) {
+    return {
+      x: (anchor.segment.x1 + anchor.segment.x2) / 2,
+      y: (anchor.segment.y1 + anchor.segment.y2) / 2,
+    };
+  }
   const door = createDoorFromAnchor(anchor, gridSize, false);
   return {
     x: (door.x1 + door.x2) / 2,
@@ -370,6 +453,14 @@ export function serializeManualAnchor(anchor) {
   return {
     side: anchor.side,
     cell: { x: anchor.cell.x, y: anchor.cell.y },
+    ...(anchor.finalGeometry ? {
+      finalGeometry: true,
+      finalBoundaryIndex: anchor.finalBoundaryIndex,
+      segment: anchor.segment ? { x1: anchor.segment.x1, y1: anchor.segment.y1, x2: anchor.segment.x2, y2: anchor.segment.y2 } : null,
+      point: anchor.point ? { x: anchor.point.x, y: anchor.point.y } : null,
+      outsideCell: anchor.outsideCell ? { x: anchor.outsideCell.x, y: anchor.outsideCell.y } : null,
+      normal: anchor.normal ? { x: anchor.normal.x, y: anchor.normal.y } : null,
+    } : {}),
     ...(anchor.expandedCircleDoor && anchor.portalRoomCell ? {
       expandedCircleDoor: true,
       portalRoomCell: { x: anchor.portalRoomCell.x, y: anchor.portalRoomCell.y },
@@ -379,13 +470,14 @@ export function serializeManualAnchor(anchor) {
   };
 }
 
-export function findClosestBoundaryAnchorAcrossRegions(regions, point, gridSize, excludeRegionId = null, maxDistance = gridSize * 1.35) {
+export function findClosestBoundaryAnchorAcrossRegions(regions, point, gridSize, excludeRegionId = null, maxDistance = gridSize * 1.35, generatedMap = null) {
   let best = null;
   regions.forEach((region) => {
     if (region.id === excludeRegionId) return;
-    const rawBoundary = getBoundaryCells(region);
-    const compatibleBoundary = rawBoundary.filter(isDoorOrientationCompatibleWithLocalWall);
-    const boundary = compatibleBoundary.length > 0 ? compatibleBoundary : rawBoundary;
+    const rawBoundary = getFinalConnectionAnchors(generatedMap, region);
+    const cellBoundary = rawBoundary.length > 0 ? rawBoundary : getBoundaryCells(region);
+    const compatibleBoundary = cellBoundary.filter(isDoorOrientationCompatibleWithLocalWall);
+    const boundary = compatibleBoundary.length > 0 ? compatibleBoundary : cellBoundary;
     boundary.forEach((anchor) => {
       const handlePoint = getAnchorHandlePoint(anchor, gridSize);
       const dx = handlePoint.x - point.x;
@@ -400,6 +492,23 @@ export function findClosestBoundaryAnchorAcrossRegions(regions, point, gridSize,
 
 export function resolveManualDoorAnchor(region, manualAnchor) {
   if (!manualAnchor) return null;
+  if (manualAnchor.finalGeometry && manualAnchor.segment && manualAnchor.cell && manualAnchor.outsideCell && manualAnchor.normal) {
+    return {
+      regionId: region.id,
+      regionShape: region.shape,
+      side: manualAnchor.side,
+      cell: { x: manualAnchor.cell.x, y: manualAnchor.cell.y },
+      outsideCell: { x: manualAnchor.outsideCell.x, y: manualAnchor.outsideCell.y },
+      normal: { x: manualAnchor.normal.x, y: manualAnchor.normal.y },
+      finalGeometry: true,
+      finalBoundaryIndex: manualAnchor.finalBoundaryIndex,
+      segment: { x1: manualAnchor.segment.x1, y1: manualAnchor.segment.y1, x2: manualAnchor.segment.x2, y2: manualAnchor.segment.y2 },
+      point: manualAnchor.point ? { x: manualAnchor.point.x, y: manualAnchor.point.y } : {
+        x: (manualAnchor.segment.x1 + manualAnchor.segment.x2) / 2,
+        y: (manualAnchor.segment.y1 + manualAnchor.segment.y2) / 2,
+      },
+    };
+  }
   const boundary = getDoorBoundaryCells(region);
   const requestedCell = manualAnchor.expandedCircleDoor && manualAnchor.originalCell ? manualAnchor.originalCell : manualAnchor.cell;
   const exact = boundary.find((anchor) =>
@@ -692,18 +801,18 @@ export function routeDirectFallback(start, goal, options) {
 
 export function isCaveLikeRegion(region, config = null) {
   if (!region) return false;
-  if (region.shape === "cave" || region.surfaceKind === "cave" || region.placementProfile === "cave") return true;
+  if (region.shape === "cave" || region.surfaceKind === "cave" || region.surfaceKind === "hybrid" || region.placementProfile === "cave") return true;
   if (!config) return false;
   return getRegionSurfaceKind(region, { config }) === "cave";
 }
 
 export function shouldUseOrganicTunnel(config, from, to) {
   const contextKey = getContextKey(config?.context || config?.biome);
-  return contextKey === "cave" || isCaveLikeRegion(from, config) || isCaveLikeRegion(to, config);
+  return contextKey === "cave" || (contextKey !== "mine" && (isCaveLikeRegion(from, config) || isCaveLikeRegion(to, config)));
 }
 
 export function isOrganicCorridor(corridor) {
-  return corridor?.surfaceKind === "cave" || corridor?.corridorStyle === "natural-tunnel";
+  return ["natural-tunnel", "collapsed-transition"].includes(corridor?.surfaceKind) || corridor?.corridorStyle === "natural-tunnel";
 }
 
 export function getCorridorTopologyCells(corridor) {
@@ -827,18 +936,23 @@ export function routeCorridors(config, regions, graph) {
     const manualDoorAnchors = config.manualDoorAnchors || {};
     const manualFromAnchor = resolveManualDoorAnchor(from, manualDoorAnchors[corridorEndpointKey(edge.id, "from")]);
     const manualToAnchor = resolveManualDoorAnchor(to, manualDoorAnchors[corridorEndpointKey(edge.id, "to")]);
+    const pureCaveContext = getContextKey(config.context || config.biome) === "cave";
+    const corridorSurfaceKind = getCorridorSurfaceProfile(config, from, to, edge);
     const sharedConnection = getSharedRoomConnection(from, to, config.gridSize, edgeRng, manualFromAnchor, manualToAnchor, routingProfile);
     if (sharedConnection) {
+      const naturalCaveConnection = pureCaveContext && shouldUseOrganicTunnel(config, from, to);
       return [{
         ...edge,
         isRoomLink: true,
+        surfaceKind: corridorSurfaceKind,
+        corridorStyle: naturalCaveConnection ? "natural-tunnel" : "structured-corridor",
         fromAnchor: sharedConnection.fromAnchor,
         toAnchor: sharedConnection.toAnchor,
         floorCells: [],
         centerline: [],
         manualWaypoints: [],
         waypoints: [],
-        doors: [decorateDoorSegment(sharedConnection.door, config, edge, "shared")],
+        doors: naturalCaveConnection ? [] : [decorateDoorSegment(sharedConnection.door, config, edge, "shared")],
       }];
     }
     const forbiddenOutsideCells = new Set(dynamicRoomCells);
@@ -886,7 +1000,7 @@ export function routeCorridors(config, regions, graph) {
 
     return [{
       ...edge,
-      surfaceKind: organicTunnel ? "cave" : "dungeon",
+      surfaceKind: corridorSurfaceKind,
       corridorStyle: organicTunnel ? "natural-tunnel" : "structured-corridor",
       fromAnchor,
       toAnchor,
@@ -895,10 +1009,12 @@ export function routeCorridors(config, regions, graph) {
       centerline,
       manualWaypoints,
       waypoints: dedupePoints(extractWaypoints(centerline)),
-      doors: dedupeDoorSegments([
-        decorateDoorSegment(createDoorFromAnchor(fromAnchor, config.gridSize, edge.secret), config, edge, "from"),
-        decorateDoorSegment(createDoorFromAnchor(toAnchor, config.gridSize, edge.secret), config, edge, "to"),
-      ]),
+      doors: pureCaveContext && organicTunnel
+        ? []
+        : dedupeDoorSegments([
+          decorateDoorSegment(createDoorFromAnchor(fromAnchor, config.gridSize, edge.secret), config, edge, "from"),
+          decorateDoorSegment(createDoorFromAnchor(toAnchor, config.gridSize, edge.secret), config, edge, "to"),
+        ]),
     }];
   });
 
@@ -926,6 +1042,28 @@ export function getSnappedCirclePortalCellFromAnchor(anchor) {
 }
 
 export function createDoorFromAnchor(anchor, gridSize, secret = false) {
+  if (anchor?.segment) {
+    const length = Math.hypot(anchor.segment.x2 - anchor.segment.x1, anchor.segment.y2 - anchor.segment.y1) || 1;
+    const ux = (anchor.segment.x2 - anchor.segment.x1) / length;
+    const uy = (anchor.segment.y2 - anchor.segment.y1) / length;
+    const half = Math.min(gridSize * 0.43, length / 2);
+    const center = getAnchorHandlePoint(anchor, gridSize);
+    return {
+      x1: center.x - ux * half,
+      y1: center.y - uy * half,
+      x2: center.x + ux * half,
+      y2: center.y + uy * half,
+      side: anchor.side,
+      secret,
+      regionId: anchor.regionId,
+      regionShape: anchor.regionShape,
+      cell: anchor.cell ? { x: anchor.cell.x, y: anchor.cell.y } : null,
+      outsideCell: anchor.outsideCell ? { x: anchor.outsideCell.x, y: anchor.outsideCell.y } : null,
+      normal: anchor.normal ? { x: anchor.normal.x, y: anchor.normal.y } : null,
+      finalGeometry: true,
+      finalBoundaryIndex: anchor.finalBoundaryIndex,
+    };
+  }
   const snappedCircleCell = getSnappedCirclePortalCellFromAnchor(anchor);
   const cell = snappedCircleCell || anchor.cell;
   const x = cell.x * gridSize;

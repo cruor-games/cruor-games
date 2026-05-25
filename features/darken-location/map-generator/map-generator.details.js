@@ -1,6 +1,6 @@
 import { getContextKey, getFallbackMapAccessIntent, getMapAccessIntent, getPlacementRole, getRegionSemanticFlags } from "./map-generator.profile.js";
 import { cellKey } from "./map-generator.mask.js";
-import { getAnchorCenterOffset, getAnchorHandlePoint, getBoundaryCells } from "./map-generator.corridors.js";
+import { getAnchorCenterOffset, getAnchorHandlePoint, getBoundaryCells, getFinalConnectionAnchors } from "./map-generator.corridors.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -46,6 +46,17 @@ export function serializeMapAccessAnchor(anchor) {
   return {
     side: anchor.side,
     cell: { x: anchor.cell.x, y: anchor.cell.y },
+    ...(anchor.finalGeometry ? {
+      finalGeometry: true,
+      caveAccessBoundary: Boolean(anchor.caveAccessBoundary),
+      finalBoundaryIndex: anchor.finalBoundaryIndex,
+      segment: anchor.segment ? { x1: anchor.segment.x1, y1: anchor.segment.y1, x2: anchor.segment.x2, y2: anchor.segment.y2 } : null,
+      point: anchor.point ? { x: anchor.point.x, y: anchor.point.y } : null,
+      outsideCell: anchor.outsideCell ? { x: anchor.outsideCell.x, y: anchor.outsideCell.y } : null,
+      normal: anchor.normal ? { x: anchor.normal.x, y: anchor.normal.y } : null,
+      tangent: anchor.tangent ? { x: anchor.tangent.x, y: anchor.tangent.y } : null,
+      caveBounds: anchor.caveBounds ? { ...anchor.caveBounds } : null,
+    } : {}),
   };
 }
 
@@ -53,7 +64,172 @@ export function anchorsShareSideAndCell(a, b) {
   return Boolean(a && b) && a.side === b.side && a.cell?.x === b.cell?.x && a.cell?.y === b.cell?.y;
 }
 
+export function anchorsShareFinalGeometry(a, b) {
+  if (!a?.finalGeometry || !b?.finalGeometry) return false;
+  if (Number.isInteger(a.finalBoundaryIndex) && Number.isInteger(b.finalBoundaryIndex)) {
+    return a.finalBoundaryIndex === b.finalBoundaryIndex;
+  }
+  return Boolean(a.segment && b.segment) &&
+    Math.abs(a.segment.x1 - b.segment.x1) < 0.01 &&
+    Math.abs(a.segment.y1 - b.segment.y1) < 0.01 &&
+    Math.abs(a.segment.x2 - b.segment.x2) < 0.01 &&
+    Math.abs(a.segment.y2 - b.segment.y2) < 0.01;
+}
+
+export function normalizeVector(vector, fallback = { x: 1, y: 0 }) {
+  const length = Math.hypot(vector?.x || 0, vector?.y || 0);
+  if (!Number.isFinite(length) || length <= 0.0001) return fallback;
+  return { x: vector.x / length, y: vector.y / length };
+}
+
+export function getCardinalSideFromNormal(normal) {
+  if (Math.abs(normal.x) >= Math.abs(normal.y)) return normal.x < 0 ? "west" : "east";
+  return normal.y < 0 ? "north" : "south";
+}
+
+export function getOutsideCellFromSide(cell, side) {
+  if (side === "north") return { x: cell.x, y: cell.y - 1 };
+  if (side === "south") return { x: cell.x, y: cell.y + 1 };
+  if (side === "west") return { x: cell.x - 1, y: cell.y };
+  return { x: cell.x + 1, y: cell.y };
+}
+
+export function projectPointToSegment(point, segment) {
+  const ax = segment.x1;
+  const ay = segment.y1;
+  const bx = segment.x2;
+  const by = segment.y2;
+  const dx = bx - ax;
+  const dy = by - ay;
+  const lengthSq = dx * dx + dy * dy || 1;
+  const t = clamp(((point.x - ax) * dx + (point.y - ay) * dy) / lengthSq, 0, 1);
+  return {
+    x: ax + dx * t,
+    y: ay + dy * t,
+    t,
+  };
+}
+
+export function isPureCaveAccessMap(generatedMap) {
+  return getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) === "cave" && generatedMap?.finalGeometry?.surfaceKind === "cave";
+}
+
+export function getCaveAccessBoundarySegments(generatedMap) {
+  if (!isPureCaveAccessMap(generatedMap)) return [];
+  const mapSurface = generatedMap.finalGeometry?.mapSurface || null;
+  const caveSurface = generatedMap.finalGeometry?.caveSurface || mapSurface?.caveSurface || null;
+  return caveSurface?.baseBoundarySegments || mapSurface?.baseBoundarySegments || mapSurface?.externalWallSegments || caveSurface?.boundarySegments || mapSurface?.wallSegments || [];
+}
+
+export function getCaveAccessBounds(segments, generatedMap) {
+  const bounds = generatedMap.contentBounds || { x: 0, y: 0, width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight };
+  if (!Array.isArray(segments) || segments.length === 0) return bounds;
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  segments.forEach((segment) => {
+    [segment.x1, segment.x2].forEach((x) => {
+      if (Number.isFinite(x)) {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+      }
+    });
+    [segment.y1, segment.y2].forEach((y) => {
+      if (Number.isFinite(y)) {
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+      }
+    });
+  });
+  if (![minX, minY, maxX, maxY].every(Number.isFinite)) return bounds;
+  return { x: minX, y: minY, width: Math.max(1, maxX - minX), height: Math.max(1, maxY - minY) };
+}
+
+export function createCaveAccessBoundaryAnchor(segment, generatedMap, index, bounds, pointOverride = null) {
+  if (!segment) return null;
+  const g = generatedMap.config.gridSize;
+  const center = pointOverride ? projectPointToSegment(pointOverride, segment) : { x: (segment.x1 + segment.x2) / 2, y: (segment.y1 + segment.y2) / 2 };
+  const tangent = normalizeVector({ x: segment.x2 - segment.x1, y: segment.y2 - segment.y1 });
+  const normalA = { x: -tangent.y, y: tangent.x };
+  const radial = normalizeVector({ x: center.x - (bounds.x + bounds.width / 2), y: center.y - (bounds.y + bounds.height / 2) }, normalA);
+  const normal = normalA.x * radial.x + normalA.y * radial.y >= 0 ? normalA : { x: -normalA.x, y: -normalA.y };
+  const side = getCardinalSideFromNormal(normal);
+  const gridW = Math.max(1, Math.floor(generatedMap.config.mapWidth / g));
+  const gridH = Math.max(1, Math.floor(generatedMap.config.mapHeight / g));
+  const cell = {
+    x: clamp(Math.floor(center.x / g), 0, gridW - 1),
+    y: clamp(Math.floor(center.y / g), 0, gridH - 1),
+  };
+  return {
+    side,
+    cell,
+    outsideCell: getOutsideCellFromSide(cell, side),
+    normal,
+    tangent,
+    finalGeometry: true,
+    caveAccessBoundary: true,
+    finalBoundaryIndex: index,
+    segment: { x1: segment.x1, y1: segment.y1, x2: segment.x2, y2: segment.y2 },
+    point: center,
+    caveBounds: bounds,
+  };
+}
+
+export function createCaveAccessAnchorFromMouth(mouth, generatedMap, index) {
+  if (!mouth?.segment || !mouth?.center) return null;
+  const g = generatedMap.config.gridSize;
+  const center = mouth.center;
+  const normal = normalizeVector(mouth.normal);
+  const tangent = normalizeVector(mouth.tangent || { x: -normal.y, y: normal.x }, { x: -normal.y, y: normal.x });
+  const side = mouth.side || getCardinalSideFromNormal(normal);
+  const gridW = Math.max(1, Math.floor(generatedMap.config.mapWidth / g));
+  const gridH = Math.max(1, Math.floor(generatedMap.config.mapHeight / g));
+  const cell = {
+    x: clamp(Math.floor(center.x / g), 0, gridW - 1),
+    y: clamp(Math.floor(center.y / g), 0, gridH - 1),
+  };
+  return {
+    side,
+    cell,
+    outsideCell: getOutsideCellFromSide(cell, side),
+    normal,
+    tangent,
+    finalGeometry: true,
+    caveAccessBoundary: true,
+    finalBoundaryIndex: Number.isInteger(mouth.edgeIndex) ? mouth.edgeIndex : index,
+    segment: { x1: mouth.segment.x1, y1: mouth.segment.y1, x2: mouth.segment.x2, y2: mouth.segment.y2 },
+    point: { x: center.x, y: center.y },
+    caveBounds: mouth.caveBounds || getCaveAccessBounds(getCaveAccessBoundarySegments(generatedMap), generatedMap),
+    accessMouth: mouth,
+  };
+}
+
+export function getCaveAccessMouthForAccess(generatedMap, access) {
+  const mouths = generatedMap?.finalGeometry?.caveSurface?.accessMouths || generatedMap?.finalGeometry?.mapSurface?.caveSurface?.accessMouths || [];
+  if (!Array.isArray(mouths) || mouths.length === 0 || !access) return null;
+  return mouths.find((mouth) => mouth.id === access.id) || null;
+}
+
+export function getPureCaveBoundaryAnchors(generatedMap) {
+  const segments = getCaveAccessBoundarySegments(generatedMap);
+  if (segments.length === 0) return [];
+  const bounds = getCaveAccessBounds(segments, generatedMap);
+  const g = generatedMap.config.gridSize;
+  return segments.map((segment, index) => {
+    const length = Math.hypot(segment.x2 - segment.x1, segment.y2 - segment.y1);
+    if (!Number.isFinite(length) || length < g * 0.24) return null;
+    return createCaveAccessBoundaryAnchor(segment, generatedMap, index, bounds);
+  }).filter(Boolean);
+}
+
 export function getExternalBoundaryAnchors(region, generatedMap) {
+  if (isPureCaveAccessMap(generatedMap)) {
+    const caveAnchors = getPureCaveBoundaryAnchors(generatedMap);
+    if (caveAnchors.length > 0) return caveAnchors;
+  }
+  const finalAnchors = getFinalConnectionAnchors(generatedMap, region);
+  if (finalAnchors.length > 0) return finalAnchors;
   const floorSet = new Set(generatedMap.dungeonMask.floorCells.map((cell) => cellKey(cell.x, cell.y)));
   return getBoundaryCells(region).filter((anchor) => !floorSet.has(cellKey(anchor.outsideCell.x, anchor.outsideCell.y)));
 }
@@ -62,8 +238,17 @@ export function resolveMapAccessAnchor(region, serializedAnchor, generatedMap) {
   const anchors = getExternalBoundaryAnchors(region, generatedMap);
   if (anchors.length === 0) return null;
   if (!serializedAnchor?.cell) return null;
-  const exact = anchors.find((anchor) => anchorsShareSideAndCell(anchor, serializedAnchor));
-  if (exact) return exact;
+  if (isPureCaveAccessMap(generatedMap) && serializedAnchor.finalGeometry && serializedAnchor.point) {
+    const projected = getClosestExternalBoundaryAnchorToPoint(region, serializedAnchor.point, generatedMap);
+    if (projected) return projected;
+  }
+  const exact = anchors.find((anchor) => anchorsShareFinalGeometry(anchor, serializedAnchor) || anchorsShareSideAndCell(anchor, serializedAnchor));
+  if (exact) {
+    if (exact.finalGeometry && exact.segment && serializedAnchor.point) {
+      return createCaveAccessBoundaryAnchor(exact.segment, generatedMap, exact.finalBoundaryIndex, exact.caveBounds || serializedAnchor.caveBounds || getCaveAccessBounds(getCaveAccessBoundarySegments(generatedMap), generatedMap), serializedAnchor.point);
+    }
+    return exact;
+  }
   return anchors
     .map((anchor) => {
       const dx = anchor.cell.x - serializedAnchor.cell.x;
@@ -74,6 +259,22 @@ export function resolveMapAccessAnchor(region, serializedAnchor, generatedMap) {
     .sort((a, b) => a.score - b.score)[0]?.anchor || null;
 }
 
+export function scorePureCaveAccessAnchor(anchor, generatedMap, intent) {
+  if (!anchor?.caveAccessBoundary) return 0;
+  const bounds = anchor.caveBounds || generatedMap.contentBounds || { x: 0, y: 0, width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight };
+  const point = anchor.point || getAnchorHandlePoint(anchor, generatedMap.config.gridSize);
+  const xRatio = clamp((point.x - bounds.x) / Math.max(1, bounds.width), 0, 1);
+  const yRatio = clamp((point.y - bounds.y) / Math.max(1, bounds.height), 0, 1);
+  const sideBias = intent.type === "entrance"
+    ? (anchor.side === "west" ? -1.25 : anchor.side === "north" ? -0.35 : 0.65) + xRatio * 2.2
+    : intent.type === "exit"
+      ? (anchor.side === "east" ? -1.15 : anchor.side === "south" ? -0.25 : 0.65) + (1 - xRatio) * 2.1
+      : Math.min(Math.abs(xRatio - 0.5), Math.abs(yRatio - 0.5)) * -0.65;
+  const labelRoom = generatedMap.config.gridSize * 1.8;
+  const hasLabelBreathingRoom = point.x > bounds.x + labelRoom && point.x < bounds.x + bounds.width - labelRoom && point.y > bounds.y + labelRoom && point.y < bounds.y + bounds.height - labelRoom;
+  return sideBias + (hasLabelBreathingRoom ? 0.3 : -0.15);
+}
+
 export function scoreMapAccessAnchor(anchor, region, generatedMap, intent, index) {
   const point = getAnchorHandlePoint(anchor, generatedMap.config.gridSize);
   const bounds = generatedMap.contentBounds || { x: 0, y: 0, width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight };
@@ -82,31 +283,61 @@ export function scoreMapAccessAnchor(anchor, region, generatedMap, intent, index
   const vy = point.y - center.y;
   const length = Math.hypot(vx, vy) || 1;
   const outward = { x: vx / length, y: vy / length };
-  const normalAlignment = 1 - (anchor.normal.x * outward.x + anchor.normal.y * outward.y);
+  const normal = anchor.normal || outward;
+  const normalAlignment = 1 - (normal.x * outward.x + normal.y * outward.y);
   const centerOffset = getAnchorCenterOffset(anchor, region);
   const roleBias = intent.type === "entrance" && anchor.side === "west" ? -0.35 : intent.type === "exit" && anchor.side === "east" ? -0.25 : 0;
+  const caveAccessBias = scorePureCaveAccessAnchor(anchor, generatedMap, intent);
   const jitter = (hashStringToSeed(generatedMap.config.seed, region.id, intent.type, index, anchor.side, anchor.cell.x, anchor.cell.y, "map-access") % 100) / 100;
-  return normalAlignment * 8 + centerOffset * 1.6 + roleBias + jitter * 0.5;
+  return normalAlignment * 8 + centerOffset * 1.6 + roleBias + caveAccessBias + jitter * 0.5;
+}
+
+export function createMapAccessFloorExtension(center, tangent, normal, gridSize) {
+  const halfWidth = gridSize * 0.52;
+  const inner = { x: center.x - normal.x * gridSize * 0.62, y: center.y - normal.y * gridSize * 0.62 };
+  const outer = { x: center.x + normal.x * gridSize * 1.08, y: center.y + normal.y * gridSize * 1.08 };
+  const points = [
+    { x: inner.x - tangent.x * halfWidth, y: inner.y - tangent.y * halfWidth },
+    { x: inner.x + tangent.x * halfWidth, y: inner.y + tangent.y * halfWidth },
+    { x: outer.x + tangent.x * halfWidth, y: outer.y + tangent.y * halfWidth },
+    { x: outer.x - tangent.x * halfWidth, y: outer.y - tangent.y * halfWidth },
+  ];
+  return {
+    kind: "access-floor-extension",
+    points,
+    path: `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y} L ${points[2].x} ${points[2].y} L ${points[3].x} ${points[3].y} Z`,
+    inner,
+    outer,
+  };
 }
 
 export function createMapAccessFromAnchor(region, anchor, intent, generatedMap, index) {
   const g = generatedMap.config.gridSize;
   const center = getAnchorHandlePoint(anchor, g);
-  const horizontal = anchor.side === "north" || anchor.side === "south";
-  const openingHalf = g * 0.43;
-  const wallGap = horizontal
-    ? { x1: center.x - openingHalf, y1: center.y, x2: center.x + openingHalf, y2: center.y }
-    : { x1: center.x, y1: center.y - openingHalf, x2: center.x, y2: center.y + openingHalf };
+  const openingHalf = g * (anchor.finalGeometry ? 0.56 : 0.43);
+  const segmentLength = anchor.segment ? Math.hypot(anchor.segment.x2 - anchor.segment.x1, anchor.segment.y2 - anchor.segment.y1) || 1 : null;
+  const tangent = anchor.segment
+    ? { x: (anchor.segment.x2 - anchor.segment.x1) / segmentLength, y: (anchor.segment.y2 - anchor.segment.y1) / segmentLength }
+    : anchor.side === "north" || anchor.side === "south"
+      ? { x: 1, y: 0 }
+      : { x: 0, y: 1 };
+  const wallGap = {
+    x1: center.x - tangent.x * openingHalf,
+    y1: center.y - tangent.y * openingHalf,
+    x2: center.x + tangent.x * openingHalf,
+    y2: center.y + tangent.y * openingHalf,
+  };
   const inward = { x: -anchor.normal.x, y: -anchor.normal.y };
-  const startOutside = { x: center.x + anchor.normal.x * g * 0.92, y: center.y + anchor.normal.y * g * 0.92 };
+  const floorExtension = createMapAccessFloorExtension(center, tangent, anchor.normal, g);
+  const startOutside = { x: floorExtension.outer.x, y: floorExtension.outer.y };
   const endInside = { x: center.x + inward.x * g * 0.56, y: center.y + inward.y * g * 0.56 };
   const startInside = { x: center.x + inward.x * g * 0.56, y: center.y + inward.y * g * 0.56 };
-  const endOutside = { x: center.x + anchor.normal.x * g * 0.92, y: center.y + anchor.normal.y * g * 0.92 };
+  const endOutside = { x: floorExtension.outer.x, y: floorExtension.outer.y };
   const start = intent.type === "exit" ? startInside : startOutside;
   const end = intent.type === "exit" ? endOutside : endInside;
 
   return {
-    id: `access-${region.id}-${intent.type}-${index}`,
+    id: intent.id || `access-${region.id}-${intent.type}-${index}`,
     regionId: region.id,
     regionName: region.name,
     type: intent.type,
@@ -114,8 +345,17 @@ export function createMapAccessFromAnchor(region, anchor, intent, generatedMap, 
     side: anchor.side,
     cell: { x: anchor.cell.x, y: anchor.cell.y },
     outsideCell: { x: anchor.outsideCell.x, y: anchor.outsideCell.y },
+    extensionCells: [{ x: anchor.outsideCell.x, y: anchor.outsideCell.y }],
     normal: anchor.normal,
+    tangent,
+    finalGeometry: Boolean(anchor.finalGeometry),
+    caveAccessBoundary: Boolean(anchor.caveAccessBoundary),
+    finalBoundaryIndex: anchor.finalBoundaryIndex,
+    segment: anchor.segment ? { x1: anchor.segment.x1, y1: anchor.segment.y1, x2: anchor.segment.x2, y2: anchor.segment.y2 } : null,
+    point: anchor.point ? { x: anchor.point.x, y: anchor.point.y } : { x: center.x, y: center.y },
+    caveBounds: anchor.caveBounds ? { ...anchor.caveBounds } : null,
     wallGap,
+    floorExtension,
     start,
     end,
     doubleHeaded: intent.type === "passage",
@@ -133,6 +373,22 @@ export function chooseMapAccessForRegion(region, generatedMap, intent, index) {
 }
 
 export function getClosestExternalBoundaryAnchorToPoint(region, point, generatedMap) {
+  if (isPureCaveAccessMap(generatedMap)) {
+    const segments = getCaveAccessBoundarySegments(generatedMap);
+    if (segments.length === 0) return null;
+    const bounds = getCaveAccessBounds(segments, generatedMap);
+    return segments
+      .map((segment, index) => {
+        const projected = projectPointToSegment(point, segment);
+        const dx = projected.x - point.x;
+        const dy = projected.y - point.y;
+        return {
+          anchor: createCaveAccessBoundaryAnchor(segment, generatedMap, index, bounds, projected),
+          score: dx * dx + dy * dy,
+        };
+      })
+      .sort((a, b) => a.score - b.score)[0]?.anchor || null;
+  }
   const anchors = getExternalBoundaryAnchors(region, generatedMap);
   if (anchors.length === 0) return null;
   return anchors
@@ -145,12 +401,84 @@ export function getClosestExternalBoundaryAnchorToPoint(region, point, generated
     .sort((a, b) => a.score - b.score)[0]?.anchor || null;
 }
 
+export function createDisplayMapAccessFromAnchor(access, anchor, generatedMap) {
+  if (!access || !anchor) return access;
+  const g = generatedMap.config.gridSize;
+  const accessMouth = anchor.accessMouth || null;
+  const center = accessMouth?.center || getAnchorHandlePoint(anchor, g);
+  const symbolCenter = accessMouth?.leftTip && accessMouth?.rightTip
+    ? {
+      x: (accessMouth.leftTip.x + accessMouth.rightTip.x) / 2,
+      y: (accessMouth.leftTip.y + accessMouth.rightTip.y) / 2,
+    }
+    : center;
+  const normal = normalizeVector(anchor.normal || access.normal);
+  const tangent = normalizeVector(anchor.tangent || access.tangent || { x: -normal.y, y: normal.x }, { x: -normal.y, y: normal.x });
+  const openingHalf = g * 0.5;
+  const displayWallGap = accessMouth?.segment ? {
+    x1: accessMouth.segment.x1,
+    y1: accessMouth.segment.y1,
+    x2: accessMouth.segment.x2,
+    y2: accessMouth.segment.y2,
+  } : {
+    x1: center.x - tangent.x * openingHalf,
+    y1: center.y - tangent.y * openingHalf,
+    x2: center.x + tangent.x * openingHalf,
+    y2: center.y + tangent.y * openingHalf,
+  };
+  const insideLength = accessMouth ? g * 0.76 : g * 0.38;
+  const outsideLength = accessMouth ? g * 0.96 : g * 0.78;
+  const inside = { x: symbolCenter.x - normal.x * insideLength, y: symbolCenter.y - normal.y * insideLength };
+  const outside = { x: symbolCenter.x + normal.x * outsideLength, y: symbolCenter.y + normal.y * outsideLength };
+  const displayStart = access.type === "exit" ? inside : outside;
+  const displayEnd = access.type === "exit" ? outside : inside;
+  const displayLabelPoint = accessMouth
+    ? { x: symbolCenter.x + normal.x * g * 1.38, y: symbolCenter.y + normal.y * g * 1.38 }
+    : { x: displayStart.x + normal.x * g * 0.32, y: displayStart.y + normal.y * g * 0.32 };
+  return {
+    ...access,
+    displayAnchor: serializeMapAccessAnchor(anchor),
+    accessMouth,
+    displayPoint: center,
+    displayWallGap,
+    displayStart,
+    displayEnd,
+    displayLabelPoint,
+    displayNormal: normal,
+    displayTangent: tangent,
+    displaySymbolCenter: symbolCenter,
+    debugRequestedPoint: accessMouth?.debugRequestedPoint || access.point || null,
+    debugFinalMouthCenter: accessMouth?.debugFinalMouthCenter || center,
+    debugSymbolCenter: symbolCenter,
+    debugLeftAttach: accessMouth?.debugLeftAttach || null,
+    debugRightAttach: accessMouth?.debugRightAttach || null,
+    debugSnapDistance: accessMouth?.debugSnapDistance ?? null,
+  };
+}
+
+export function reconcileMapAccessesWithFinalGeometry(generatedMap) {
+  if (!isPureCaveAccessMap(generatedMap)) return generatedMap?.mapAccesses || generatedMap?.dungeonMask?.mapAccesses || [];
+  const accesses = generatedMap?.mapAccesses || generatedMap?.dungeonMask?.mapAccesses || [];
+  if (accesses.length === 0) return accesses;
+  const regionsById = new Map((generatedMap.regions || []).map((region) => [region.id, region]));
+  return accesses.map((access, index) => {
+    const region = regionsById.get(access.regionId) || generatedMap.regions?.[0];
+    const mouth = getCaveAccessMouthForAccess(generatedMap, access);
+    const mouthAnchor = mouth ? createCaveAccessAnchorFromMouth(mouth, generatedMap, index) : null;
+    if (mouthAnchor) return createDisplayMapAccessFromAnchor(access, mouthAnchor, generatedMap);
+    const target = access.point || access.displayPoint || (access.wallGap ? { x: (access.wallGap.x1 + access.wallGap.x2) / 2, y: (access.wallGap.y1 + access.wallGap.y2) / 2 } : null) || access.start || null;
+    const anchor = target && region ? getClosestExternalBoundaryAnchorToPoint(region, target, generatedMap) : null;
+    return anchor ? createDisplayMapAccessFromAnchor(access, anchor, generatedMap) : access;
+  });
+}
+
 export function createManualMapAccessForRegion(region, override, generatedMap, index) {
   if (!override || override.disabled) return null;
   const fallbackIntent = getFallbackMapAccessIntent(region, generatedMap);
   const type = normalizeMapAccessType(override.type, fallbackIntent.type);
   const intent = {
     ...fallbackIntent,
+    id: override.id || override.accessId || null,
     type,
     label: override.label || getMapAccessLabelForType(type),
     manual: true,

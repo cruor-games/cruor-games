@@ -21,6 +21,7 @@ import {
   normalizeDoorType,
   stairTransitionKey,
   normalizeStairTransition,
+  getManualStairTransition,
   resolveStairTransition,
   getManualJunctionOverride,
   normalizeJunctionType,
@@ -116,6 +117,7 @@ import {
   getDoorBoundaryCells,
   getAnchorCenterOffset,
   getAnchorHandlePoint,
+  getClosestBoundaryAnchorToPoint,
   getClosestSharedRoomConnectionToPoint,
   corridorEndpointKey,
   serializeManualAnchor,
@@ -142,6 +144,11 @@ import {
 import {
   normalizeMapAccessType,
   getMapAccessLabelForType,
+  anchorsShareSideAndCell,
+  anchorsShareFinalGeometry,
+  createCaveAccessBoundaryAnchor,
+  getCaveAccessBounds,
+  resolveMapAccessAnchor,
   serializeMapAccessAnchor,
   getClosestExternalBoundaryAnchorToPoint,
 } from "./map-generator.details.js";
@@ -149,6 +156,7 @@ import {
   MapSvg,
   getMapSurface,
   getRegionSurface,
+  isPureCaveMap,
 } from "./map-generator.render.jsx";
 import {
   serializeSvg,
@@ -231,6 +239,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   const pendingRoomMoveRef = useRef(null);
   const corridorDragRef = useRef(null);
   const accessDragRef = useRef(null);
+  const accessMoveFrameRef = useRef(null);
+  const pendingAccessMoveRef = useRef(null);
   const connectionDragRef = useRef(null);
   const contentBoundsRef = useRef(generatedMap.contentBounds);
   const lastViewResetKeyRef = useRef(null);
@@ -239,6 +249,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   const [hoveredRegionId, setHoveredRegionId] = useState(null);
   const [draggingCorridorHandle, setDraggingCorridorHandle] = useState(null);
   const [draggingMapAccessId, setDraggingMapAccessId] = useState(null);
+  const [mapAccessDragPreview, setMapAccessDragPreview] = useState(null);
   const [hoverWallHandle, setHoverWallHandle] = useState(null);
   const [hoverCorridorHandle, setHoverCorridorHandle] = useState(null);
   const [hoveredCorridorId, setHoveredCorridorId] = useState(null);
@@ -249,6 +260,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   const [waypointContextMenu, setWaypointContextMenu] = useState(null);
   const [addWaypointContextMenu, setAddWaypointContextMenu] = useState(null);
   const [wallAccessContextMenu, setWallAccessContextMenu] = useState(null);
+  const pureCaveEditor = isPureCaveMap(generatedMap);
   const [mapContextMenu, setMapContextMenu] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [viewportSize, setViewportSize] = useState({ width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight });
@@ -362,6 +374,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
 
   useEffect(() => () => {
     if (roomMoveFrameRef.current) window.cancelAnimationFrame(roomMoveFrameRef.current);
+    if (accessMoveFrameRef.current) window.cancelAnimationFrame(accessMoveFrameRef.current);
   }, []);
 
   function openMapContextMenu(event) {
@@ -441,25 +454,52 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setDraggingRegionId(region.id);
   }
 
+  function getPureCaveWallAnchorFromEvent(event, zone) {
+    if (!pureCaveEditor || !zone?.anchor?.finalGeometry || !zone.anchor.segment) return zone?.anchor || null;
+    const point = clientToMapPoint(event) || zone.point || zone.anchor.point;
+    const segments = generatedMap.finalGeometry?.caveSurface?.boundarySegments || [];
+    const bounds = zone.anchor.caveBounds || getCaveAccessBounds(segments, generatedMap);
+    return createCaveAccessBoundaryAnchor(
+      zone.anchor.segment,
+      generatedMap,
+      zone.anchor.finalBoundaryIndex,
+      bounds,
+      point,
+    ) || zone.anchor;
+  }
+
+  function anchorsMatchEditorLocation(a, b) {
+    if (!a || !b) return false;
+    if (anchorsShareFinalGeometry(a, b)) {
+      const ax = a.point?.x;
+      const ay = a.point?.y;
+      const bx = b.point?.x;
+      const by = b.point?.y;
+      if (![ax, ay, bx, by].every(Number.isFinite)) return true;
+      return Math.abs(ax - bx) < 0.5 && Math.abs(ay - by) < 0.5;
+    }
+    return anchorsShareSideAndCell(a, b);
+  }
+
   function handleWallZonePointerMove(event, zone) {
     if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
     event.stopPropagation();
+    const anchor = getPureCaveWallAnchorFromEvent(event, zone) || zone.anchor;
+    const point = anchor ? getAnchorHandlePoint(anchor, generatedMap.config.gridSize) : zone.point;
     setHoveredRegionId(zone.regionId);
     setHoverCorridorHandle((current) => current ? null : current);
     setHoveredCorridorId((current) => current ? null : current);
     setHoverWallHandle((current) => {
       if (
         current?.regionId === zone.regionId &&
-        current?.anchor?.side === zone.anchor.side &&
-        current?.anchor?.cell?.x === zone.anchor.cell.x &&
-        current?.anchor?.cell?.y === zone.anchor.cell.y
+        anchorsMatchEditorLocation(current?.anchor, anchor)
       ) return current;
       return {
         regionId: zone.regionId,
         adjacentRegionId: zone.adjacentRegionId,
         adjacentAnchor: zone.adjacentAnchor,
-        anchor: zone.anchor,
-        point: zone.point,
+        anchor,
+        point,
       };
     });
   }
@@ -476,9 +516,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       current &&
       zoneOrHandle &&
       current.regionId === zoneOrHandle.regionId &&
-      current.anchor?.side === zoneOrHandle.anchor?.side &&
-      current.anchor?.cell?.x === zoneOrHandle.anchor?.cell?.x &&
-      current.anchor?.cell?.y === zoneOrHandle.anchor?.cell?.y
+      anchorsMatchEditorLocation(current.anchor, zoneOrHandle.anchor)
     );
   }
 
@@ -500,6 +538,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
 
   function isExternalMapBoundaryZone(zone) {
     if (!zone?.anchor) return false;
+    if (pureCaveEditor && zone.anchor.finalGeometry && zone.anchor.caveAccessBoundary) return true;
     const floorSet = new Set(generatedMap.dungeonMask.floorCells.map((cell) => cellKey(cell.x, cell.y)));
     return !floorSet.has(cellKey(zone.anchor.outsideCell.x, zone.anchor.outsideCell.y));
   }
@@ -509,7 +548,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function mapAccessMatchesAnchor(access, anchor) {
-    return Boolean(access && anchor) && access.side === anchor.side && access.cell?.x === anchor.cell?.x && access.cell?.y === anchor.cell?.y;
+    const accessAnchor = access?.displayAnchor || access;
+    return Boolean(accessAnchor && anchor) && (anchorsShareFinalGeometry(accessAnchor, anchor) || anchorsShareSideAndCell(accessAnchor, anchor));
   }
 
   function openWallAccessContextMenu(event, zone) {
@@ -519,6 +559,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     const viewport = viewportRef.current;
     if (!viewport) return true;
     const rect = viewport.getBoundingClientRect();
+    const anchor = getPureCaveWallAnchorFromEvent(event, zone) || zone.anchor;
     const regionAccess = getMapAccessForRegion(zone.regionId);
     setRoomContextMenu(null);
     setDoorContextMenu(null);
@@ -528,9 +569,9 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setMapContextMenu(null);
     setWallAccessContextMenu({
       regionId: zone.regionId,
-      anchor: serializeMapAccessAnchor(zone.anchor),
+      anchor: serializeMapAccessAnchor(anchor),
       hasRegionAccess: Boolean(regionAccess),
-      hasAccessAtAnchor: mapAccessMatchesAnchor(regionAccess, zone.anchor),
+      hasAccessAtAnchor: mapAccessMatchesAnchor(regionAccess, anchor),
       accessType: regionAccess?.type || "passage",
       x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
       y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 220)),
@@ -548,7 +589,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.stopPropagation();
     const region = generatedMap.regions.find((item) => item.id === handle.regionId);
     if (!region) return;
-    const anchor = resolveMapAccessAnchor(region, { side: handle.access.side, cell: handle.access.cell }, generatedMap);
+    const anchor = resolveMapAccessAnchor(region, handle.access.displayAnchor || handle.access, generatedMap);
     if (!anchor) return;
     const zone = { regionId: region.id, anchor };
     openWallAccessContextMenu(event, zone);
@@ -573,6 +614,47 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setDraggingMapAccessId(handle.id);
   }
 
+  function flushPendingMapAccessMove() {
+    if (accessMoveFrameRef.current) {
+      window.cancelAnimationFrame(accessMoveFrameRef.current);
+      accessMoveFrameRef.current = null;
+    }
+    const pending = pendingAccessMoveRef.current;
+    pendingAccessMoveRef.current = null;
+    if (pending) onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
+  }
+
+  function scheduleMapAccessMove(regionId, anchor, accessType) {
+    pendingAccessMoveRef.current = { regionId, anchor, accessType };
+    if (accessMoveFrameRef.current) return;
+    accessMoveFrameRef.current = window.requestAnimationFrame(() => {
+      accessMoveFrameRef.current = null;
+      const pending = pendingAccessMoveRef.current;
+      pendingAccessMoveRef.current = null;
+      if (!pending) return;
+      onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
+    });
+  }
+
+  function scheduleMapAccessPreview(regionId, accessId, anchor, accessType) {
+    pendingAccessMoveRef.current = { regionId, anchor, accessType };
+    if (accessMoveFrameRef.current) return;
+    accessMoveFrameRef.current = window.requestAnimationFrame(() => {
+      accessMoveFrameRef.current = null;
+      const pending = pendingAccessMoveRef.current;
+      if (!pending) return;
+      const point = getAnchorHandlePoint(pending.anchor, generatedMap.config.gridSize);
+      setMapAccessDragPreview({
+        id: accessId,
+        regionId: pending.regionId,
+        accessType: pending.accessType,
+        anchor: pending.anchor,
+        x: point.x,
+        y: point.y,
+      });
+    });
+  }
+
   function handleMapAccessPointerMove(event) {
     const drag = accessDragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return false;
@@ -584,7 +666,11 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!region) return true;
     const anchor = getClosestExternalBoundaryAnchorToPoint(region, point, generatedMap);
     if (!anchor) return true;
-    onMapAccessMove?.(drag.regionId, anchor, drag.accessType);
+    if (pureCaveEditor) {
+      scheduleMapAccessPreview(drag.regionId, drag.id, anchor, drag.accessType);
+      return true;
+    }
+    scheduleMapAccessMove(drag.regionId, anchor, drag.accessType);
     return true;
   }
 
@@ -593,8 +679,20 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!drag || drag.pointerId !== event.pointerId) return false;
     event.preventDefault();
     event.stopPropagation();
+    if (pureCaveEditor) {
+      const pending = pendingAccessMoveRef.current;
+      if (accessMoveFrameRef.current) {
+        window.cancelAnimationFrame(accessMoveFrameRef.current);
+        accessMoveFrameRef.current = null;
+      }
+      pendingAccessMoveRef.current = null;
+      if (pending) onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
+    } else {
+      flushPendingMapAccessMove();
+    }
     accessDragRef.current = null;
     setDraggingMapAccessId(null);
+    setMapAccessDragPreview(null);
     onEditCommit?.();
     return true;
   }
@@ -742,7 +840,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.stopPropagation();
     const point = clientToMapPoint(event);
     if (!point) return true;
-    const target = findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId);
+    const target = findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId, generatedMap.config.gridSize * 1.35, generatedMap);
     setConnectionDraft({
       start: drag.start,
       current: target ? target.point : point,
@@ -757,7 +855,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.preventDefault();
     event.stopPropagation();
     const point = clientToMapPoint(event);
-    const target = point ? findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId) : null;
+    const target = point ? findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId, generatedMap.config.gridSize * 1.35, generatedMap) : null;
     if (target) {
       onCreateConnection?.({
         fromRegionId: drag.fromRegionId,
@@ -1125,6 +1223,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
               hoveredRegionId,
               draggingCorridorHandle,
               draggingMapAccessId,
+              mapAccessDragPreview,
               hoverWallHandle,
               hoverCorridorHandle,
               hoveredCorridorId,
@@ -1169,6 +1268,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
         <DoorContextMenu
           menu={doorContextMenu}
           manualOverrides={manualOverrides || createEmptyManualOverrides()}
+          isPureCave={pureCaveEditor}
           onTypeChange={onDoorTypeChange}
           onStairChange={onDoorStairChange}
           onDelete={onConnectionDelete}
@@ -1177,12 +1277,14 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
         <CorridorJunctionContextMenu
           menu={junctionContextMenu}
           manualOverrides={manualOverrides || createEmptyManualOverrides()}
+          isPureCave={pureCaveEditor}
           onChange={onJunctionTypeChange}
           onClose={() => setJunctionContextMenu(null)}
         />
         <WaypointContextMenu
           menu={waypointContextMenu}
           manualOverrides={manualOverrides || createEmptyManualOverrides()}
+          isPureCave={pureCaveEditor}
           onDeleteWaypoint={onWaypointDelete}
           onDeleteConnection={onConnectionDelete}
           onJunctionChange={onJunctionTypeChange}
@@ -1191,6 +1293,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
         <AddWaypointContextMenu
           menu={addWaypointContextMenu}
           manualOverrides={manualOverrides || createEmptyManualOverrides()}
+          isPureCave={pureCaveEditor}
           onAddWaypoint={onWaypointInsert}
           onJunctionChange={onJunctionTypeChange}
           onClose={() => setAddWaypointContextMenu(null)}
@@ -1465,17 +1568,21 @@ function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
   );
 }
 
-function AddWaypointContextMenu({ menu, manualOverrides, onAddWaypoint, onJunctionChange, onClose }) {
+function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onAddWaypoint, onJunctionChange, onClose }) {
   if (!menu) return null;
   const hasJunction = Boolean(menu.junctionKey);
   const currentJunctionType = hasJunction
     ? getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.junctionKey, "merge")
     : null;
   const junctionLabels = {
-    merge: "Normal Merge",
-    wall: "Wall",
-    door: "Door",
+    merge: isPureCave ? "Natural Merge" : "Normal Merge",
+    wall: isPureCave ? "Blocked Passage" : "Wall",
+    door: isPureCave ? "Passage" : "Door",
   };
+  const pointLabel = isPureCave ? "Tunnel Point" : "Corridor Point";
+  const junctionPointLabel = isPureCave ? "Tunnel Junction Point" : "Corridor Junction Point";
+  const addLabel = isPureCave ? "Add Tunnel Point" : "Add Waypoint";
+  const junctionLabel = isPureCave ? "Connection" : "Junction";
   return (
     <div
       className="room-context-menu add-waypoint-context-menu"
@@ -1484,7 +1591,7 @@ function AddWaypointContextMenu({ menu, manualOverrides, onAddWaypoint, onJuncti
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="room-context-menu__header">
-        <strong>{hasJunction ? "Corridor Junction Point" : "Corridor Point"}</strong>
+        <strong>{hasJunction ? junctionPointLabel : pointLabel}</strong>
         <span>{menu.corridorId} · Cell {menu.cell.x},{menu.cell.y}</span>
       </div>
       <div className="room-context-menu__body">
@@ -1493,12 +1600,12 @@ function AddWaypointContextMenu({ menu, manualOverrides, onAddWaypoint, onJuncti
           className="room-context-menu__trigger"
           onClick={() => { onAddWaypoint?.(menu.corridorId, menu.insertIndex, menu.point); onClose?.(); }}
         >
-          <span>Add Waypoint</span>
+          <span>{addLabel}</span>
           <span>›</span>
         </button>
         {hasJunction && (
           <>
-            <div className="room-context-menu__label">Junction</div>
+            <div className="room-context-menu__label">{junctionLabel}</div>
             {JUNCTION_TYPE_OPTIONS.map((type) => (
               <button
                 key={type}
@@ -1520,17 +1627,22 @@ function AddWaypointContextMenu({ menu, manualOverrides, onAddWaypoint, onJuncti
   );
 }
 
-function WaypointContextMenu({ menu, manualOverrides, onDeleteWaypoint, onDeleteConnection, onJunctionChange, onClose }) {
+function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDeleteWaypoint, onDeleteConnection, onJunctionChange, onClose }) {
   if (!menu) return null;
   const hasJunction = Boolean(menu.junctionKey);
   const currentJunctionType = hasJunction
     ? getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.junctionKey, "merge")
     : null;
   const junctionLabels = {
-    merge: "Normal Merge",
-    wall: "Wall",
-    door: "Door",
+    merge: isPureCave ? "Natural Merge" : "Normal Merge",
+    wall: isPureCave ? "Blocked Passage" : "Wall",
+    door: isPureCave ? "Passage" : "Door",
   };
+  const waypointLabel = isPureCave ? "Tunnel Point" : "Corridor Waypoint";
+  const junctionWaypointLabel = isPureCave ? "Tunnel Junction Point" : "Corridor Junction Waypoint";
+  const deleteLabel = isPureCave ? "Delete Tunnel Point" : "Delete Waypoint";
+  const confirmDeleteLabel = isPureCave ? "Confirm Delete Tunnel Point" : "Confirm Delete Waypoint";
+  const junctionLabel = isPureCave ? "Connection" : "Junction";
   return (
     <div
       className="room-context-menu waypoint-context-menu"
@@ -1539,19 +1651,19 @@ function WaypointContextMenu({ menu, manualOverrides, onDeleteWaypoint, onDelete
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="room-context-menu__header">
-        <strong>{hasJunction ? "Corridor Junction Waypoint" : "Corridor Waypoint"}</strong>
+        <strong>{hasJunction ? junctionWaypointLabel : waypointLabel}</strong>
         <span>{menu.corridorId} · Cell {menu.cell.x},{menu.cell.y}</span>
       </div>
       <div className="room-context-menu__body">
         <ConfirmingDeleteButton
-          label="Delete Waypoint"
-          confirmLabel="Confirm Delete Waypoint"
+          label={deleteLabel}
+          confirmLabel={confirmDeleteLabel}
           onConfirm={() => onDeleteWaypoint?.(menu.corridorId, menu.waypointIndex, menu.source)}
           onClose={onClose}
         />
         {hasJunction && (
           <>
-            <div className="room-context-menu__label">Junction</div>
+            <div className="room-context-menu__label">{junctionLabel}</div>
             {JUNCTION_TYPE_OPTIONS.map((type) => (
               <button
                 key={type}
@@ -1573,13 +1685,13 @@ function WaypointContextMenu({ menu, manualOverrides, onDeleteWaypoint, onDelete
   );
 }
 
-function CorridorJunctionContextMenu({ menu, manualOverrides, onChange, onClose }) {
+function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false, onChange, onClose }) {
   if (!menu) return null;
   const currentType = getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.key, "merge");
   const labels = {
-    merge: "Normal Merge",
-    wall: "Wall",
-    door: "Door",
+    merge: isPureCave ? "Natural Merge" : "Normal Merge",
+    wall: isPureCave ? "Blocked Passage" : "Wall",
+    door: isPureCave ? "Passage" : "Door",
   };
   return (
     <div
@@ -1589,8 +1701,8 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, onChange, onClose 
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="room-context-menu__header">
-        <strong>Corridor Junction</strong>
-        <span>Cell {menu.cell.x},{menu.cell.y} · {menu.corridorIds.length} corridors</span>
+        <strong>{isPureCave ? "Tunnel Connection" : "Corridor Junction"}</strong>
+        <span>Cell {menu.cell.x},{menu.cell.y} · {menu.corridorIds.length} {isPureCave ? "passages" : "corridors"}</span>
       </div>
       <div className="room-context-menu__body">
         {JUNCTION_TYPE_OPTIONS.map((type) => (
@@ -1613,7 +1725,7 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, onChange, onClose 
   );
 }
 
-function DoorContextMenu({ menu, manualOverrides, onTypeChange, onStairChange, onDelete, onClose }) {
+function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChange, onStairChange, onDelete, onClose }) {
   if (!menu) return null;
   const currentType = getManualDoorType(manualOverrides.doorTypes || {}, menu.corridorId, menu.endpoint, menu.fallbackType || "default");
   const currentStair = getManualStairTransition(manualOverrides.stairTransitions || {}, menu.corridorId, menu.endpoint, "none");
@@ -1636,7 +1748,7 @@ function DoorContextMenu({ menu, manualOverrides, onTypeChange, onStairChange, o
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="room-context-menu__header">
-        <strong>Door</strong>
+        <strong>{isPureCave ? "Passage" : "Door"}</strong>
         <span>{menu.corridorId} · {menu.endpoint}</span>
       </div>
       <div className="room-context-menu__body">
@@ -1850,6 +1962,7 @@ export default function CruorMapGeneratorMvp() {
     gridStyle,
   }), [seed, context, roomCount, showGrid, gridStyle]);
   const generatedMap = useMemo(() => generateMap(config, manualOverrides), [config, manualOverrides]);
+  const pureCaveMap = isPureCaveMap(generatedMap);
   const availableLevels = useMemo(() => getAvailableMapLevels(generatedMap), [generatedMap]);
   const availableLevelsKey = availableLevels.join(":");
   const [exportValidation, setExportValidation] = useState({ passed: false, missingSvg: true, leakedTokens: [] });
@@ -2054,7 +2167,7 @@ export default function CruorMapGeneratorMvp() {
     const regionId = endpoint === "from" ? corridor.from : corridor.to;
     const region = generatedMap.regions.find((item) => item.id === regionId);
     if (!region) return;
-    const anchor = getClosestBoundaryAnchorToPoint(region, point, generatedMap.config.gridSize);
+    const anchor = getClosestBoundaryAnchorToPoint(region, point, generatedMap.config.gridSize, generatedMap);
     if (!anchor) return;
     const nextAnchor = serializeManualAnchor(anchor);
     setManualOverrides((current) => {
@@ -2220,6 +2333,34 @@ export default function CruorMapGeneratorMvp() {
     });
   }
 
+  function getMapAccessAnchorForOverride(access) {
+    if (!access) return null;
+    if (access.displayAnchor) {
+      return {
+        ...access.displayAnchor,
+        finalBoundaryIndex: access.finalBoundaryIndex ?? access.displayAnchor.finalBoundaryIndex,
+        segment: access.segment || access.displayAnchor.segment,
+        point: access.point || access.displayAnchor.point,
+        normal: access.normal || access.displayAnchor.normal,
+        tangent: access.tangent || access.displayAnchor.tangent,
+        caveBounds: access.caveBounds || access.displayAnchor.caveBounds,
+      };
+    }
+    return {
+      side: access.side,
+      cell: access.cell,
+      outsideCell: access.outsideCell,
+      normal: access.normal,
+      tangent: access.tangent,
+      finalGeometry: Boolean(access.finalGeometry),
+      caveAccessBoundary: Boolean(access.caveAccessBoundary),
+      finalBoundaryIndex: access.finalBoundaryIndex,
+      segment: access.segment,
+      point: access.displayPoint || access.point || access.start,
+      caveBounds: access.caveBounds,
+    };
+  }
+
   function buildMapAccessOverride(regionId, anchor, accessType = null) {
     if (!regionId || !anchor) return null;
     const region = generatedMap.regions.find((item) => item.id === regionId);
@@ -2231,10 +2372,29 @@ export default function CruorMapGeneratorMvp() {
     if (!serializedAnchor) return null;
     return {
       disabled: false,
+      manual: true,
+      id: existingAccess?.id || null,
       type,
       label: getMapAccessLabelForType(type),
       anchor: serializedAnchor,
     };
+  }
+
+  function mapAccessOverrideEquals(previous, nextOverride) {
+    return Boolean(previous && !previous.disabled && nextOverride) &&
+      previous.type === nextOverride.type &&
+      JSON.stringify(previous.anchor || null) === JSON.stringify(nextOverride.anchor || null);
+  }
+
+  function preservePureCaveAccessOverrides(mapAccesses, targetRegionId) {
+    if (!pureCaveMap) return mapAccesses;
+    (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).forEach((access) => {
+      if (!access?.regionId || access.regionId === targetRegionId || mapAccesses[access.regionId]?.disabled) return;
+      const anchor = getMapAccessAnchorForOverride(access);
+      const frozenOverride = buildMapAccessOverride(access.regionId, anchor, access.type);
+      if (frozenOverride) mapAccesses[access.regionId] = frozenOverride;
+    });
+    return mapAccesses;
   }
 
   function setMapAccess(regionId, anchor, accessType = null) {
@@ -2243,11 +2403,8 @@ export default function CruorMapGeneratorMvp() {
     setManualOverrides((current) => {
       const mapAccesses = { ...(current.mapAccesses || {}) };
       const previous = mapAccesses[regionId];
-      if (
-        previous && !previous.disabled &&
-        previous.type === nextOverride.type &&
-        anchorsShareSideAndCell(previous.anchor, nextOverride.anchor)
-      ) return current;
+      if (mapAccessOverrideEquals(previous, nextOverride)) return current;
+      preservePureCaveAccessOverrides(mapAccesses, regionId);
       mapAccesses[regionId] = nextOverride;
       return {
         ...current,
@@ -2262,11 +2419,8 @@ export default function CruorMapGeneratorMvp() {
     updateManualOverridesWithHistory((current) => {
       const mapAccesses = { ...(current.mapAccesses || {}) };
       const previous = mapAccesses[regionId];
-      if (
-        previous && !previous.disabled &&
-        previous.type === nextOverride.type &&
-        anchorsShareSideAndCell(previous.anchor, nextOverride.anchor)
-      ) return current;
+      if (mapAccessOverrideEquals(previous, nextOverride)) return current;
+      preservePureCaveAccessOverrides(mapAccesses, regionId);
       mapAccesses[regionId] = nextOverride;
       return {
         ...current,

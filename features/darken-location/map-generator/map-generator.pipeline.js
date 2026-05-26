@@ -5,7 +5,7 @@ import { placeRegions, applyManualRoomPositions, applyRoomSizeOverrides, applyRo
 import { buildAllRoomMasks, applyCircleDoorRoomExtensions, buildDungeonMask } from "./map-generator.mask.js";
 import { routeCorridors, applyLevelMetadata } from "./map-generator.corridors.js";
 import { createMapAccesses, createProps, reconcileMapAccessesWithFinalGeometry } from "./map-generator.details.js";
-import { computeContentBounds, finalizeCaveGeometry } from "./map-generator.geometry.js";
+import { computeContentBounds, finalizeCaveGeometry, finalizeHybridGeometry, reconcileHybridCorridorAnchors } from "./map-generator.geometry.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -65,15 +65,23 @@ export function generateMap(rawConfig, manualOverrides = {}) {
   const mapAccesses = createMapAccesses(accessAnchorMap);
   const dungeonMask = { ...baseDungeonMask, mapAccesses };
   const geometryMap = { ...baseMap, dungeonMask, mapAccesses };
-  const finalGeometry = finalizeCaveGeometry(geometryMap);
+  const finalGeometry = finalizeCaveGeometry(geometryMap) || finalizeHybridGeometry(geometryMap);
+  const finalCorridors = finalGeometry?.surfaceKind === "hybrid"
+    ? reconcileHybridCorridorAnchors(geometryMap, finalGeometry)
+    : corridors;
   const finalMapAccesses = finalGeometry
-    ? reconcileMapAccessesWithFinalGeometry({ ...geometryMap, finalGeometry })
+    ? reconcileMapAccessesWithFinalGeometry({ ...geometryMap, corridors: finalCorridors, finalGeometry })
     : mapAccesses;
-  const finalDungeonMask = { ...baseDungeonMask, mapAccesses: finalMapAccesses };
+  const structureMaskRegions = finalGeometry?.surfaceKind === "hybrid"
+    ? routedRegions.filter((region) => region.surfaceKind === "structure")
+    : routedRegions;
+  const finalDungeonMask = finalGeometry?.surfaceKind === "hybrid"
+    ? { ...buildDungeonMask(structureMaskRegions, finalCorridors, graphConfig.gridSize), mapAccesses: finalMapAccesses }
+    : { ...baseDungeonMask, mapAccesses: finalMapAccesses };
   const provisionalMap = finalGeometry
-    ? { ...geometryMap, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses, finalGeometry }
-    : { ...geometryMap, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses };
-  const props = createProps({ config: graphConfig, regions: routedRegions, corridors, dungeonMask: finalDungeonMask });
+    ? { ...geometryMap, corridors: finalCorridors, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses, finalGeometry }
+    : { ...geometryMap, corridors: finalCorridors, dungeonMask: finalDungeonMask, mapAccesses: finalMapAccesses };
+  const props = createProps({ config: graphConfig, regions: routedRegions, corridors: finalCorridors, dungeonMask: finalDungeonMask });
   return {
     ...provisionalMap,
     dungeonMask: finalDungeonMask,

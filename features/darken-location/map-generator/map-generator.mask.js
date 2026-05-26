@@ -376,7 +376,100 @@ export function buildCaveMask(room, rng) {
   return ensureRoomMaskViable(organic, room);
 }
 
+export function isMineHybridCaveRoom(room) {
+  return room?.placementProfile === "mine" && (room?.surfaceKind === "cave" || room?.surfaceKind === "hybrid");
+}
+
+export function buildMineCaveChamberMask(room, rng) {
+  const { x, y, w, h } = room.cellRect;
+  const profile = room.caveChamberProfile || "irregular-chamber";
+  const cells = buildCaveMask(room, rng);
+  const center = {
+    x: x + w / 2 + (rng() - 0.5) * Math.max(1, w * 0.18),
+    y: y + h / 2 + (rng() - 0.5) * Math.max(1, h * 0.18),
+  };
+  const addEllipse = (cx, cy, rx, ry) => {
+    for (let yy = y; yy < y + h; yy += 1) {
+      for (let xx = x; xx < x + w; xx += 1) {
+        const dx = (xx + 0.5 - cx) / Math.max(0.75, rx);
+        const dy = (yy + 0.5 - cy) / Math.max(0.75, ry);
+        if (dx * dx + dy * dy <= 1) cells.add(cellKey(xx, yy));
+      }
+    }
+  };
+  const removeEllipse = (cx, cy, rx, ry) => {
+    for (let yy = y; yy < y + h; yy += 1) {
+      for (let xx = x; xx < x + w; xx += 1) {
+        const dx = (xx + 0.5 - cx) / Math.max(0.75, rx);
+        const dy = (yy + 0.5 - cy) / Math.max(0.75, ry);
+        if (dx * dx + dy * dy <= 1) cells.delete(cellKey(xx, yy));
+      }
+    }
+  };
+
+  const mainRx = Math.max(2.2, w * (profile === "narrow-fissure" ? 0.33 : 0.42));
+  const mainRy = Math.max(2.2, h * (profile === "narrow-fissure" ? 0.33 : 0.42));
+  addEllipse(center.x, center.y, mainRx, mainRy);
+
+  const lobeCount = profile === "clustered-alcoves" || profile === "branching-pocket"
+    ? randomInt(rng, 4, 6)
+    : profile === "narrow-fissure"
+      ? randomInt(rng, 2, 3)
+      : randomInt(rng, 3, 5);
+  const axis = profile === "narrow-fissure" || profile === "rough-gallery"
+    ? (w >= h ? 0 : Math.PI / 2)
+    : rng() * Math.PI;
+
+  for (let index = 0; index < lobeCount; index += 1) {
+    const angle = profile === "narrow-fissure" || profile === "rough-gallery"
+      ? axis + (index % 2 === 0 ? 0 : Math.PI) + (rng() - 0.5) * 0.75
+      : rng() * Math.PI * 2;
+    const distance = profile === "clustered-alcoves" ? 0.48 + rng() * 0.32 : 0.38 + rng() * 0.34;
+    const lobeRx = Math.max(1.35, w * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12));
+    const lobeRy = Math.max(1.35, h * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12));
+    addEllipse(
+      center.x + Math.cos(angle) * w * distance * 0.45,
+      center.y + Math.sin(angle) * h * distance * 0.45,
+      lobeRx,
+      lobeRy
+    );
+  }
+
+  const biteCount = profile === "collapsed-pocket" ? randomInt(rng, 3, 5) : randomInt(rng, 2, 4);
+  for (let index = 0; index < biteCount; index += 1) {
+    const side = pickOne(rng, ["north", "south", "east", "west"]);
+    const horizontal = side === "north" || side === "south";
+    removeEllipse(
+      horizontal ? x + rng() * w : side === "west" ? x - 0.15 : x + w + 0.15,
+      horizontal ? side === "north" ? y - 0.15 : y + h + 0.15 : y + rng() * h,
+      Math.max(1.1, w * (0.12 + rng() * 0.1)),
+      Math.max(1.1, h * (0.12 + rng() * 0.1))
+    );
+  }
+
+  let draft = getLargestConnectedCellSet(cells);
+  for (let yy = y; yy < y + h; yy += 1) {
+    for (let xx = x; xx < x + w; xx += 1) {
+      const key = cellKey(xx, yy);
+      if (!draft.has(key)) continue;
+      let neighbors = 0;
+      ORTHOGONAL_DIRECTIONS.forEach((direction) => {
+        if (draft.has(cellKey(xx + direction.dx, yy + direction.dy))) neighbors += 1;
+      });
+      if (neighbors <= 1 && rng() > 0.25) cells.delete(key);
+    }
+  }
+  draft = getLargestConnectedCellSet(cells);
+  const minimum = Math.max(6, Math.floor(w * h * 0.42));
+  if (draft.size < minimum) {
+    addEllipse(center.x, center.y, Math.max(2.2, w * 0.46), Math.max(2.1, h * 0.44));
+    draft = getLargestConnectedCellSet(cells);
+  }
+  return ensureRoomMaskViable(draft, room);
+}
+
 export function buildBaseRoomMask(room, rng) {
+  if (isMineHybridCaveRoom(room) && room.shape === "cave") return buildMineCaveChamberMask(room, rng);
   if (room.shape === "hall") return buildHallMask(room, rng);
   if (room.shape === "l-shape") return buildLShapeMask(room, rng);
   if (room.shape === "notched") return buildNotchedMask(room, rng);

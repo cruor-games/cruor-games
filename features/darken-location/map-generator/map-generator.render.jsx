@@ -25,6 +25,7 @@ import {
   isValidPoint,
   getBoundaryCells,
   getFinalConnectionAnchors,
+  createFinalAnchorFromSegment,
   getDoorBoundaryCells,
   getAnchorHandlePoint,
   getSnappedCirclePortalCellFromAnchor,
@@ -1653,7 +1654,10 @@ export function createHatchLineFromPattern(origin, scale, rawLine) {
 
 export function createExternalHatchingLines(generatedMap) {
   const { config, dungeonMask } = generatedMap;
-  const wallSegments = dungeonMask.externalWallSegments || [];
+  const wallSegments = trimWallSegmentsAgainstMineCaveOpenings(
+    (dungeonMask.externalWallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, config.gridSize)),
+    generatedMap
+  );
   if (wallSegments.length === 0) return [];
 
   const tileSize = config.gridSize * 7.5;
@@ -1861,7 +1865,10 @@ export function roughenBoundaryLoop(loop, config, loopIndex) {
 }
 
 export function createExternalHaloBufferPath(generatedMap) {
-  const loops = buildBoundaryLoops(generatedMap.dungeonMask.externalWallSegments || []);
+  const loops = buildBoundaryLoops(trimWallSegmentsAgainstMineCaveOpenings(
+    (generatedMap.dungeonMask.externalWallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize)),
+    generatedMap
+  ));
   return loops
     .map((loop, loopIndex) => roughenBoundaryLoop(loop, generatedMap.config, loopIndex))
     .filter((points) => points.length > 2)
@@ -2118,6 +2125,229 @@ export function createRoughOrganicCorridorWallPath(corridor, generatedMap, layer
   return buildOrganicCorridorBoundaryPath(corridor, generatedMap, generatedMap.config.gridSize, layer);
 }
 
+export function getHybridLocalCaveRegionSurfaces(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return [];
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
+  const storedSurfaces = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+    ? generatedMap.finalGeometry.regions || {}
+    : {};
+  return generatedMap.regions
+    .filter((region) => region.surfaceKind === "cave" || region.surfaceKind === "hybrid")
+    .map((region) => storedSurfaces[region.id])
+    .filter((surface) => surface?.geometryQuality === "organic")
+    .filter((surface) => surface?.geometryKind === "organic-cell-mask")
+    .filter((surface) => surface?.wallPath);
+}
+
+export function getHybridLocalCaveWallPath(surface) {
+  return surface.wallPath || surface.wallArcPath || surface.visualFloorPath || "";
+}
+
+export function getMineCaveEndpointSeams(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return [];
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
+  return Object.values(generatedMap?.finalGeometry?.regions || {})
+    .flatMap((surface) => surface?.passMouths || [])
+    .map((mouth) => mouth.seam || {
+      corridorId: mouth.corridorId,
+      endpoint: mouth.endpoint,
+      regionId: mouth.regionId,
+      surfaceKind: "cave",
+      corridorTerminalCenter: mouth.corridorTerminalCenter,
+      corridorTerminalLeft: mouth.corridorTerminalLeft || mouth.outerLeft,
+      corridorTerminalRight: mouth.corridorTerminalRight || mouth.outerRight,
+      mouthCenter: mouth.center,
+      mouthLeft: mouth.mouthLeft,
+      mouthRight: mouth.mouthRight,
+      outerCenter: mouth.corridorTerminalCenter,
+      outerLeft: mouth.outerLeft,
+      outerRight: mouth.outerRight,
+      tangent: mouth.tangent,
+      normal: mouth.normal,
+      width: mouth.width,
+      depth: mouth.depth,
+    })
+    .filter((seam) => seam?.corridorTerminalLeft && seam?.corridorTerminalRight);
+}
+
+export function getMineCaveEndpointCapSegments(generatedMap) {
+  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) => [
+    {
+      x1: seam.corridorTerminalLeft.x,
+      y1: seam.corridorTerminalLeft.y,
+      x2: seam.corridorTerminalRight.x,
+      y2: seam.corridorTerminalRight.y,
+    },
+    seam.mouthLeft && seam.mouthRight ? {
+      x1: seam.mouthLeft.x,
+      y1: seam.mouthLeft.y,
+      x2: seam.mouthRight.x,
+      y2: seam.mouthRight.y,
+    } : null,
+  ].filter(Boolean));
+}
+
+export function getMineCaveEndpointOpeningSegments(generatedMap) {
+  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) => [
+    {
+      kind: "corridor-terminal",
+      seam,
+      x1: seam.corridorTerminalLeft.x,
+      y1: seam.corridorTerminalLeft.y,
+      x2: seam.corridorTerminalRight.x,
+      y2: seam.corridorTerminalRight.y,
+    },
+    seam.mouthLeft && seam.mouthRight ? {
+      kind: "cave-mouth",
+      seam,
+      x1: seam.mouthLeft.x,
+      y1: seam.mouthLeft.y,
+      x2: seam.mouthRight.x,
+      y2: seam.mouthRight.y,
+    } : null,
+  ].filter(Boolean));
+}
+
+export function wallSegmentsCollinearAndOverlap(a, b, tolerance = 0.75) {
+  if (!a || !b) return false;
+  const aHorizontal = Math.abs(a.y1 - a.y2) <= tolerance;
+  const bHorizontal = Math.abs(b.y1 - b.y2) <= tolerance;
+  const aVertical = Math.abs(a.x1 - a.x2) <= tolerance;
+  const bVertical = Math.abs(b.x1 - b.x2) <= tolerance;
+  if (aHorizontal && bHorizontal) {
+    if (Math.abs(a.y1 - b.y1) > tolerance) return false;
+    const aMin = Math.min(a.x1, a.x2);
+    const aMax = Math.max(a.x1, a.x2);
+    const bMin = Math.min(b.x1, b.x2);
+    const bMax = Math.max(b.x1, b.x2);
+    return Math.min(aMax, bMax) - Math.max(aMin, bMin) > tolerance;
+  }
+  if (aVertical && bVertical) {
+    if (Math.abs(a.x1 - b.x1) > tolerance) return false;
+    const aMin = Math.min(a.y1, a.y2);
+    const aMax = Math.max(a.y1, a.y2);
+    const bMin = Math.min(b.y1, b.y2);
+    const bMax = Math.max(b.y1, b.y2);
+    return Math.min(aMax, bMax) - Math.max(aMin, bMin) > tolerance;
+  }
+  return segmentMatches(a, b);
+}
+
+export function trimWallSegmentAgainstMineCaveOpening(segment, opening, tolerance = 0.75) {
+  if (!wallSegmentsCollinearAndOverlap(segment, opening, tolerance)) return [segment];
+  const horizontal = Math.abs(segment.y1 - segment.y2) <= tolerance && Math.abs(opening.y1 - opening.y2) <= tolerance;
+  const vertical = Math.abs(segment.x1 - segment.x2) <= tolerance && Math.abs(opening.x1 - opening.x2) <= tolerance;
+  if (!horizontal && !vertical) return segmentMatches(segment, opening) ? [] : [segment];
+
+  const axis = horizontal ? "x" : "y";
+  const crossAxis = horizontal ? "y" : "x";
+  if (Math.abs(segment[`${crossAxis}1`] - opening[`${crossAxis}1`]) > tolerance) return [segment];
+
+  const reversed = segment[`${axis}2`] < segment[`${axis}1`];
+  const segmentStart = Math.min(segment[`${axis}1`], segment[`${axis}2`]);
+  const segmentEnd = Math.max(segment[`${axis}1`], segment[`${axis}2`]);
+  const openingStart = Math.min(opening[`${axis}1`], opening[`${axis}2`]);
+  const openingEnd = Math.max(opening[`${axis}1`], opening[`${axis}2`]);
+  const overlapStart = Math.max(segmentStart, openingStart);
+  const overlapEnd = Math.min(segmentEnd, openingEnd);
+  if (overlapEnd - overlapStart <= tolerance) return [segment];
+
+  const line = segment[`${crossAxis}1`];
+  const makePart = (start, end) => {
+    if (end - start <= tolerance) return null;
+    if (horizontal) {
+      return reversed
+        ? { x1: end, y1: line, x2: start, y2: line }
+        : { x1: start, y1: line, x2: end, y2: line };
+    }
+    return reversed
+      ? { x1: line, y1: end, x2: line, y2: start }
+      : { x1: line, y1: start, x2: line, y2: end };
+  };
+
+  return [
+    makePart(segmentStart, overlapStart),
+    makePart(overlapEnd, segmentEnd),
+  ].filter(Boolean);
+}
+
+export function trimWallSegmentAgainstMineCaveOpenings(segment, openings, tolerance = 0.75) {
+  let parts = [segment];
+  openings.forEach((opening) => {
+    parts = parts.flatMap((part) => trimWallSegmentAgainstMineCaveOpening(part, opening, tolerance));
+  });
+  return parts;
+}
+
+export function trimWallSegmentsAgainstMineCaveOpenings(segments, generatedMap, tolerance = 0.75) {
+  const openings = getMineCaveEndpointOpeningSegments(generatedMap);
+  if (openings.length === 0) return segments;
+  return segments.flatMap((segment) => trimWallSegmentAgainstMineCaveOpenings(segment, openings, tolerance));
+}
+
+export function shouldSuppressMineCaveEndpointCapSegment(segment, generatedMap) {
+  return trimWallSegmentsAgainstMineCaveOpenings([segment], generatedMap).length === 0;
+}
+
+export function renderHybridLocalCaveRegionWalls(generatedMap) {
+  const surfaces = getHybridLocalCaveRegionSurfaces(generatedMap);
+  if (surfaces.length === 0) return null;
+  return (
+    <>
+      <g className="wall-main hybrid-cave-region-walls">
+        {surfaces.map((surface) => <path key={`hybrid-cave-wall-${surface.regionId}`} d={getHybridLocalCaveWallPath(surface)} />)}
+      </g>
+      <g className="wall-sketch hybrid-cave-region-wall-sketch">
+        {surfaces.map((surface) => <path key={`hybrid-cave-wall-sketch-${surface.regionId}`} d={surface.sketchPath || getHybridLocalCaveWallPath(surface)} />)}
+      </g>
+    </>
+  );
+}
+
+export function getHybridCaveBreachMouths(generatedMap) {
+  return [];
+}
+
+export function breachMouthFloorPath(mouth) {
+  const points = [mouth.leftAttach, mouth.leftOuter, mouth.terminalLeft, mouth.terminalRight, mouth.rightOuter, mouth.rightAttach].filter(Boolean);
+  if (points.length < 4) return "";
+  return `M ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} Z`;
+}
+
+export function renderHybridCaveBreachFloors(generatedMap) {
+  const mouths = getHybridCaveBreachMouths(generatedMap);
+  if (mouths.length === 0) return null;
+  return (
+    <g className="hybrid-cave-breach-floors">
+      {mouths.map((mouth, index) => {
+        const d = breachMouthFloorPath(mouth);
+        return d ? <path key={`hybrid-cave-breach-floor-${mouth.corridorId}-${mouth.regionId}-${index}`} className="floor-fill" d={d} /> : null;
+      })}
+    </g>
+  );
+}
+
+export function renderHybridCaveBreachWalls(generatedMap) {
+  const mouths = getHybridCaveBreachMouths(generatedMap);
+  if (mouths.length === 0) return null;
+  return (
+    <>
+      <g className="wall-main hybrid-cave-breach-walls">
+        {mouths.flatMap((mouth, index) => [
+          <path key={`hybrid-cave-breach-left-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: mouth.leftAttach.x, y1: mouth.leftAttach.y, x2: (mouth.terminalLeft || mouth.leftOuter).x, y2: (mouth.terminalLeft || mouth.leftOuter).y }, generatedMap.config, `hybrid-breach-left-${mouth.corridorId}-${index}`, "main")} />,
+          <path key={`hybrid-cave-breach-right-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: (mouth.terminalRight || mouth.rightOuter).x, y1: (mouth.terminalRight || mouth.rightOuter).y, x2: mouth.rightAttach.x, y2: mouth.rightAttach.y }, generatedMap.config, `hybrid-breach-right-${mouth.corridorId}-${index}`, "main")} />,
+        ])}
+      </g>
+      <g className="wall-sketch hybrid-cave-breach-wall-sketch">
+        {mouths.flatMap((mouth, index) => [
+          <path key={`hybrid-cave-breach-left-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: mouth.leftAttach.x, y1: mouth.leftAttach.y, x2: (mouth.terminalLeft || mouth.leftOuter).x, y2: (mouth.terminalLeft || mouth.leftOuter).y }, generatedMap.config, `hybrid-breach-left-sketch-${mouth.corridorId}-${index}`, "sketch")} />,
+          <path key={`hybrid-cave-breach-right-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: (mouth.terminalRight || mouth.rightOuter).x, y1: (mouth.terminalRight || mouth.rightOuter).y, x2: mouth.rightAttach.x, y2: mouth.rightAttach.y }, generatedMap.config, `hybrid-breach-right-sketch-${mouth.corridorId}-${index}`, "sketch")} />,
+        ])}
+      </g>
+    </>
+  );
+}
+
 export function renderOrganicCorridorWalls(generatedMap) {
   const organicCorridors = generatedMap.corridors.filter(isOrganicCorridor);
   if (organicCorridors.length === 0) return null;
@@ -2205,6 +2435,9 @@ export function renderWallShadows(generatedMap) {
     <g className="wall-shadow" clipPath="url(#clip-dungeon-floor)" aria-hidden="true">
       {walls.map((wall, index) => (
         <path key={`wall-shadow-${index}`} d={createRoughWallPath(wall, config, index, "main")} />
+      ))}
+      {getHybridLocalCaveRegionSurfaces(generatedMap).map((surface) => (
+        <path key={`hybrid-cave-wall-shadow-${surface.regionId}`} d={getHybridLocalCaveWallPath(surface)} />
       ))}
       {circles.map((region) => (
         <React.Fragment key={`circle-wall-shadow-${region.id}`}>
@@ -2415,6 +2648,7 @@ export function renderDoorSymbols(generatedMap) {
       {dungeonMask.doorSegments.map((door, index) => {
         const doorType = normalizeDoorType(door.doorType, door.secret ? "secret" : "default");
         const stairTransition = normalizeStairTransition(door.stairTransition, "none");
+        if (door.breach && stairTransition === "none") return null;
         if (doorType === "open" && stairTransition === "none") return null;
         const geometry = getDoorGeometry(door, config.gridSize);
         const symbolClass = `door-symbol door-symbol--${doorType} ${stairTransition !== "none" ? `door-symbol--stairs-${stairTransition}` : ""}`;
@@ -2508,6 +2742,7 @@ export function createMapAccessWallMouthMaskPath(access, config) {
 }
 
 export function renderCaveWallAccessMask(generatedMap) {
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "cave") return null;
   if (isPureCaveMap(generatedMap)) return null;
   const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.wallGap);
   if (accesses.length === 0) return null;
@@ -2782,11 +3017,29 @@ export function getCircleRoomCellKeys(generatedMap) {
 }
 
 export function shouldHideCellWallForVectorRoom(segment, generatedMap) {
-  if (!generatedMap.regions.some((region) => isWallSegmentOnCircleRoom(segment, region, generatedMap))) return false;
   const adjacent = getWallSegmentAdjacentCells(segment, generatedMap.config.gridSize);
   if (!adjacent) return false;
+  const hybridCells = getHybridLocalCaveRegionCellKeys(generatedMap);
+  if (hybridCells.has(cellKey(adjacent.a.x, adjacent.a.y)) || hybridCells.has(cellKey(adjacent.b.x, adjacent.b.y))) return true;
+  if (!generatedMap.regions.some((region) => isWallSegmentOnCircleRoom(segment, region, generatedMap))) return false;
   const circleCells = getCircleRoomCellKeys(generatedMap);
   return circleCells.has(cellKey(adjacent.a.x, adjacent.a.y)) || circleCells.has(cellKey(adjacent.b.x, adjacent.b.y));
+}
+
+export function getHybridLocalCaveRegionCellKeys(generatedMap) {
+  const keys = new Set();
+  if (isPureCaveMap(generatedMap)) return keys;
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return keys;
+  const storedSurfaces = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+    ? generatedMap.finalGeometry.regions || {}
+    : {};
+  generatedMap.regions
+    .filter((region) => region.surfaceKind === "cave" || region.surfaceKind === "hybrid")
+    .forEach((region) => {
+      const surface = storedSurfaces[region.id];
+      (surface?.floorCells || region.floorCells || []).forEach((cell) => keys.add(cellKey(cell.x, cell.y)));
+    });
+  return keys;
 }
 
 export function getOrganicCorridorCellKeys(generatedMap) {
@@ -2894,12 +3147,17 @@ export function getCirclePortalSquareWallSegments(region, generatedMap) {
 }
 
 export function getDrawableWallSegments(generatedMap) {
-  const gridWalls = (generatedMap.dungeonMask.wallSegments || [])
-    .flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize))
+  const gridWalls = trimWallSegmentsAgainstMineCaveOpenings(
+    (generatedMap.dungeonMask.wallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize)),
+    generatedMap
+  )
     .filter((wall) => !shouldHideCellWallForVectorRoom(wall, generatedMap))
     .filter((wall) => !shouldHideCellWallForOrganicCorridor(wall, generatedMap));
   const corridorWallsNearCircles = getCorridorWallSegmentsNearVectorRooms(generatedMap);
-  const baseWalls = mergeCollinearWallSegments([...gridWalls, ...corridorWallsNearCircles]);
+  const baseWalls = trimWallSegmentsAgainstMineCaveOpenings(
+    mergeCollinearWallSegments([...gridWalls, ...corridorWallsNearCircles]),
+    generatedMap
+  );
   const openDoorGaps = (generatedMap.dungeonMask.doorSegments || [])
     .filter((door) => normalizeDoorType(door.doorType, door.secret ? "secret" : "default") === "open")
     .map((door) => getOpenDoorWallGapSegment(door, generatedMap.config));
@@ -2994,12 +3252,14 @@ export function renderUnifiedDungeonSurface(generatedMap, gridStyle = "solid") {
       {renderWallShadows(generatedMap)}
       {renderRoughWalls(generatedMap)}
       {renderWallSketch(generatedMap)}
+      {renderHybridLocalCaveRegionWalls(generatedMap)}
       {renderCircleRoomWalls(generatedMap)}
       {renderOrganicCorridorWalls(generatedMap)}
       {renderCrossLevelCorridorOverpasses(generatedMap)}
       <g className="door-cuts">
         {dungeonMask.doorSegments.map((door, index) => {
           const doorType = normalizeDoorType(door.doorType, door.secret ? "secret" : "default");
+          if (door.breach) return null;
           if (doorType === "open") return null;
           const cut = getDoorCutSegment(door, config);
           return <line key={`door-opening-${index}`} x1={cut.x1} y1={cut.y1} x2={cut.x2} y2={cut.y2} className={getDoorCutClassName(door)} />;
@@ -3217,6 +3477,33 @@ export function getCellRegionOwnerMap(regions) {
   return owners;
 }
 
+export function getHybridFinalWallConnectionZones(region, generatedMap) {
+  if (isPureCaveMap(generatedMap)) return [];
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
+  if (region?.surfaceKind !== "cave" && region?.surfaceKind !== "hybrid") return [];
+  const surface = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+    ? generatedMap.finalGeometry.regions?.[region.id]
+    : null;
+  const segments = surface?.finalGeometry && Array.isArray(surface.boundarySegments)
+    ? surface.boundarySegments
+    : [];
+  return segments
+    .filter((segment) => Number.isFinite(segment.x1) && Number.isFinite(segment.y1) && Number.isFinite(segment.x2) && Number.isFinite(segment.y2))
+    .map((segment, index) => {
+      const anchor = createFinalAnchorFromSegment(segment, region, generatedMap, index);
+      const point = getAnchorHandlePoint(anchor, generatedMap.config.gridSize);
+      return {
+        id: `hybrid-cave-boundary:${region.id}:${index}`,
+        regionId: region.id,
+        adjacentRegionId: null,
+        adjacentAnchor: null,
+        anchor,
+        point,
+        ...segment,
+      };
+    });
+}
+
 export function getWallConnectionZones(region, regions, gridSize, generatedMap = null) {
   if (isPureCaveMap(generatedMap)) {
     const segments = generatedMap?.finalGeometry?.caveSurface?.boundarySegments || [];
@@ -3246,6 +3533,8 @@ export function getWallConnectionZones(region, regions, gridSize, generatedMap =
       })
       .filter(Boolean);
   }
+  const hybridFinalZones = getHybridFinalWallConnectionZones(region, generatedMap);
+  if (hybridFinalZones.length > 0) return hybridFinalZones;
   const ownerByCell = getCellRegionOwnerMap(regions);
   const finalAnchors = getFinalConnectionAnchors(generatedMap, region);
   const anchors = finalAnchors.length > 0 ? finalAnchors : getBoundaryCells(region);

@@ -41,7 +41,10 @@ function rectsOverlapWithMargin(a, b, margin = 2) {
   return !(a.x + a.w + margin <= b.x || b.x + b.w + margin <= a.x || a.y + a.h + margin <= b.y || b.y + b.h + margin <= a.y);
 }
 
-export function resolveRoomSize(region, rng) {
+export function resolveRoomSize(region, rng, config = null) {
+  const contextKey = getContextKey(config?.context || config?.biome);
+  if (isMineCaveLikeRegion(region, contextKey)) return resolveMineCaveRoomSize(region, rng, config);
+
   const preset = SIZE_PRESETS[region.size] || SIZE_PRESETS.Medium;
   let w = randomInt(rng, preset.minW, preset.maxW);
   let h = randomInt(rng, preset.minH, preset.maxH);
@@ -64,6 +67,74 @@ export function resolveRoomSize(region, rng) {
   }
 
   return { w, h };
+}
+
+export function isMineCaveLikeRegion(region, contextKey = "mine") {
+  if (contextKey !== "mine") return false;
+  const surfaceKind = getRegionSurfaceProfile(region, contextKey);
+  return surfaceKind === "cave" || surfaceKind === "hybrid";
+}
+
+export function getMineCaveChamberProfile(region, contextKey = "mine") {
+  if (!isMineCaveLikeRegion(region, contextKey)) return null;
+  const text = getRegionText(region);
+  const role = getPlacementRole(region);
+  const flags = classifyRegion(region);
+  if (flags.hazard || text.includes("collapse") || text.includes("rubble") || text.includes("broken")) return "collapsed-pocket";
+  if (flags.secret || text.includes("fissure") || text.includes("crack") || text.includes("crevice")) return "narrow-fissure";
+  if (role === "connector" || flags.connector || text.includes("gallery") || text.includes("tunnel") || text.includes("rail")) return "rough-gallery";
+  if (role === "final" || flags.climax || flags.outcome || text.includes("cavern") || text.includes("chamber")) return "widened-cavern";
+  const variants = ["irregular-chamber", "branching-pocket", "rough-gallery", "clustered-alcoves"];
+  return variants[hashStringToSeed(region.id, text, "mine-cave-profile") % variants.length];
+}
+
+export function resolveMineCaveRoomSize(region, rng, config = null) {
+  const role = getPlacementRole(region);
+  const preset = SIZE_PRESETS[region.size] || SIZE_PRESETS.Medium;
+  const profile = getMineCaveChamberProfile(region, "mine");
+  let w = randomInt(rng, preset.minW + 1, preset.maxW + 3);
+  let h = randomInt(rng, preset.minH + 1, preset.maxH + 3);
+
+  if (profile === "narrow-fissure") {
+    const long = randomInt(rng, 8, 12);
+    const short = randomInt(rng, 4, 6);
+    if (hashStringToSeed(region.id, "mine-fissure-axis") % 2 === 0) {
+      w = long;
+      h = short;
+    } else {
+      w = short;
+      h = long;
+    }
+  } else if (profile === "rough-gallery") {
+    w = randomInt(rng, 8, 12);
+    h = randomInt(rng, 4, 7);
+    if (hashStringToSeed(region.id, "mine-gallery-axis") % 3 === 0) [w, h] = [h, w];
+  } else if (profile === "collapsed-pocket") {
+    w = randomInt(rng, 6, 9);
+    h = randomInt(rng, 5, 8);
+  } else if (profile === "branching-pocket" || profile === "clustered-alcoves") {
+    w = randomInt(rng, 7, 10);
+    h = randomInt(rng, 5, 8);
+  } else if (profile === "widened-cavern") {
+    w = randomInt(rng, 8, 12);
+    h = randomInt(rng, 6, 9);
+  }
+
+  if (role === "final" || role === "hazard") {
+    w += randomInt(rng, 1, 2);
+    h += randomInt(rng, 1, 2);
+  }
+  if (role === "secret") {
+    w = Math.max(4, w - 1);
+    h = Math.max(4, h - 1);
+  }
+
+  const gridW = Math.floor((config?.mapWidth || DEFAULT_CONFIG.mapWidth) / (config?.gridSize || DEFAULT_CONFIG.gridSize));
+  const gridH = Math.floor((config?.mapHeight || DEFAULT_CONFIG.mapHeight) / (config?.gridSize || DEFAULT_CONFIG.gridSize));
+  return {
+    w: clamp(w, 4, Math.max(4, Math.min(13, gridW - 8))),
+    h: clamp(h, 4, Math.max(4, Math.min(10, gridH - 8))),
+  };
 }
 
 export function chooseRoomShape(region, contextKey = "") {
@@ -91,6 +162,7 @@ export function chooseRoomShape(region, contextKey = "") {
   }
 
   if (contextKey === "mine") {
+    if (isMineCaveLikeRegion(region, contextKey)) return "cave";
     if (role === "connector" || shape.includes("hall") || shape.includes("corridor")) return "hall";
     if (shape.includes("shaft") || text.includes("well") || text.includes("vertical")) return "shaft";
     if (role === "hazard" || text.includes("collapse")) return "broken";
@@ -253,12 +325,16 @@ export function scorePlacementCandidate(candidate, target, placed, graph, region
 
 export function createPlacedRegion(region, shape, cellRect, config, profileKey, number) {
   const surfaceKind = getRegionSurfaceProfile(region, profileKey);
+  const caveChamberProfile = profileKey === "mine" && (surfaceKind === "cave" || surfaceKind === "hybrid")
+    ? getMineCaveChamberProfile(region, profileKey)
+    : null;
   return {
     ...region,
     shape,
     cellRect,
     placementProfile: profileKey,
     surfaceKind,
+    ...(caveChamberProfile ? { caveChamberProfile } : {}),
     floorCells: [],
     wallSegments: [],
     doorAnchors: [],
@@ -702,7 +778,7 @@ export function placeRegions(config, graph, rng) {
   });
 
   orderedRegions.forEach((region, index) => {
-    const size = resolveRoomSize(region, rng);
+    const size = resolveRoomSize(region, rng, config);
     const shape = chooseRoomShape(region, profile.key);
     const maxX = Math.max(margin, gridW - size.w - margin);
     const maxY = Math.max(margin, gridH - size.h - margin);
@@ -728,12 +804,17 @@ export function placeRegions(config, graph, rng) {
     }
 
     const cellRect = best;
+    const surfaceKind = getRegionSurfaceProfile(region, profile.key);
+    const caveChamberProfile = profile.key === "mine" && (surfaceKind === "cave" || surfaceKind === "hybrid")
+      ? getMineCaveChamberProfile(region, profile.key)
+      : null;
     placed.push({
       ...region,
       shape,
       cellRect,
       placementProfile: profile.key,
-      surfaceKind: getRegionSurfaceProfile(region, profile.key),
+      surfaceKind,
+      ...(caveChamberProfile ? { caveChamberProfile } : {}),
       floorCells: [],
       wallSegments: [],
       doorAnchors: [],

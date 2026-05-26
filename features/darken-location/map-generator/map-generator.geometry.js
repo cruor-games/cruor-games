@@ -12,6 +12,7 @@ import {
   getCorridorTopologyCells,
   isOrganicCorridor,
 } from "./map-generator.corridors.js";
+import { getContextKey } from "./map-generator.profile.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -73,7 +74,16 @@ export function buildFloorPath(floorCells, gridSize) {
   return floorCells.map((cell) => cellRectToPath(cell, gridSize)).join(" ");
 }
 
+export function buildBoundarySegmentPath(segments) {
+  if (!Array.isArray(segments) || segments.length === 0) return "";
+  return segments
+    .filter((segment) => [segment.x1, segment.y1, segment.x2, segment.y2].every(Number.isFinite))
+    .map((segment) => `M ${roundTo(segment.x1, 2)} ${roundTo(segment.y1, 2)} L ${roundTo(segment.x2, 2)} ${roundTo(segment.y2, 2)}`)
+    .join(" ");
+}
+
 export function isPureCaveMap(generatedMap) {
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "cave") return false;
   const regions = Array.isArray(generatedMap?.regions) ? generatedMap.regions : [];
   if (regions.length === 0) return false;
   return regions.every((region) => getRegionSurfaceKind(region, generatedMap) === "cave");
@@ -1569,7 +1579,7 @@ export function buildOrganicCellBoundaryPath(region, generatedMap = null, gridSi
     : sourceCells;
   const organicContourPath = buildOrganicCaveContourPath(floorCells, gridSize, hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour"));
   if (organicContourPath) return organicContourPath;
-  return buildFloorPath(floorCells, gridSize);
+  return "";
 }
 
 export function buildOrganicCorridorBoundaryPath(corridor, generatedMap = null, gridSize = DEFAULT_CONFIG.gridSize, layer = "surface") {
@@ -1609,6 +1619,8 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
   const organicPath = isOrganicRegionSurface(region) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
   const visualFloorPath = organicPath || buildFloorPath(floorCells, gridSize);
   const organicSurface = Boolean(organicPath);
+  const boundaryPath = buildBoundarySegmentPath(boundarySegments);
+  const wallPath = organicSurface ? visualFloorPath : boundaryPath;
   return {
     regionId: region.id,
     surfaceKind: getRegionSurfaceKind(region, generatedMap),
@@ -1621,11 +1633,606 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
     clipPath: visualFloorPath,
     hoverPath: organicSurface ? visualFloorPath : "",
     hoverSegments: boundarySegments,
-    wallArcPath: organicSurface ? visualFloorPath : "",
+    wallArcPath: wallPath,
+    wallPath,
+    sketchPath: wallPath,
     wallSegments: boundarySegments,
     boundarySegments,
     connectionAnchors: getDoorBoundaryCells(region),
   };
+}
+
+export function isHybridLocalCaveRegion(region, generatedMap = null) {
+  if (isPureCaveMap(generatedMap)) return false;
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return false;
+  return region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid";
+}
+
+export function getCellCenter(cell, gridSize) {
+  return {
+    x: (cell.x + 0.5) * gridSize,
+    y: (cell.y + 0.5) * gridSize,
+  };
+}
+
+export function getMineCaveConnectorOpenSegment(cell, normal, gridSize) {
+  const x = cell.x * gridSize;
+  const y = cell.y * gridSize;
+  const right = x + gridSize;
+  const bottom = y + gridSize;
+  if (Math.abs(normal.x) >= Math.abs(normal.y)) {
+    return normal.x >= 0
+      ? { x1: right, y1: y, x2: right, y2: bottom }
+      : { x1: x, y1: y, x2: x, y2: bottom };
+  }
+  return normal.y >= 0
+    ? { x1: x, y1: bottom, x2: right, y2: bottom }
+    : { x1: x, y1: y, x2: right, y2: y };
+}
+
+export function segmentsMatchUndirected(a, b, tolerance = 0.01) {
+  if (!a || !b) return false;
+  const same = Math.abs(a.x1 - b.x1) <= tolerance
+    && Math.abs(a.y1 - b.y1) <= tolerance
+    && Math.abs(a.x2 - b.x2) <= tolerance
+    && Math.abs(a.y2 - b.y2) <= tolerance;
+  const reversed = Math.abs(a.x1 - b.x2) <= tolerance
+    && Math.abs(a.y1 - b.y2) <= tolerance
+    && Math.abs(a.x2 - b.x1) <= tolerance
+    && Math.abs(a.y2 - b.y1) <= tolerance;
+  return same || reversed;
+}
+
+export function createMineCaveConnectorPad(corridor, endpoint, region, gridSize) {
+  const anchor = endpoint === "from" ? corridor.fromAnchor : corridor.toAnchor;
+  if (!anchor?.outsideCell || !anchor?.cell) return null;
+  const normal = anchor.normal
+    ? { x: Math.sign(anchor.normal.x), y: Math.sign(anchor.normal.y) }
+    : {
+      x: Math.sign(anchor.outsideCell.x - anchor.cell.x),
+      y: Math.sign(anchor.outsideCell.y - anchor.cell.y),
+    };
+  if (normal.x === 0 && normal.y === 0) return null;
+  const tangent = { x: -normal.y, y: normal.x };
+  const padCell = { x: anchor.outsideCell.x, y: anchor.outsideCell.y };
+  const corridorTerminalCenter = {
+    x: (padCell.x + 0.5 - normal.x * 0.5) * gridSize,
+    y: (padCell.y + 0.5 - normal.y * 0.5) * gridSize,
+  };
+  const caveAttachCenter = corridorTerminalCenter;
+  const half = gridSize * 0.5;
+  const corridorTerminalLeft = { x: corridorTerminalCenter.x - tangent.x * half, y: corridorTerminalCenter.y - tangent.y * half };
+  const corridorTerminalRight = { x: corridorTerminalCenter.x + tangent.x * half, y: corridorTerminalCenter.y + tangent.y * half };
+  const caveAttachLeft = { x: caveAttachCenter.x - tangent.x * half, y: caveAttachCenter.y - tangent.y * half };
+  const caveAttachRight = { x: caveAttachCenter.x + tangent.x * half, y: caveAttachCenter.y + tangent.y * half };
+  return {
+    type: "mine-cave-connector-pad",
+    corridorId: corridor.id,
+    endpoint,
+    regionId: region.id,
+    cell: padCell,
+    cells: [padCell],
+    corridorTerminalCenter,
+    corridorTerminalLeft,
+    corridorTerminalRight,
+    caveAttachCenter,
+    caveAttachLeft,
+    caveAttachRight,
+    direction: normal,
+    tangent,
+    normal,
+    width: gridSize,
+    depth: gridSize,
+    openToCorridor: true,
+    openToCave: true,
+    corridorOpenSegment: { x1: corridorTerminalLeft.x, y1: corridorTerminalLeft.y, x2: corridorTerminalRight.x, y2: corridorTerminalRight.y },
+  };
+}
+
+export function collectMineCaveConnectorPads(generatedMap, caveRegionIds) {
+  const gridSize = generatedMap?.config?.gridSize || DEFAULT_CONFIG.gridSize;
+  const regionById = new Map((generatedMap?.regions || []).map((region) => [region.id, region]));
+  const padsByRegion = new Map();
+  const addPad = (corridor, endpoint) => {
+    const regionId = endpoint === "from" ? corridor.from : corridor.to;
+    if (!caveRegionIds.has(regionId)) return;
+    const region = regionById.get(regionId);
+    if (!region) return;
+    const pad = createMineCaveConnectorPad(corridor, endpoint, region, gridSize);
+    if (!pad) return;
+    if (!padsByRegion.has(regionId)) padsByRegion.set(regionId, []);
+    const existing = padsByRegion.get(regionId);
+    if (!existing.some((item) => item.corridorId === pad.corridorId && item.endpoint === pad.endpoint)) existing.push(pad);
+  };
+  (generatedMap?.corridors || []).forEach((corridor) => {
+    if (corridor.surfaceKind !== "mine-tunnel") return;
+    addPad(corridor, "from");
+    addPad(corridor, "to");
+  });
+  return padsByRegion;
+}
+
+export function addMineCaveConnectorPadsToRegion(region, connectorPads) {
+  if (!Array.isArray(connectorPads) || connectorPads.length === 0) return region;
+  const cellsByKey = new Map((region.floorCells || []).map((cell) => [cellKey(cell.x, cell.y), { x: cell.x, y: cell.y }]));
+  connectorPads.forEach((pad) => {
+    (pad.cells || []).forEach((cell) => cellsByKey.set(cellKey(cell.x, cell.y), { x: cell.x, y: cell.y }));
+  });
+  return {
+    ...region,
+    floorCells: Array.from(cellsByKey.values()),
+    mineCaveConnectorPads: connectorPads,
+  };
+}
+
+export function createMineCavePassAccesses(connectorPads) {
+  return (connectorPads || []).map((pad) => ({
+    id: `${pad.corridorId}-${pad.endpoint}-mine-cave-pass-mouth`,
+    type: "passage",
+    point: pad.corridorTerminalCenter || pad.caveAttachCenter,
+    displayPoint: pad.corridorTerminalCenter || pad.caveAttachCenter,
+    tangent: pad.tangent,
+    normal: pad.normal,
+    connectorPad: pad,
+  }));
+}
+
+export function getMinePassMouthInsertedStart(mouth) {
+  const outerSkip = (mouth?.skippedEdges || []).find((edge) => edge.role === "outer-open-edge");
+  return Number.isFinite(outerSkip?.from) ? outerSkip.from - 2 : -1;
+}
+
+export function alignMineCavePassMouthsToCorridorSeams(accessResult, passAccesses) {
+  if (!accessResult?.points?.length || !accessResult?.mouths?.length) return accessResult;
+  const accessById = new Map((passAccesses || []).map((access) => [access.id, access]));
+  accessResult.mouths.forEach((mouth) => {
+    const connectorPad = accessById.get(mouth.accessId)?.connectorPad;
+    if (!connectorPad?.corridorTerminalLeft || !connectorPad?.corridorTerminalRight) return;
+    const insertedStart = getMinePassMouthInsertedStart(mouth);
+    if (insertedStart < 0 || insertedStart + 4 >= accessResult.points.length) return;
+    const terminalLeft = { x: connectorPad.corridorTerminalLeft.x, y: connectorPad.corridorTerminalLeft.y };
+    const terminalRight = { x: connectorPad.corridorTerminalRight.x, y: connectorPad.corridorTerminalRight.y };
+    const terminalCenter = connectorPad.corridorTerminalCenter;
+    const terminalVector = normalizeGeometryVector({
+      x: terminalRight.x - terminalLeft.x,
+      y: terminalRight.y - terminalLeft.y,
+    }, mouth.tangent);
+    const mouthTangent = terminalVector.x * mouth.tangent.x + terminalVector.y * mouth.tangent.y >= 0
+      ? terminalVector
+      : { x: -terminalVector.x, y: -terminalVector.y };
+    const corridorWidth = Math.max(distanceBetweenPoints(terminalLeft, terminalRight), connectorPad.width || 0);
+    const mouthHalf = Math.max(corridorWidth * 0.55, Math.min(corridorWidth * 0.675, connectorPad.width * 0.675 || corridorWidth * 0.625));
+    const existingDepth = distanceBetweenPoints(mouth.center, terminalCenter);
+    const desiredDepth = Math.max(connectorPad.depth * 0.65, Math.min(connectorPad.depth, existingDepth || connectorPad.depth * 0.78));
+    const mouthCenter = {
+      x: terminalCenter.x - mouth.normal.x * desiredDepth,
+      y: terminalCenter.y - mouth.normal.y * desiredDepth,
+    };
+    const leftMouth = {
+      x: mouthCenter.x - mouthTangent.x * mouthHalf,
+      y: mouthCenter.y - mouthTangent.y * mouthHalf,
+    };
+    const rightMouth = {
+      x: mouthCenter.x + mouthTangent.x * mouthHalf,
+      y: mouthCenter.y + mouthTangent.y * mouthHalf,
+    };
+    const leftShoulder = {
+      x: (leftMouth.x + terminalLeft.x) / 2,
+      y: (leftMouth.y + terminalLeft.y) / 2,
+    };
+    const rightShoulder = {
+      x: (rightMouth.x + terminalRight.x) / 2,
+      y: (rightMouth.y + terminalRight.y) / 2,
+    };
+    accessResult.points[insertedStart + 1] = leftShoulder;
+    accessResult.points[insertedStart + 2] = terminalLeft;
+    accessResult.points[insertedStart + 3] = terminalRight;
+    accessResult.points[insertedStart + 4] = rightShoulder;
+    mouth.points = [leftMouth, leftShoulder, terminalLeft, terminalRight, rightShoulder, rightMouth];
+    mouth.center = mouthCenter;
+    mouth.tangent = mouthTangent;
+    mouth.leftAttach = leftMouth;
+    mouth.rightAttach = rightMouth;
+    mouth.leftTip = terminalLeft;
+    mouth.rightTip = terminalRight;
+    mouth.corridorTerminalCenter = connectorPad.corridorTerminalCenter;
+    mouth.corridorTerminalLeft = terminalLeft;
+    mouth.corridorTerminalRight = terminalRight;
+    mouth.outerCenter = connectorPad.corridorTerminalCenter;
+    mouth.outerLeft = terminalLeft;
+    mouth.outerRight = terminalRight;
+    mouth.seam = {
+      corridorId: connectorPad.corridorId,
+      endpoint: connectorPad.endpoint,
+      regionId: connectorPad.regionId,
+      surfaceKind: "cave",
+      corridorTerminalCenter: connectorPad.corridorTerminalCenter,
+      corridorTerminalLeft: terminalLeft,
+      corridorTerminalRight: terminalRight,
+      mouthCenter,
+      mouthLeft: leftMouth,
+      mouthRight: rightMouth,
+      outerCenter: connectorPad.corridorTerminalCenter,
+      outerLeft: terminalLeft,
+      outerRight: terminalRight,
+      tangent: mouthTangent,
+      normal: mouth.normal,
+      width: distanceBetweenPoints(leftMouth, rightMouth),
+      depth: distanceBetweenPoints(mouthCenter, connectorPad.corridorTerminalCenter),
+    };
+  });
+  return accessResult;
+}
+
+export function expandCellsForMineCaveContour(floorCells) {
+  const cells = new Map();
+  (floorCells || []).forEach((cell) => {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      for (let dx = -1; dx <= 1; dx += 1) {
+        const next = { x: cell.x + dx, y: cell.y + dy };
+        cells.set(cellKey(next.x, next.y), next);
+      }
+    }
+  });
+  return Array.from(cells.values());
+}
+
+export function createFallbackMineCaveContourFromCells(floorCells, gridSize, seed) {
+  if (!Array.isArray(floorCells) || floorCells.length === 0) return [];
+  const bounds = getCellBounds(floorCells);
+  const minX = bounds.minX * gridSize;
+  const minY = bounds.minY * gridSize;
+  const maxX = (bounds.maxX + 1) * gridSize;
+  const maxY = (bounds.maxY + 1) * gridSize;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+  const rx = Math.max(gridSize * 0.95, (maxX - minX) / 2);
+  const ry = Math.max(gridSize * 0.95, (maxY - minY) / 2);
+  const count = 14;
+  return Array.from({ length: count }, (_, index) => {
+    const angle = (Math.PI * 2 * index) / count;
+    const noise = ((hashStringToSeed(seed, index, "mine-cave-fallback-contour") % 1000) / 1000 - 0.5) * gridSize * 0.18;
+    const tangentNoise = ((hashStringToSeed(seed, index, "mine-cave-fallback-tangent") % 1000) / 1000 - 0.5) * gridSize * 0.1;
+    return {
+      x: cx + Math.cos(angle) * (rx + noise) + Math.cos(angle + Math.PI / 2) * tangentNoise,
+      y: cy + Math.sin(angle) * (ry + noise) + Math.sin(angle + Math.PI / 2) * tangentNoise,
+    };
+  });
+}
+
+export function createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads) {
+  const gridSize = generatedMap.config.gridSize;
+  const seed = generatedMap?.config?.seed || DEFAULT_CONFIG.seed;
+  const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
+  const baseBoundarySegments = computeBoundarySegments(floorCells, gridSize);
+  let contourCells = floorCells;
+  let baseContour = buildOrganicCaveContourPoints(contourCells, gridSize, hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour"));
+  if (!Array.isArray(baseContour) || baseContour.length < 3) {
+    contourCells = createNaturalCaveVisualCells(floorCells, { ...generatedMap.config, gridSize });
+    baseContour = buildOrganicCaveContourPoints(contourCells, gridSize, hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour-fallback"));
+  }
+  if (!Array.isArray(baseContour) || baseContour.length < 3) {
+    contourCells = expandCellsForMineCaveContour(floorCells);
+    baseContour = buildOrganicCaveContourPoints(contourCells, gridSize, hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour-expanded"));
+  }
+  if (!Array.isArray(baseContour) || baseContour.length < 3) {
+    baseContour = createFallbackMineCaveContourFromCells(floorCells, gridSize, hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour-local-fallback"));
+  }
+  if (!Array.isArray(baseContour) || baseContour.length < 3) return null;
+  const passAccesses = createMineCavePassAccesses(connectorPads);
+  const accessResult = alignMineCavePassMouthsToCorridorSeams(
+    applyCaveAccessMouthsToBoundaryLoop(baseContour, passAccesses, generatedMap.config),
+    passAccesses
+  );
+  const visualFloorPath = segmentedClosedPath(accessResult.points);
+  const wallPath = segmentedLoopPathWithSkippedEdges(accessResult.points, accessResult.skippedEdges);
+  const boundarySegments = accessResult.points.length > 0 ? loopToSegments(accessResult.points, accessResult.skippedEdges) : baseBoundarySegments;
+  const passMouths = (accessResult.mouths || []).map((mouth) => {
+    const connectorPad = passAccesses.find((access) => access.id === mouth.accessId)?.connectorPad || null;
+    return {
+      type: "mine-cave-pass-mouth",
+      corridorId: connectorPad?.corridorId || mouth.accessId,
+      endpoint: connectorPad?.endpoint || null,
+      regionId: region.id,
+      center: mouth.center,
+      tangent: mouth.tangent,
+      normal: mouth.normal,
+      mouthLeft: mouth.leftAttach,
+      mouthRight: mouth.rightAttach,
+      outerLeft: mouth.leftTip,
+      outerRight: mouth.rightTip,
+      innerLeft: mouth.leftAttach,
+      innerRight: mouth.rightAttach,
+      width: distanceBetweenPoints(mouth.leftAttach, mouth.rightAttach),
+      depth: distanceBetweenPoints(mouth.center, {
+        x: (mouth.leftTip.x + mouth.rightTip.x) / 2,
+        y: (mouth.leftTip.y + mouth.rightTip.y) / 2,
+      }),
+      corridorTerminalCenter: connectorPad?.corridorTerminalCenter || null,
+      corridorTerminalLeft: connectorPad?.corridorTerminalLeft || null,
+      corridorTerminalRight: connectorPad?.corridorTerminalRight || null,
+      seam: mouth.seam || null,
+      openingType: "breach",
+      skippedEdges: mouth.skippedEdges || [],
+    };
+  });
+  return {
+    regionId: region.id,
+    surfaceKind: getRegionSurfaceKind(region, generatedMap),
+    kind: "organic-cell-mask",
+    geometryKind: "organic-cell-mask",
+    gridSize,
+    floorCells,
+    visualFloorCells: contourCells,
+    extensionCells: [],
+    visualFloorPath,
+    clipPath: visualFloorPath,
+    hoverPath: visualFloorPath,
+    hoverSegments: boundarySegments,
+    wallArcPath: wallPath,
+    wallPath,
+    sketchPath: wallPath,
+    wallSegments: boundarySegments,
+    boundarySegments,
+    baseBoundaryLoop: baseContour,
+    baseBoundarySegments,
+    accessMouths: accessResult.mouths,
+    passMouths,
+    connectionAnchors: getDoorBoundaryCells(region),
+  };
+}
+
+export function finalizeHybridGeometry(generatedMap) {
+  if (isPureCaveMap(generatedMap)) return null;
+  const caveRegions = (generatedMap?.regions || []).filter((region) => isHybridLocalCaveRegion(region, generatedMap));
+  if (caveRegions.length === 0) return null;
+  const caveRegionIds = new Set(caveRegions.map((region) => region.id));
+  const connectorPadsByRegion = collectMineCaveConnectorPads(generatedMap, caveRegionIds);
+  const regions = Object.fromEntries(caveRegions.map((region) => {
+    const connectorPads = connectorPadsByRegion.get(region.id) || [];
+    const surface = createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads)
+      || createCellMaskRegionSurface(region, generatedMap, generatedMap.config.gridSize);
+    const wallSegments = surface.wallSegments || surface.boundarySegments || [];
+    const organicSurface = surface.geometryKind === "organic-cell-mask" && isUsableSvgPath(surface.wallPath || surface.wallArcPath || surface.visualFloorPath);
+    const fallbackWallPath = buildBoundarySegmentPath(wallSegments) || buildBoundarySegmentPath(surface.boundarySegments);
+    const wallPath = organicSurface
+      ? surface.wallPath || surface.wallArcPath || surface.visualFloorPath
+      : fallbackWallPath;
+    const sketchPath = organicSurface
+      ? surface.sketchPath || surface.wallPath || surface.wallArcPath || surface.visualFloorPath
+      : fallbackWallPath;
+    return [region.id, {
+      ...surface,
+      finalGeometry: true,
+      surfaceKind: "cave",
+      geometryQuality: organicSurface ? "organic" : "degraded-boundary-fallback",
+      wallPath,
+      sketchPath,
+      wallSegments,
+      boundarySegments: surface.boundarySegments,
+      connectorPads,
+      passMouths: surface.passMouths || [],
+      bounds: {
+        x: region.cellRect.x * generatedMap.config.gridSize,
+        y: region.cellRect.y * generatedMap.config.gridSize,
+        width: region.cellRect.w * generatedMap.config.gridSize,
+        height: region.cellRect.h * generatedMap.config.gridSize,
+      },
+    }];
+  }));
+  return {
+    kind: "final-hybrid-geometry",
+    surfaceKind: "hybrid",
+    regions,
+    corridors: {},
+  };
+}
+
+export function projectPointToSegment(point, segment) {
+  const dx = segment.x2 - segment.x1;
+  const dy = segment.y2 - segment.y1;
+  const lengthSq = dx * dx + dy * dy || 1;
+  const t = Math.max(0, Math.min(1, ((point.x - segment.x1) * dx + (point.y - segment.y1) * dy) / lengthSq));
+  return {
+    x: segment.x1 + dx * t,
+    y: segment.y1 + dy * t,
+    t,
+  };
+}
+
+export function getClosestHybridBoundaryProjection(point, surface) {
+  const segments = surface?.boundarySegments || [];
+  if (!point || segments.length === 0) return null;
+  return segments
+    .map((segment, index) => {
+      const projected = projectPointToSegment(point, segment);
+      const dx = projected.x - point.x;
+      const dy = projected.y - point.y;
+      const length = Math.hypot(segment.x2 - segment.x1, segment.y2 - segment.y1) || 1;
+      return {
+        index,
+        segment,
+        point: projected,
+        tangent: { x: (segment.x2 - segment.x1) / length, y: (segment.y2 - segment.y1) / length },
+        score: dx * dx + dy * dy,
+      };
+    })
+    .sort((a, b) => a.score - b.score)[0] || null;
+}
+
+export function getDoorCenter(door) {
+  return { x: (door.x1 + door.x2) / 2, y: (door.y1 + door.y2) / 2 };
+}
+
+export function isHybridBreachEndpoint(region, surface) {
+  return Boolean(surface && region && (region.surfaceKind === "cave" || region.surfaceKind === "hybrid"));
+}
+
+export function createHybridBreachMouth(door, surface, region, corridorId = door?.corridorId) {
+  if (!door || !isHybridBreachEndpoint(region, surface)) return null;
+  const projection = getClosestHybridBoundaryProjection(getDoorCenter(door), surface);
+  if (!projection) return null;
+  const gridSize = surface.gridSize || DEFAULT_CONFIG.gridSize;
+  const width = gridSize * 1.08;
+  const half = width / 2;
+  const tangent = projection.tangent;
+  const center = projection.point;
+  const regionCenter = region.labelPoint || {
+    x: (region.cellRect.x + region.cellRect.w / 2) * gridSize,
+    y: (region.cellRect.y + region.cellRect.h / 2) * gridSize,
+  };
+  const normalA = { x: -tangent.y, y: tangent.x };
+  const radial = { x: center.x - regionCenter.x, y: center.y - regionCenter.y };
+  const outward = normalA.x * radial.x + normalA.y * radial.y >= 0 ? normalA : { x: -normalA.x, y: -normalA.y };
+  const doorCenter = getDoorCenter(door);
+  const towardCorridor = { x: doorCenter.x - center.x, y: doorCenter.y - center.y };
+  const normal = outward.x * towardCorridor.x + outward.y * towardCorridor.y >= 0 ? outward : { x: -outward.x, y: -outward.y };
+  const projectedDepth = normal.x * towardCorridor.x + normal.y * towardCorridor.y;
+  const depth = Math.max(gridSize * 0.55, Math.min(gridSize * 1.35, projectedDepth || gridSize * 0.72));
+  const leftAttach = { x: center.x - tangent.x * half, y: center.y - tangent.y * half };
+  const rightAttach = { x: center.x + tangent.x * half, y: center.y + tangent.y * half };
+  const innerCenter = { x: center.x - normal.x * gridSize * 0.16, y: center.y - normal.y * gridSize * 0.16 };
+  const outerCenter = { x: center.x + normal.x * depth, y: center.y + normal.y * depth };
+  const outerHalf = width * 0.38;
+  const leftOuter = { x: outerCenter.x - tangent.x * outerHalf, y: outerCenter.y - tangent.y * outerHalf };
+  const rightOuter = { x: outerCenter.x + tangent.x * outerHalf, y: outerCenter.y + tangent.y * outerHalf };
+  const terminalCenter = doorCenter;
+  const terminalHalf = gridSize * 0.5;
+  const terminalLeft = { x: terminalCenter.x - tangent.x * terminalHalf, y: terminalCenter.y - tangent.y * terminalHalf };
+  const terminalRight = { x: terminalCenter.x + tangent.x * terminalHalf, y: terminalCenter.y + tangent.y * terminalHalf };
+  return {
+    type: "cave-breach-mouth",
+    corridorId,
+    regionId: region.id,
+    center,
+    outerCenter,
+    innerCenter,
+    leftAttach,
+    rightAttach,
+    leftOuter,
+    rightOuter,
+    terminalCenter,
+    terminalLeft,
+    terminalRight,
+    tangent,
+    normal,
+    width,
+    depth,
+    openingType: "breach",
+    wallPoint: center,
+    boundarySegment: projection.segment,
+    finalBoundaryIndex: projection.index,
+  };
+}
+
+export function createHybridBreachDoor(door, surface, region) {
+  const mouth = createHybridBreachMouth(door, surface, region, door?.corridorId);
+  if (!mouth) return door;
+  const half = mouth.width / 2;
+  const { center, tangent, normal } = mouth;
+  return {
+    ...door,
+    breach: true,
+    x1: center.x - tangent.x * half,
+    y1: center.y - tangent.y * half,
+    x2: center.x + tangent.x * half,
+    y2: center.y + tangent.y * half,
+    openingType: "breach",
+    wallPoint: center,
+    tangent,
+    normal,
+    boundarySegment: mouth.boundarySegment,
+    finalBoundaryIndex: mouth.finalBoundaryIndex,
+  };
+}
+
+export function createHybridConnectorDoor(door, connectorPad) {
+  if (!door || !connectorPad) return door;
+  return {
+    ...door,
+    breach: true,
+    x1: connectorPad.caveAttachLeft.x,
+    y1: connectorPad.caveAttachLeft.y,
+    x2: connectorPad.caveAttachRight.x,
+    y2: connectorPad.caveAttachRight.y,
+    openingType: "breach",
+    wallPoint: connectorPad.caveAttachCenter,
+    tangent: connectorPad.tangent,
+    normal: connectorPad.normal,
+    caveConnectorPad: {
+      corridorId: connectorPad.corridorId,
+      endpoint: connectorPad.endpoint,
+      regionId: connectorPad.regionId,
+    },
+  };
+}
+
+export function stripHybridBreachDoorFields(door) {
+  if (!door) return door;
+  const {
+    breach,
+    openingKind,
+    openingType,
+    wallPoint,
+    tangent,
+    normal,
+    boundarySegment,
+    finalBoundaryIndex,
+    caveBreachMouth,
+    caveConnectorPad,
+    ...cleanDoor
+  } = door;
+  return cleanDoor;
+}
+
+export function createHybridEndpointOpening(corridor, endpoint, region, surface, door) {
+  const surfaceKind = region?.surfaceKind || "structure";
+  const base = {
+    regionId: region?.id || null,
+    surfaceKind,
+    endpoint,
+    anchor: endpoint === "from" ? corridor.fromAnchor : corridor.toAnchor,
+    openingType: "none",
+  };
+  if (isHybridBreachEndpoint(region, surface)) {
+    const caveConnectorPad = (surface.connectorPads || []).find((pad) => pad.corridorId === corridor.id && pad.endpoint === endpoint) || null;
+    return {
+      ...base,
+      openingType: caveConnectorPad ? "breach" : "none",
+      wallPoint: caveConnectorPad?.caveAttachCenter || null,
+      tangent: caveConnectorPad?.tangent || null,
+      normal: caveConnectorPad?.normal || null,
+      caveConnectorPad,
+    };
+  }
+  return {
+    ...base,
+    openingType: door ? "door" : "none",
+  };
+}
+
+export function reconcileHybridCorridorAnchors(generatedMap, finalGeometry) {
+  if (!finalGeometry?.regions || isPureCaveMap(generatedMap)) return generatedMap.corridors || [];
+  const regionById = new Map((generatedMap.regions || []).map((region) => [region.id, region]));
+  return (generatedMap.corridors || []).map((corridor) => {
+    if (corridor.surfaceKind !== "mine-tunnel") return corridor;
+    const fromRegion = regionById.get(corridor.from);
+    const toRegion = regionById.get(corridor.to);
+    const fromDoor = (corridor.doors || []).find((door) => door.endpoint === "from" || door.endpoint === "shared") || null;
+    const toDoor = (corridor.doors || []).find((door) => door.endpoint === "to" || door.endpoint === "shared") || null;
+    const fromOpening = createHybridEndpointOpening(corridor, "from", fromRegion, fromRegion ? finalGeometry.regions[fromRegion.id] : null, fromDoor);
+    const toOpening = createHybridEndpointOpening(corridor, "to", toRegion, toRegion ? finalGeometry.regions[toRegion.id] : null, toDoor);
+    const doors = (corridor.doors || []).map((door) => {
+      if (door.endpoint === "from") return fromOpening.openingType === "breach" ? createHybridConnectorDoor(door, fromOpening.caveConnectorPad) : stripHybridBreachDoorFields(door);
+      if (door.endpoint === "to") return toOpening.openingType === "breach" ? createHybridConnectorDoor(door, toOpening.caveConnectorPad) : stripHybridBreachDoorFields(door);
+      if (door.endpoint === "shared") {
+        if (fromOpening.openingType === "breach") return createHybridConnectorDoor(door, fromOpening.caveConnectorPad);
+        if (toOpening.openingType === "breach") return createHybridConnectorDoor(door, toOpening.caveConnectorPad);
+      }
+      return stripHybridBreachDoorFields(door);
+    });
+    return { ...corridor, fromOpening, toOpening, doors };
+  });
 }
 
 export function isUsableSvgPath(path) {

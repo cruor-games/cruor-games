@@ -815,6 +815,23 @@ export function isOrganicCorridor(corridor) {
   return ["natural-tunnel", "collapsed-transition"].includes(corridor?.surfaceKind) || corridor?.corridorStyle === "natural-tunnel";
 }
 
+export function shouldUseMineBreachOpening(config, corridorSurfaceKind, region, door) {
+  if (getContextKey(config?.context || config?.biome) !== "mine") return false;
+  if (corridorSurfaceKind !== "mine-tunnel") return false;
+  if (region?.surfaceKind === "structure") return false;
+  if (!door || door.hasStairs || door.secret || door.locked) return false;
+  return door.doorType === "default" || door.doorType === "open" || !door.doorType;
+}
+
+export function markMineBreachOpening(door, config, corridorSurfaceKind, region) {
+  if (!shouldUseMineBreachOpening(config, corridorSurfaceKind, region, door)) return door;
+  return {
+    ...door,
+    breach: true,
+    openingKind: "mine-breach",
+  };
+}
+
 export function getCorridorTopologyCells(corridor) {
   return Array.isArray(corridor?.pathCells) && corridor.pathCells.length > 0
     ? corridor.pathCells
@@ -941,6 +958,8 @@ export function routeCorridors(config, regions, graph) {
     const sharedConnection = getSharedRoomConnection(from, to, config.gridSize, edgeRng, manualFromAnchor, manualToAnchor, routingProfile);
     if (sharedConnection) {
       const naturalCaveConnection = pureCaveContext && shouldUseOrganicTunnel(config, from, to);
+      const sharedBreachRegion = from.surfaceKind === "structure" ? to : from;
+      const sharedDoor = markMineBreachOpening(decorateDoorSegment(sharedConnection.door, config, edge, "shared"), config, corridorSurfaceKind, sharedBreachRegion);
       return [{
         ...edge,
         isRoomLink: true,
@@ -952,7 +971,7 @@ export function routeCorridors(config, regions, graph) {
         centerline: [],
         manualWaypoints: [],
         waypoints: [],
-        doors: naturalCaveConnection ? [] : [decorateDoorSegment(sharedConnection.door, config, edge, "shared")],
+        doors: naturalCaveConnection ? [] : [sharedDoor],
       }];
     }
     const forbiddenOutsideCells = new Set(dynamicRoomCells);
@@ -998,6 +1017,9 @@ export function routeCorridors(config, regions, graph) {
       y: (cell.y + 0.5) * config.gridSize,
     }));
 
+    const fromDoor = markMineBreachOpening(decorateDoorSegment(createDoorFromAnchor(fromAnchor, config.gridSize, edge.secret), config, edge, "from"), config, corridorSurfaceKind, from);
+    const toDoor = markMineBreachOpening(decorateDoorSegment(createDoorFromAnchor(toAnchor, config.gridSize, edge.secret), config, edge, "to"), config, corridorSurfaceKind, to);
+
     return [{
       ...edge,
       surfaceKind: corridorSurfaceKind,
@@ -1011,10 +1033,7 @@ export function routeCorridors(config, regions, graph) {
       waypoints: dedupePoints(extractWaypoints(centerline)),
       doors: pureCaveContext && organicTunnel
         ? []
-        : dedupeDoorSegments([
-          decorateDoorSegment(createDoorFromAnchor(fromAnchor, config.gridSize, edge.secret), config, edge, "from"),
-          decorateDoorSegment(createDoorFromAnchor(toAnchor, config.gridSize, edge.secret), config, edge, "to"),
-        ]),
+        : dedupeDoorSegments([fromDoor, toDoor]),
     }];
   });
 

@@ -219,16 +219,7 @@ export function getRegionSurfaceProfile(region, contextKey = "crypt") {
     if (flags.vertical || flags.ruined || text.includes("shaft") || text.includes("support") || text.includes("rail")) return "hybrid";
     return "cave";
   }
-  if (contextKey === "ruins") {
-    if (text.includes("cave") || text.includes("cavern") || text.includes("sinkhole") || text.includes("undercroft")) return "cave";
-    if (flags.ruined || flags.hazard || flags.water || text.includes("collapsed")) return "hybrid";
-    return "structure";
-  }
-  if (contextKey === "crypt") {
-    if (text.includes("cave") || text.includes("natural") || text.includes("fissure")) return "cave";
-    if (flags.ruined || flags.hazard || flags.water || text.includes("collapsed")) return "hybrid";
-    return "structure";
-  }
+  if (contextKey === "ruins" || contextKey === "crypt") return "structure";
   return "structure";
 }
 
@@ -240,6 +231,7 @@ export function getCorridorSurfaceProfile(config, fromRegion, toRegion, edge = n
 
   if (contextKey === "cave") return "natural-tunnel";
   if (contextKey === "mine") return "mine-tunnel";
+  if (contextKey === "ruins" || contextKey === "crypt") return "structure";
   if (edgeText.includes("collapse") || edgeText.includes("rubble") || edgeText.includes("breach")) return "collapsed-transition";
   if (fromSurface === "cave" && toSurface === "cave") return "natural-tunnel";
   if (fromSurface !== toSurface || fromSurface === "hybrid" || toSurface === "hybrid") return "collapsed-transition";

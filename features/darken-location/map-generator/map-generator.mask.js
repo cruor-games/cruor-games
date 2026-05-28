@@ -899,11 +899,15 @@ export function buildDungeonMask(regions, corridors, gridSize) {
 }
 
 export function getRegionSurfaceKind(region, generatedMap = null) {
+  const contextKey = generatedMap?.config
+    ? getContextKey(generatedMap.config.context || generatedMap.config.biome)
+    : getContextKey(region?.placementProfile || "");
   const explicit = region?.surfaceKind || region?.generationKind || region?.surface?.kind;
-  if (["cave", "hybrid", "organic-cave", "natural"].includes(explicit)) return "cave";
+  if (["cave", "hybrid", "organic-cave", "natural"].includes(explicit)) {
+    return contextKey === "cave" || contextKey === "mine" ? "cave" : "dungeon";
+  }
   if (["structure", "dungeon", "structured", "room"].includes(explicit)) return "dungeon";
-  if (region?.placementProfile === "cave" || region?.shape === "cave") return "cave";
-  const contextKey = generatedMap?.config ? getContextKey(generatedMap.config.context || generatedMap.config.biome) : "";
+  if ((region?.placementProfile === "cave" || region?.shape === "cave") && (contextKey === "cave" || contextKey === "mine")) return "cave";
   return contextKey === "cave" ? "cave" : "dungeon";
 }
 

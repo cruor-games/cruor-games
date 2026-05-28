@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Download, Eye, EyeOff, Grid3X3, Maximize2, Minus, Plus, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { DEFAULT_CONFIG, normalizeRoomCount } from "./map-generator.input.js";
+import { createPortal } from "react-dom";
+import { registerTooltipProvider } from "../../../shared/tooltips/tooltip.registry.js";
+import { DEFAULT_CONFIG, createConfigFromNormalizedMapRequest, normalizeRoomCount } from "./map-generator.input.js";
 import {
   LEVEL_VIEW_ALL,
   MANUAL_OVERRIDE_SCHEMA_VERSION,
@@ -222,6 +221,16 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+function getFixedContextMenuPosition(event, width = 250, height = 280) {
+  const margin = 8;
+  const viewportWidth = typeof window === "undefined" ? width + margin * 2 : window.innerWidth;
+  const viewportHeight = typeof window === "undefined" ? height + margin * 2 : window.innerHeight;
+  return {
+    x: clamp(event.clientX, margin, Math.max(margin, viewportWidth - width - margin)),
+    y: clamp(event.clientY, margin, Math.max(margin, viewportHeight - height - margin)),
+  };
+}
+
 function roundTo(value, decimals = 2) {
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
@@ -385,12 +394,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setJunctionContextMenu(null);
     setWaypointContextMenu(null);
     setAddWaypointContextMenu(null);
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     setMapContextMenu({
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 280)),
+      ...getFixedContextMenuPosition(event, 250, 280),
     });
   }
 
@@ -398,9 +403,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     setMapContextMenu(null);
     setDoorContextMenu(null);
     setJunctionContextMenu(null);
@@ -408,8 +410,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setAddWaypointContextMenu(null);
     setRoomContextMenu({
       regionId: region.id,
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 280)),
+      ...getFixedContextMenuPosition(event, 250, 280),
     });
   }
 
@@ -556,9 +557,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor || !isExternalMapBoundaryZone(zone)) return false;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return true;
-    const rect = viewport.getBoundingClientRect();
     const anchor = getPureCaveWallAnchorFromEvent(event, zone) || zone.anchor;
     const regionAccess = getMapAccessForRegion(zone.regionId);
     setRoomContextMenu(null);
@@ -573,8 +571,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       hasRegionAccess: Boolean(regionAccess),
       hasAccessAtAnchor: mapAccessMatchesAnchor(regionAccess, anchor),
       accessType: regionAccess?.type || "passage",
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 220)),
+      ...getFixedContextMenuPosition(event, 250, 220),
     });
     return true;
   }
@@ -874,9 +871,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     setRoomContextMenu(null);
     setMapContextMenu(null);
     setJunctionContextMenu(null);
@@ -886,8 +880,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       corridorId: handle.corridor.id,
       endpoint: handle.endpoint,
       fallbackType: handle.corridor.secret ? "secret" : "default",
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 250)),
+      ...getFixedContextMenuPosition(event, 250, 250),
     });
     setHoverCorridorHandle(null);
     setHoverWallHandle(null);
@@ -897,9 +890,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor || !junction) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     setRoomContextMenu(null);
     setDoorContextMenu(null);
     setMapContextMenu(null);
@@ -909,8 +899,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       key: junction.key,
       cell: junction.cell,
       corridorIds: junction.corridors.map((corridor) => corridor.id),
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 250)),
+      ...getFixedContextMenuPosition(event, 250, 250),
     });
     setHoverCorridorHandle(null);
     setHoverWallHandle(null);
@@ -920,9 +909,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor || !handle) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     setRoomContextMenu(null);
     setDoorContextMenu(null);
     setJunctionContextMenu(null);
@@ -936,8 +922,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       cell: handle.cell,
       junctionKey: junction?.key || null,
       junctionCorridorIds: junction?.corridors?.map((corridor) => corridor.id) || [],
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 220)),
+      ...getFixedContextMenuPosition(event, 250, 220),
     });
     setHoveredCorridorId(handle.corridor.id);
   }
@@ -946,9 +931,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor) return;
     event.preventDefault();
     event.stopPropagation();
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
     const cell = {
       x: Math.floor(handle.x / generatedMap.config.gridSize),
       y: Math.floor(handle.y / generatedMap.config.gridSize),
@@ -966,8 +948,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       cell,
       junctionKey: junction?.key || null,
       junctionCorridorIds: junction?.corridors?.map((corridor) => corridor.id) || [],
-      x: clamp(event.clientX - rect.left, 8, Math.max(8, rect.width - 250)),
-      y: clamp(event.clientY - rect.top, 8, Math.max(8, rect.height - 280)),
+      ...getFixedContextMenuPosition(event, 250, 280),
     });
     setHoverCorridorHandle(null);
     setHoveredCorridorId(handle.corridor.id);
@@ -1184,12 +1165,6 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
 
   return (
     <>
-      <div className="zoom-toolbar">
-        <Button className="mvp-button zoom-button" onClick={() => zoomAtCenter(1.15)}><Plus size={15} /> Zoom</Button>
-        <Button className="mvp-button zoom-button" onClick={() => zoomAtCenter(0.85)}><Minus size={15} /> Zoom</Button>
-        <Button className="mvp-button zoom-button" onClick={fitView}><Maximize2 size={15} /> Fit</Button>
-        <span className="zoom-scale">{Math.round(view.scale * 100)}%</span>
-      </div>
       <div
         ref={viewportRef}
         className={`map-viewport ${isPanning ? "is-panning" : ""}`}
@@ -1257,81 +1232,97 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
             }}
           />
         </div>
-        <RoomStyleContextMenu
-          menu={roomContextMenu}
-          generatedMap={generatedMap}
-          manualOverrides={manualOverrides || createEmptyManualOverrides()}
-          onChange={onRoomStyleChange}
-          onReset={onRoomStyleReset}
-          onClose={() => setRoomContextMenu(null)}
-        />
-        <DoorContextMenu
-          menu={doorContextMenu}
-          manualOverrides={manualOverrides || createEmptyManualOverrides()}
-          isPureCave={pureCaveEditor}
-          onTypeChange={onDoorTypeChange}
-          onStairChange={onDoorStairChange}
-          onDelete={onConnectionDelete}
-          onClose={() => setDoorContextMenu(null)}
-        />
-        <CorridorJunctionContextMenu
-          menu={junctionContextMenu}
-          manualOverrides={manualOverrides || createEmptyManualOverrides()}
-          isPureCave={pureCaveEditor}
-          onChange={onJunctionTypeChange}
-          onClose={() => setJunctionContextMenu(null)}
-        />
-        <WaypointContextMenu
-          menu={waypointContextMenu}
-          manualOverrides={manualOverrides || createEmptyManualOverrides()}
-          isPureCave={pureCaveEditor}
-          onDeleteWaypoint={onWaypointDelete}
-          onDeleteConnection={onConnectionDelete}
-          onJunctionChange={onJunctionTypeChange}
-          onClose={() => setWaypointContextMenu(null)}
-        />
-        <AddWaypointContextMenu
-          menu={addWaypointContextMenu}
-          manualOverrides={manualOverrides || createEmptyManualOverrides()}
-          isPureCave={pureCaveEditor}
-          onAddWaypoint={onWaypointInsert}
-          onJunctionChange={onJunctionTypeChange}
-          onClose={() => setAddWaypointContextMenu(null)}
-        />
-        <WallAccessContextMenu
-          menu={wallAccessContextMenu}
-          onSet={onMapAccessSet}
-          onRemove={onMapAccessRemove}
-          onClose={() => setWallAccessContextMenu(null)}
-        />
-        <MapActionContextMenu
-          menu={mapContextMenu}
-          showGrid={showGrid}
-          showEditor={showEditor}
-          showProps={showProps}
-          levelView={levelView}
-          availableLevels={availableLevels}
-          fadeOtherLevels={fadeOtherLevels}
-          gridStyle={gridStyle}
-          onNewSeed={onNewSeed}
-          onToggleGrid={onToggleGrid}
-          onGridStyleChange={onGridStyleChange}
-          onToggleEditor={onToggleEditor}
-          onToggleProps={onToggleProps}
-          onLevelViewChange={onLevelViewChange}
-          onToggleFadeOtherLevels={onToggleFadeOtherLevels}
-          onExportSvg={onExportSvg}
-          onExportGmSvg={onExportGmSvg}
-          onExportPlayerSvg={onExportPlayerSvg}
-          onExportPrintSvg={onExportPrintSvg}
-          onExportState={onExportState}
-          onImportState={onImportState}
-          onUndo={onUndo}
-          onRedo={onRedo}
-          onClose={() => setMapContextMenu(null)}
-        />
+        <ContextMenuPortal>
+          <RoomStyleContextMenu
+            menu={roomContextMenu}
+            generatedMap={generatedMap}
+            manualOverrides={manualOverrides || createEmptyManualOverrides()}
+            onChange={onRoomStyleChange}
+            onReset={onRoomStyleReset}
+            onClose={() => setRoomContextMenu(null)}
+          />
+          <DoorContextMenu
+            menu={doorContextMenu}
+            manualOverrides={manualOverrides || createEmptyManualOverrides()}
+            isPureCave={pureCaveEditor}
+            onTypeChange={onDoorTypeChange}
+            onStairChange={onDoorStairChange}
+            onDelete={onConnectionDelete}
+            onClose={() => setDoorContextMenu(null)}
+          />
+          <CorridorJunctionContextMenu
+            menu={junctionContextMenu}
+            manualOverrides={manualOverrides || createEmptyManualOverrides()}
+            isPureCave={pureCaveEditor}
+            onChange={onJunctionTypeChange}
+            onClose={() => setJunctionContextMenu(null)}
+          />
+          <WaypointContextMenu
+            menu={waypointContextMenu}
+            manualOverrides={manualOverrides || createEmptyManualOverrides()}
+            isPureCave={pureCaveEditor}
+            onDeleteWaypoint={onWaypointDelete}
+            onDeleteConnection={onConnectionDelete}
+            onJunctionChange={onJunctionTypeChange}
+            onClose={() => setWaypointContextMenu(null)}
+          />
+          <AddWaypointContextMenu
+            menu={addWaypointContextMenu}
+            manualOverrides={manualOverrides || createEmptyManualOverrides()}
+            isPureCave={pureCaveEditor}
+            onAddWaypoint={onWaypointInsert}
+            onJunctionChange={onJunctionTypeChange}
+            onClose={() => setAddWaypointContextMenu(null)}
+          />
+          <WallAccessContextMenu
+            menu={wallAccessContextMenu}
+            onSet={onMapAccessSet}
+            onRemove={onMapAccessRemove}
+            onClose={() => setWallAccessContextMenu(null)}
+          />
+          <MapActionContextMenu
+            menu={mapContextMenu}
+            showGrid={showGrid}
+            showEditor={showEditor}
+            showProps={showProps}
+            levelView={levelView}
+            availableLevels={availableLevels}
+            fadeOtherLevels={fadeOtherLevels}
+            gridStyle={gridStyle}
+            onNewSeed={onNewSeed}
+            onToggleGrid={onToggleGrid}
+            onGridStyleChange={onGridStyleChange}
+            onToggleEditor={onToggleEditor}
+            onToggleProps={onToggleProps}
+            onLevelViewChange={onLevelViewChange}
+            onToggleFadeOtherLevels={onToggleFadeOtherLevels}
+            onExportSvg={onExportSvg}
+            onExportGmSvg={onExportGmSvg}
+            onExportPlayerSvg={onExportPlayerSvg}
+            onExportPrintSvg={onExportPrintSvg}
+            onExportState={onExportState}
+            onImportState={onImportState}
+            onUndo={onUndo}
+            onRedo={onRedo}
+            onClose={() => setMapContextMenu(null)}
+          />
+        </ContextMenuPortal>
       </div>
-      <div className="zoom-hint">Wheel zooms. Click and drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.</div>
+      <div className="map-canvas-bottombar">
+        <div className="zoom-toolbar" aria-label="Map zoom controls">
+          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Zoom In", "Increase the map zoom.", "+")} aria-label="Zoom In" onClick={() => zoomAtCenter(1.15)}>
+            <i className="fa-solid fa-plus" aria-hidden="true" />
+          </button>
+          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Zoom Out", "Decrease the map zoom.", "-")} aria-label="Zoom Out" onClick={() => zoomAtCenter(0.85)}>
+            <i className="fa-solid fa-minus" aria-hidden="true" />
+          </button>
+          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Fit Map", "Fit the whole map in view.", "0")} aria-label="Fit Map" onClick={fitView}>
+            <i className="fa-solid fa-expand" aria-hidden="true" />
+          </button>
+          <span className="zoom-scale">{Math.round(view.scale * 100)}%</span>
+        </div>
+        <div className="zoom-hint">Wheel zooms. Drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.</div>
+      </div>
     </>
   );
 }
@@ -1343,7 +1334,7 @@ function getRoomStyleMenuOptions(contextKey) {
     { value: "l-shape", label: "L-Shape" },
     { value: "circle", label: "Circle" },
     { value: "shaft", label: "Shaft / Oval" },
-    { value: "cave", label: "Cave" },
+    ...(contextKey === "cave" || contextKey === "mine" ? [{ value: "cave", label: "Cave" }] : []),
   ];
   const types = [
     { value: "none", label: "None" },
@@ -1355,7 +1346,7 @@ function getRoomStyleMenuOptions(contextKey) {
   return {
     shapes,
     types,
-    sizes: Object.keys(ROOM_SIZE_MENU_PRESETS).map((value) => ({ value, label: value, dimensions: `${ROOM_SIZE_MENU_PRESETS[value].w}×${ROOM_SIZE_MENU_PRESETS[value].h}` })),
+    sizes: Object.keys(ROOM_SIZE_MENU_PRESETS).map((value) => ({ value, label: value, dimensions: `${ROOM_SIZE_MENU_PRESETS[value].w}\u00D7${ROOM_SIZE_MENU_PRESETS[value].h}` })),
     toggles: [
       { key: "notch", label: "Notch" },
       { key: "ruined", label: "Ruined" },
@@ -1380,6 +1371,7 @@ function inferGeneratedRoomShape(region) {
 function getRoomStyleForMenu(region, manualOverrides) {
   const manual = manualOverrides.roomStyles?.[region.id] || {};
   return {
+    surfaceKind: manual.surfaceKind || region.surfaceKind || "structure",
     shape: manual.shape || inferGeneratedRoomShape(region),
     roomType: manual.roomType || inferGeneratedRoomType(region),
     sizePreset: manual.sizePreset || region.size || "Medium",
@@ -1408,18 +1400,63 @@ function ConfirmingDeleteButton({ label = "Delete", confirmLabel = "Confirm Dele
   );
 }
 
+function ContextMenuPortal({ children }) {
+  if (typeof document === "undefined") return children;
+  return createPortal(children, document.body);
+}
+
+function useContextMenuDismiss(isOpen, onClose) {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen || typeof document === "undefined") return undefined;
+
+    const handlePointerDown = (event) => {
+      if (menuRef.current?.contains?.(event.target)) return;
+      onClose?.();
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") onClose?.();
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+    };
+  }, [isOpen, onClose]);
+
+  return menuRef;
+}
+
 function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, onReset, onClose }) {
-  const [activeGroup, setActiveGroup] = useState("shape");
+  const [activeGroup, setActiveGroup] = useState("type");
   if (!menu) return null;
   const region = generatedMap.regions.find((item) => item.id === menu.regionId);
   if (!region) return null;
   const contextKey = getContextKey(generatedMap.config.context || generatedMap.config.biome);
   const options = getRoomStyleMenuOptions(contextKey);
-  const style = getRoomStyleForMenu(region, manualOverrides);
+  const cavernSupported = contextKey === "cave" || contextKey === "mine";
+  let style = getRoomStyleForMenu(region, manualOverrides);
+  if (!cavernSupported && (style.shape === "cave" || style.surfaceKind === "cave" || style.surfaceKind === "hybrid")) {
+    style = {
+      ...style,
+      shape: "rect",
+      surfaceKind: "structure",
+    };
+  }
+  const roomKind = style.shape === "cave" || style.surfaceKind === "cave" || style.surfaceKind === "hybrid" ? "cavern" : "building";
   const activeShape = options.shapes.find((shape) => shape.value === style.shape)?.label || style.shape;
-  const activeType = options.types.find((type) => type.value === style.roomType)?.label || style.roomType || "None";
+  const activeType = roomKind === "cavern" ? "Cavern" : "Building";
   const activeSize = options.sizes.find((size) => size.value === style.sizePreset)?.label || style.sizePreset;
-  const activeModifiers = options.toggles.filter((toggle) => style[toggle.key]).map((toggle) => toggle.label);
+  const activeRoomType = options.types.find((type) => type.value === style.roomType)?.label || style.roomType || "None";
+  const activeModifiers = [
+    ...(style.roomType && style.roomType !== "none" ? [activeRoomType] : []),
+    ...options.toggles.filter((toggle) => style[toggle.key]).map((toggle) => toggle.label),
+  ];
 
   return (
     <div
@@ -1430,18 +1467,51 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
     >
       <div className="room-context-menu__header">
         <strong>{region.name}</strong>
-        <span>{region.number} · {contextKey} · {region.cellRect.w}×{region.cellRect.h}</span>
+        <span>{region.number} {"\u00B7"} {contextKey} {"\u00B7"} {region.cellRect.w}{"\u00D7"}{region.cellRect.h}</span>
       </div>
       <div className="room-context-menu__body">
+        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("type")}>
+          <button type="button" className="room-context-menu__trigger">
+            <span>Type</span>
+            <span>{activeType} {"\u203A"}</span>
+          </button>
+          {activeGroup === "type" && (
+            <div className="room-context-submenu">
+              <div className="room-context-submenu__hint">Region surface model</div>
+              <button
+                type="button"
+                className={roomKind === "building" ? "is-active" : ""}
+                onClick={() => onChange(region.id, { shape: "rect", surfaceKind: "structure" })}
+              >
+                <span>Building</span>
+                <span>{roomKind === "building" ? "Active" : ""}</span>
+              </button>
+              <button
+                type="button"
+                className={roomKind === "cavern" ? "is-active" : ""}
+                disabled={!cavernSupported}
+                onClick={() => onChange(region.id, { shape: "cave", surfaceKind: "cave", roomType: "none", notch: false, ruined: false })}
+              >
+                <span>Cavern</span>
+                <span>{!cavernSupported ? "Unavailable" : roomKind === "cavern" ? "Active" : ""}</span>
+              </button>
+            </div>
+          )}
+        </div>
         <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("shape")}>
           <button type="button" className="room-context-menu__trigger">
             <span>Shape</span>
-            <span>{activeShape} ›</span>
+            <span>{roomKind === "cavern" ? "Not available" : activeShape} {"\u203A"}</span>
           </button>
           {activeGroup === "shape" && (
             <div className="room-context-submenu">
               <div className="room-context-submenu__hint">Base footprint</div>
-              {options.shapes.map((shape) => (
+              {roomKind === "cavern" ? (
+                <button type="button" disabled>
+                  <span>Not available</span>
+                  <span />
+                </button>
+              ) : options.shapes.map((shape) => (
                 <button
                   key={shape.value}
                   type="button"
@@ -1449,29 +1519,7 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                   onClick={() => onChange(region.id, { shape: shape.value })}
                 >
                   <span>{shape.label}</span>
-                  <span>{style.shape === shape.value ? "✓" : ""}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("type")}>
-          <button type="button" className="room-context-menu__trigger">
-            <span>Type</span>
-            <span>{activeType} ›</span>
-          </button>
-          {activeGroup === "type" && (
-            <div className="room-context-submenu">
-              <div className="room-context-submenu__hint">Room-specific structure</div>
-              {options.types.map((type) => (
-                <button
-                  key={type.value}
-                  type="button"
-                  className={style.roomType === type.value ? "is-active" : ""}
-                  onClick={() => onChange(region.id, { roomType: type.value })}
-                >
-                  <span>{type.label}</span>
-                  <span>{style.roomType === type.value ? "✓" : ""}</span>
+                  <span>{style.shape === shape.value ? "Active" : ""}</span>
                 </button>
               ))}
             </div>
@@ -1480,7 +1528,7 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
         <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("size")}>
           <button type="button" className="room-context-menu__trigger">
             <span>Size</span>
-            <span>{activeSize} ›</span>
+            <span>{activeSize} {"\u203A"}</span>
           </button>
           {activeGroup === "size" && (
             <div className="room-context-submenu">
@@ -1493,7 +1541,7 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                   onClick={() => onChange(region.id, { sizePreset: size.value })}
                 >
                   <span>{size.label}</span>
-                  <span>{size.dimensions}{style.sizePreset === size.value ? " ✓" : ""}</span>
+                  <span>{size.dimensions}{style.sizePreset === size.value ? " Active" : ""}</span>
                 </button>
               ))}
             </div>
@@ -1502,22 +1550,42 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
         <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("modifiers")}>
           <button type="button" className="room-context-menu__trigger">
             <span>Modifiers</span>
-            <span>{activeModifiers.length > 0 ? activeModifiers.length : "None"} ›</span>
+            <span>{roomKind === "cavern" ? "Not available" : activeModifiers.length > 0 ? activeModifiers.length : "None"} {"\u203A"}</span>
           </button>
           {activeGroup === "modifiers" && (
             <div className="room-context-submenu">
-              <div className="room-context-submenu__hint">Extra cuts</div>
-              {options.toggles.map((toggle) => (
-                <button
-                  key={toggle.key}
-                  type="button"
-                  className={style[toggle.key] ? "is-active" : ""}
-                  onClick={() => onChange(region.id, { [toggle.key]: !style[toggle.key] })}
-                >
-                  <span>{toggle.label}</span>
-                  <span>{style[toggle.key] ? "✓" : ""}</span>
+              <div className="room-context-submenu__hint">Room-specific structure</div>
+              {roomKind === "cavern" ? (
+                <button type="button" disabled>
+                  <span>Not available</span>
+                  <span />
                 </button>
-              ))}
+              ) : (
+                <>
+                  {options.types.map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      className={style.roomType === type.value ? "is-active" : ""}
+                      onClick={() => onChange(region.id, { roomType: type.value })}
+                    >
+                      <span>{type.label}</span>
+                      <span>{style.roomType === type.value ? "Active" : ""}</span>
+                    </button>
+                  ))}
+                  {options.toggles.map((toggle) => (
+                    <button
+                      key={toggle.key}
+                      type="button"
+                      className={style[toggle.key] ? "is-active" : ""}
+                      onClick={() => onChange(region.id, { [toggle.key]: !style[toggle.key] })}
+                    >
+                      <span>{toggle.label}</span>
+                      <span>{style[toggle.key] ? "Active" : ""}</span>
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
@@ -1531,10 +1599,12 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
 }
 
 function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
+  const menuRef = useContextMenuDismiss(Boolean(menu), onClose);
   if (!menu) return null;
   const actionLabel = menu.hasAccessAtAnchor ? "Remove Passage" : menu.hasRegionAccess ? "Move Passage Here" : "Add Passage";
   return (
     <div
+      ref={menuRef}
       className="room-context-menu wall-access-context-menu"
       style={{ left: menu.x, top: menu.y }}
       onPointerDown={(event) => event.stopPropagation()}
@@ -1542,7 +1612,7 @@ function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
     >
       <div className="room-context-menu__header">
         <strong>Map Passage</strong>
-        <span>{menu.regionId} · {menu.anchor?.side || "wall"}</span>
+        <span>{menu.regionId} {"\u00B7"} {menu.anchor?.side || "wall"}</span>
       </div>
       <div className="room-context-menu__body">
         <button
@@ -1551,14 +1621,15 @@ function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
           onClick={() => {
             if (menu.hasAccessAtAnchor) {
               onRemove?.(menu.regionId);
+              onClose?.();
               return;
             }
             onSet?.(menu.regionId, menu.anchor, menu.accessType || "passage");
-            if (!menu.hasRegionAccess) onClose?.();
+            onClose?.();
           }}
         >
           <span><i className="fa-solid fa-route" aria-hidden="true" /> {actionLabel}</span>
-          <span>›</span>
+          <span aria-hidden="true">{"\u203A"}</span>
         </button>
       </div>
       <div className="room-context-menu__actions">
@@ -1592,7 +1663,7 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
     >
       <div className="room-context-menu__header">
         <strong>{hasJunction ? junctionPointLabel : pointLabel}</strong>
-        <span>{menu.corridorId} · Cell {menu.cell.x},{menu.cell.y}</span>
+        <span>{menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}</span>
       </div>
       <div className="room-context-menu__body">
         <button
@@ -1601,7 +1672,7 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
           onClick={() => { onAddWaypoint?.(menu.corridorId, menu.insertIndex, menu.point); onClose?.(); }}
         >
           <span>{addLabel}</span>
-          <span>›</span>
+          <span aria-hidden="true">{"\u203A"}</span>
         </button>
         {hasJunction && (
           <>
@@ -1614,7 +1685,7 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
                 onClick={() => { onJunctionChange?.(menu.junctionKey, type); }}
               >
                 <span>{junctionLabels[type]}</span>
-                <span>{currentJunctionType === type ? "✓" : ""}</span>
+                <span>{currentJunctionType === type ? "\u2713" : ""}</span>
               </button>
             ))}
           </>
@@ -1652,7 +1723,7 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
     >
       <div className="room-context-menu__header">
         <strong>{hasJunction ? junctionWaypointLabel : waypointLabel}</strong>
-        <span>{menu.corridorId} · Cell {menu.cell.x},{menu.cell.y}</span>
+        <span>{menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}</span>
       </div>
       <div className="room-context-menu__body">
         <ConfirmingDeleteButton
@@ -1672,7 +1743,7 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
                 onClick={() => { onJunctionChange?.(menu.junctionKey, type); }}
               >
                 <span>{junctionLabels[type]}</span>
-                <span>{currentJunctionType === type ? "✓" : ""}</span>
+                <span>{currentJunctionType === type ? "\u2713" : ""}</span>
               </button>
             ))}
           </>
@@ -1702,7 +1773,7 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false
     >
       <div className="room-context-menu__header">
         <strong>{isPureCave ? "Tunnel Connection" : "Corridor Junction"}</strong>
-        <span>Cell {menu.cell.x},{menu.cell.y} · {menu.corridorIds.length} {isPureCave ? "passages" : "corridors"}</span>
+        <span>Cell {menu.cell.x},{menu.cell.y} {"\u00B7"} {menu.corridorIds.length} {isPureCave ? "passages" : "corridors"}</span>
       </div>
       <div className="room-context-menu__body">
         {JUNCTION_TYPE_OPTIONS.map((type) => (
@@ -1713,7 +1784,7 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false
             onClick={() => { onChange?.(menu.key, type); }}
           >
             <span>{labels[type]}</span>
-            <span>{currentType === type ? "✓" : ""}</span>
+            <span>{currentType === type ? "\u2713" : ""}</span>
           </button>
         ))}
       </div>
@@ -1749,7 +1820,7 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
     >
       <div className="room-context-menu__header">
         <strong>{isPureCave ? "Passage" : "Door"}</strong>
-        <span>{menu.corridorId} · {menu.endpoint}</span>
+        <span>{menu.corridorId} {"\u00B7"} {menu.endpoint}</span>
       </div>
       <div className="room-context-menu__body">
         {DOOR_TYPE_OPTIONS.map((type) => (
@@ -1760,7 +1831,7 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
             onClick={() => { onTypeChange?.(menu.corridorId, menu.endpoint, type); }}
           >
             <span>{labels[type]}</span>
-            <span>{currentType === type ? "✓" : ""}</span>
+            <span>{currentType === type ? "\u2713" : ""}</span>
           </button>
         ))}
         <div className="room-context-menu__label">Stair</div>
@@ -1772,7 +1843,7 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
             onClick={() => { onStairChange?.(menu.corridorId, menu.endpoint, type); }}
           >
             <span>{stairLabels[type]}</span>
-            <span>{currentStair === type ? "✓" : ""}</span>
+            <span>{currentStair === type ? "\u2713" : ""}</span>
           </button>
         ))}
       </div>
@@ -1820,11 +1891,11 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="context-menu-toolbar" aria-label="Quick map actions">
-        <button type="button" title="Undo" aria-label="Undo" onClick={() => run(onUndo)}>{icon("rotate-left")}</button>
-        <button type="button" title="Redo" aria-label="Redo" onClick={() => run(onRedo)}>{icon("rotate-right")}</button>
+        <button type="button" {...getGenericTooltipAttrs("Undo")} aria-label="Undo" onClick={() => run(onUndo)}>{icon("rotate-left")}</button>
+        <button type="button" {...getGenericTooltipAttrs("Redo")} aria-label="Redo" onClick={() => run(onRedo)}>{icon("rotate-right")}</button>
         <span className="context-menu-toolbar__divider" />
-        <button type="button" className={showGrid ? "is-active" : ""} title="Toggle Grid" aria-label="Toggle Grid" onClick={() => run(onToggleGrid)}>{icon("border-all")}</button>
-        <button type="button" className={showEditor ? "is-active" : ""} title="Toggle Editor View" aria-label="Toggle Editor View" onClick={() => run(onToggleEditor)}>{icon("pen-ruler")}</button>
+        <button type="button" className={showGrid ? "is-active" : ""} {...getGenericTooltipAttrs("Toggle Grid")} aria-label="Toggle Grid" onClick={() => run(onToggleGrid)}>{icon("border-all")}</button>
+        <button type="button" className={showEditor ? "is-active" : ""} {...getGenericTooltipAttrs("Toggle Editor View")} aria-label="Toggle Editor View" onClick={() => run(onToggleEditor)}>{icon("pen-ruler")}</button>
       </div>
       <div className="room-context-menu__header">
         <strong>Map Actions</strong>
@@ -1833,12 +1904,12 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
       <div className="room-context-menu__body">
         <button type="button" className="room-context-menu__trigger" onClick={() => runAndClose(onNewSeed)}>
           <span>{icon("shuffle")} New Seed</span>
-          <span>›</span>
+          <span aria-hidden="true">{"\u203A"}</span>
         </button>
         <div className="room-context-menu__item">
           <button type="button" className="room-context-menu__trigger">
             <span>{icon("border-all")} Grid</span>
-            <span>{gridLabels[normalizeGridStyle(gridStyle)]} ›</span>
+            <span>{gridLabels[normalizeGridStyle(gridStyle)]} {"\u203A"}</span>
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Grid rendering</div>
@@ -1850,7 +1921,7 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
                 onClick={() => setGridStyleOnly(style)}
               >
                 <span>{icon(style === "solid" ? "table-cells" : style === "dotted" ? "braille" : style === "dashed" ? "grip-lines" : "eye-slash")} {gridLabels[style]}</span>
-                <span>{normalizeGridStyle(gridStyle) === style ? "✓" : ""}</span>
+                <span>{normalizeGridStyle(gridStyle) === style ? "\u2713" : ""}</span>
               </button>
             ))}
           </div>
@@ -1862,7 +1933,7 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
         <div className="room-context-menu__item">
           <button type="button" className="room-context-menu__trigger">
             <span>{icon("layer-group")} Levels</span>
-            <span>{levelLabel} ›</span>
+            <span>{levelLabel} {"\u203A"}</span>
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Level visibility</div>
@@ -1872,7 +1943,7 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
               onClick={() => onLevelViewChange?.(LEVEL_VIEW_ALL)}
             >
               <span>{icon("layer-group")} All Levels</span>
-              <span>{normalizedLevelView === LEVEL_VIEW_ALL ? "✓" : ""}</span>
+              <span>{normalizedLevelView === LEVEL_VIEW_ALL ? "\u2713" : ""}</span>
             </button>
             {availableLevels.map((level) => (
               <button
@@ -1882,7 +1953,7 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
                 onClick={() => onLevelViewChange?.(level)}
               >
                 <span>{icon(levelIconName(level))} Level {formatMapLevel(level)}</span>
-                <span>{normalizedLevelView === level ? "✓" : ""}</span>
+                <span>{normalizedLevelView === level ? "\u2713" : ""}</span>
               </button>
             ))}
             <button
@@ -1898,20 +1969,20 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
         <div className="room-context-menu__item">
           <button type="button" className="room-context-menu__trigger">
             <span>{icon("file-export")} Export</span>
-            <span>›</span>
+            <span aria-hidden="true">{"\u203A"}</span>
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Output format</div>
-            <button type="button" onClick={() => run(onExportSvg)}><span>{icon("vector-square")} Current SVG</span><span>›</span></button>
-            <button type="button" onClick={() => run(onExportGmSvg)}><span>{icon("user-secret")} GM SVG</span><span>›</span></button>
-            <button type="button" onClick={() => run(onExportPlayerSvg)}><span>{icon("users")} Player SVG</span><span>›</span></button>
-            <button type="button" onClick={() => run(onExportPrintSvg)}><span>{icon("print")} Print SVG</span><span>›</span></button>
-            <button type="button" onClick={() => run(onExportState)}><span>{icon("floppy-disk")} State JSON</span><span>›</span></button>
+            <button type="button" onClick={() => run(onExportSvg)}><span>{icon("vector-square")} Current SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
+            <button type="button" onClick={() => run(onExportGmSvg)}><span>{icon("user-secret")} GM SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
+            <button type="button" onClick={() => run(onExportPlayerSvg)}><span>{icon("users")} Player SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
+            <button type="button" onClick={() => run(onExportPrintSvg)}><span>{icon("print")} Print SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
+            <button type="button" onClick={() => run(onExportState)}><span>{icon("floppy-disk")} State JSON</span><span aria-hidden="true">{"\u203A"}</span></button>
           </div>
         </div>
         <button type="button" className="room-context-menu__trigger" onClick={() => run(onImportState)}>
           <span>{icon("file-import")} Import State</span>
-          <span>›</span>
+          <span aria-hidden="true">{"\u203A"}</span>
         </button>
       </div>
     </div>
@@ -1926,7 +1997,7 @@ function RoomKey({ generatedMap }) {
           <span className="room-key__number">{region.number}</span>
           <div>
             <div className="room-key__name">{region.name}</div>
-            <div className="room-key__meta">{region.role} · {region.graphRole || "region"} · level {region.level ?? 0} · depth {region.graphDepth ?? "—"} · {region.placementProfile || "layout"} · surface {getRegionSurfaceKind(region, generatedMap)} · {region.shape || "rect"} · {region.roomType || region.shapeOptions?.roomType || "none"} · {region.cellRect.w}×{region.cellRect.h}</div>
+            <div className="room-key__meta">{region.role} {"\u00B7"} {region.graphRole || "region"} {"\u00B7"} level {region.level ?? 0} {"\u00B7"} depth {region.graphDepth ?? "\u2014"} {"\u00B7"} {region.placementProfile || "layout"} {"\u00B7"} surface {getRegionSurfaceKind(region, generatedMap)} {"\u00B7"} {region.shape || "rect"} {"\u00B7"} {region.roomType || region.shapeOptions?.roomType || "none"} {"\u00B7"} {region.cellRect.w}{"\u00D7"}{region.cellRect.h}</div>
           </div>
         </div>
       ))}
@@ -1934,14 +2005,152 @@ function RoomKey({ generatedMap }) {
   );
 }
 
-export default function CruorMapGeneratorMvp() {
+function formatTooltipList(values) {
+  if (!Array.isArray(values) || values.length === 0) return "";
+  return values.filter(Boolean).join(", ");
+}
+
+function getRegionMetadata(region) {
+  return region?.metadata && typeof region.metadata === "object" ? region.metadata : {};
+}
+
+function getImportedRegionForTooltip(region, importedRegions) {
+  if (!region || !Array.isArray(importedRegions)) return null;
+  return importedRegions.find((item) => (
+    item.id === region.id
+    || item.sourceRegionId === region.id
+    || item.id === region.sourceRegionId
+    || item.sourceRegionId === region.sourceRegionId
+    || item.label === region.name
+  )) || null;
+}
+
+function getImportedRegionValue(importedRegion, key) {
+  if (!importedRegion) return "";
+  const metadata = getRegionMetadata(importedRegion);
+  return importedRegion[key] || metadata[key] || "";
+}
+
+function getTooltipReadAloud(value) {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return value.compact || value.extended || "";
+}
+
+function createRoomTooltipPayload(region, generatedMap, importedRegion = null) {
+  if (!region) return null;
+  const requestMetadata = region.requestMetadata && typeof region.requestMetadata === "object" ? region.requestMetadata : {};
+  const role = importedRegion?.role || region.role || "Location Region";
+  const shape = importedRegion?.shape || region.shape || region.roomType || region.shapeOptions?.roomType || "room";
+  const size = importedRegion?.size || region.size || `${region.cellRect?.w || "?"}\u00D7${region.cellRect?.h || "?"}`;
+  const generatedLinks = generatedMap.corridors.filter((corridor) => corridor.from === region.id || corridor.to === region.id).length;
+  const importedConnectors = Number(importedRegion?.connectors);
+  const linkCount = Number.isFinite(importedConnectors) ? importedConnectors : generatedLinks;
+  const metaParts = [
+    role,
+    shape,
+    size,
+    `${linkCount} link${linkCount === 1 ? "" : "s"}`,
+  ].filter(Boolean);
+  const importedReadAloud = getTooltipReadAloud(getImportedRegionValue(importedRegion, "readAloud")) || getImportedRegionValue(importedRegion, "read");
+  const generatedReadAloud = getTooltipReadAloud(requestMetadata.readAloud) || getTooltipReadAloud(region.readAloud) || requestMetadata.read || region.read || "";
+
+  return {
+    type: "room",
+    title: importedRegion?.label || region.name || `Region ${region.number || ""}`.trim(),
+    role,
+    shape,
+    meta: metaParts.join(" \u00B7 "),
+    readAloud: importedReadAloud || generatedReadAloud,
+    feature: getImportedRegionValue(importedRegion, "feature") || requestMetadata.feature || region.feature || "",
+    interaction: getImportedRegionValue(importedRegion, "interaction") || getImportedRegionValue(importedRegion, "interact") || requestMetadata.interaction || requestMetadata.interact || region.interaction || region.interact || "",
+    danger: getImportedRegionValue(importedRegion, "danger") || requestMetadata.danger || region.danger || "",
+    secret: getImportedRegionValue(importedRegion, "secret") || requestMetadata.secret || region.secret || "",
+  };
+}
+
+function getGenericTooltipAttrs(label, description = "", kbd = "") {
+  const attrs = {
+    "data-key": "tooltip-generic",
+    "data-tooltip": label,
+  };
+  if (description) attrs["data-tooltip-description"] = description;
+  if (kbd) attrs["data-tooltip-kbd"] = kbd;
+  return attrs;
+}
+
+function MapToolButton({ icon, label, description = "", kbd = "", active = false, disabled = false, onClick }) {
+  return (
+    <button
+      type="button"
+      className={active ? "map-tool-button is-active" : "map-tool-button"}
+      {...getGenericTooltipAttrs(label, description, kbd)}
+      aria-label={label}
+      aria-pressed={active || undefined}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      <i className={`fa-solid fa-${icon}`} aria-hidden="true" />
+    </button>
+  );
+}
+
+function TestReport({ testSuite }) {
+  return (
+    <div className={testSuite.passed ? "test-report is-passing" : "test-report is-failing"}>
+      <div className="test-report__summary">
+        {testSuite.tests.filter((test) => test.passed).length}/{testSuite.tests.length} checks passing
+      </div>
+      <div className="test-report__list">
+        {testSuite.tests.map((test) => (
+          <div key={test.id} className={test.passed ? "test-report__check is-passing" : "test-report__check is-failing"}>
+            <span>{test.label}</span>
+            <strong>{test.passed ? "pass" : "fail"}</strong>
+            {test.details && <small>{test.details}</small>}
+          </div>
+        ))}
+      </div>
+      {testSuite.structural.warnings.length > 0 && <div className="test-report__warning">{testSuite.structural.warnings[0]}</div>}
+      {testSuite.structural.errors.length > 0 && <div className="test-report__error">{testSuite.structural.errors[0]}</div>}
+    </div>
+  );
+}
+
+function MapTestsModal({ open, testSuite, onClose }) {
+  if (!open) return null;
+  return (
+    <div className="map-tests-modal" role="presentation" onPointerDown={onClose}>
+      <section
+        className="map-tests-modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="map-tests-modal-title"
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <header className="map-tests-modal__header">
+          <div>
+            <p className="map-panel-eyebrow">Diagnostics</p>
+            <h2 id="map-tests-modal-title">Structural Test Suite</h2>
+          </div>
+          <button type="button" className="map-tool-button" {...getGenericTooltipAttrs("Close Tests", "Close the structural test suite.", "Esc")} aria-label="Close Tests" onClick={onClose}>
+            <i className="fa-solid fa-xmark" aria-hidden="true" />
+          </button>
+        </header>
+        <TestReport testSuite={testSuite} />
+      </section>
+    </div>
+  );
+}
+
+export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshFromComposer = null } = {}) {
+  const initialConfig = useMemo(() => createConfigFromNormalizedMapRequest(initialRequest, DEFAULT_CONFIG), [initialRequest]);
   const stateFileInputRef = useRef(null);
   const manualEditSnapshotRef = useRef(null);
   const [stateStatus, setStateStatus] = useState("");
-  const [seed, setSeed] = useState(DEFAULT_CONFIG.seed);
-  const [roomCount, setRoomCount] = useState(DEFAULT_CONFIG.roomCount);
-  const [context, setContext] = useState(DEFAULT_CONFIG.context);
-  const [gridStyle, setGridStyle] = useState(DEFAULT_CONFIG.gridStyle);
+  const [seed, setSeed] = useState(initialConfig.seed);
+  const [roomCount, setRoomCount] = useState(initialConfig.roomCount);
+  const [context, setContext] = useState(initialConfig.context);
+  const [gridStyle, setGridStyle] = useState(initialConfig.gridStyle);
   const [levelView, setLevelView] = useState(LEVEL_VIEW_ALL);
   const [fadeOtherLevels, setFadeOtherLevels] = useState(true);
   const [showGrid, setShowGrid] = useState(true);
@@ -1951,16 +2160,19 @@ export default function CruorMapGeneratorMvp() {
   const [manualOverrides, setManualOverrides] = useState(createEmptyManualOverrides());
   const [manualHistory, setManualHistory] = useState({ past: [], future: [] });
   const [isManualEditActive, setIsManualEditActive] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [testsModalOpen, setTestsModalOpen] = useState(false);
   const lastTestSuiteRef = useRef(null);
+  const importedRegions = Array.isArray(initialRequest?.requiredRegions) ? initialRequest.requiredRegions : [];
 
   const config = useMemo(() => ({
-    ...DEFAULT_CONFIG,
+    ...initialConfig,
     seed,
     context,
     roomCount,
     showGrid,
     gridStyle,
-  }), [seed, context, roomCount, showGrid, gridStyle]);
+  }), [initialConfig, seed, context, roomCount, showGrid, gridStyle]);
   const generatedMap = useMemo(() => generateMap(config, manualOverrides), [config, manualOverrides]);
   const pureCaveMap = isPureCaveMap(generatedMap);
   const availableLevels = useMemo(() => getAvailableMapLevels(generatedMap), [generatedMap]);
@@ -1992,6 +2204,39 @@ export default function CruorMapGeneratorMvp() {
     golden: null,
     exportValidation,
   };
+
+  useEffect(() => {
+    function handleTestsShortcut(event) {
+      if (event.key !== "F2") return;
+      const target = event.target;
+      if (target?.closest?.("input, select, textarea, [contenteditable='true']")) return;
+      event.preventDefault();
+      setTestsModalOpen((value) => !value);
+    }
+
+    window.addEventListener("keydown", handleTestsShortcut);
+    return () => window.removeEventListener("keydown", handleTestsShortcut);
+  }, []);
+
+  useEffect(() => {
+    if (!testsModalOpen) return undefined;
+    function handleModalKeyDown(event) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setTestsModalOpen(false);
+    }
+
+    window.addEventListener("keydown", handleModalKeyDown);
+    return () => window.removeEventListener("keydown", handleModalKeyDown);
+  }, [testsModalOpen]);
+
+  useEffect(() => {
+    return registerTooltipProvider("tooltip-room", (id) => {
+      const region = generatedMap.regions.find((item) => item.id === id || item.sourceRegionId === id);
+      if (!region) return null;
+      return createRoomTooltipPayload(region, generatedMap, getImportedRegionForTooltip(region, importedRegions));
+    });
+  }, [generatedMap, importedRegions]);
 
   function clearManualHistory() {
     manualEditSnapshotRef.current = null;
@@ -2511,170 +2756,190 @@ export default function CruorMapGeneratorMvp() {
   }
 
   return (
-    <div className="cruor-map-mvp" onContextMenu={(event) => event.preventDefault()}>
-      <style>{`
-        @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css");
-        .cruor-map-mvp{min-height:100vh;background:#181512;color:#f3eee3;padding:24px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.mvp-shell{max-width:1440px;margin:0 auto;display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr);gap:18px}.panel{background:rgba(245,237,220,.075);border:1px solid rgba(245,237,220,.16);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.28)}.control-panel{padding:18px;position:sticky;top:18px;align-self:start}.mvp-title{font-size:24px;line-height:1.1;font-weight:750;letter-spacing:-.03em;margin:0 0 8px}.mvp-subtitle{color:rgba(243,238,227,.68);font-size:13px;line-height:1.45;margin:0 0 18px}.control-group{display:grid;gap:8px;margin-bottom:14px}.control-label{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:rgba(243,238,227,.58);font-weight:700}.control-input,.control-select{width:100%;height:38px;border-radius:10px;border:1px solid rgba(245,237,220,.2);background:rgba(0,0,0,.22);color:#f3eee3;padding:0 11px;outline:none}.control-input:focus,.control-select:focus{border-color:rgba(208,188,126,.8)}.button-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.mvp-button{border-radius:10px!important;border:1px solid rgba(245,237,220,.18)!important;background:rgba(245,237,220,.08)!important;color:#f3eee3!important;font-size:12px!important;height:38px!important}.mvp-button:hover{background:rgba(245,237,220,.13)!important}.mvp-button:disabled{opacity:.42;cursor:not-allowed!important}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0}.control-group .mvp-button{width:100%!important;justify-content:center!important}.stat{border:1px solid rgba(245,237,220,.12);border-radius:10px;padding:10px;background:rgba(0,0,0,.16)}.stat__value{font-size:20px;font-weight:750;line-height:1}.stat__label{font-size:11px;color:rgba(243,238,227,.55);margin-top:4px}.state-status{margin:10px 0 0;border:1px solid rgba(245,237,220,.12);border-radius:10px;padding:8px 10px;background:rgba(0,0,0,.16);font-size:11px;color:rgba(243,238,227,.68)}.test-report{border:1px solid rgba(245,237,220,.12);border-radius:10px;padding:10px;margin:0 0 14px;background:rgba(0,0,0,.16);font-size:11px;color:rgba(243,238,227,.66)}.test-report.is-passing{border-color:rgba(145,190,140,.28)}.test-report.is-failing{border-color:rgba(217,110,85,.5)}.test-report__title{font-weight:800;color:#f3eee3;margin-bottom:5px}.test-report__summary{margin-bottom:8px;color:rgba(243,238,227,.72)}.test-report__list{display:grid;gap:5px;max-height:230px;overflow:auto;padding-right:3px}.test-report__check{display:grid;grid-template-columns:1fr auto;gap:4px 8px;border:1px solid rgba(245,237,220,.1);border-radius:8px;padding:6px;background:rgba(0,0,0,.12)}.test-report__check strong{font-size:10px;text-transform:uppercase;letter-spacing:.08em}.test-report__check small{grid-column:1 / -1;color:rgba(243,238,227,.52);line-height:1.25}.test-report__check.is-passing strong{color:#9bcf91}.test-report__check.is-failing{border-color:rgba(217,110,85,.38)}.test-report__check.is-failing strong{color:#e38b76}.test-report__warning{margin-top:6px;color:#d6bc77}.test-report__error{margin-top:6px;color:#e38b76}.map-panel{overflow:hidden}.map-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;border-bottom:1px solid rgba(245,237,220,.13)}.map-toolbar__title{font-size:13px;color:rgba(243,238,227,.7)}.map-toolbar__actions{display:flex;gap:8px;flex-wrap:wrap}.map-stage{padding:16px;background:radial-gradient(circle at top,rgba(245,237,220,.08),transparent 42%),#11100e}.map-frame{background:#d9c8a5;border-radius:12px;padding:12px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.22),0 20px 80px rgba(0,0,0,.42)}.zoom-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}.zoom-button{width:auto!important;padding:0 11px!important}.zoom-scale{margin-left:auto;color:#1d1915;background:rgba(255,255,255,.28);border:1px solid rgba(29,25,21,.18);border-radius:999px;font-size:12px;font-weight:800;padding:5px 9px}.map-viewport{height:min(68vh,720px);min-height:420px;overflow:hidden;border-radius:8px;background:#cdbb95;box-shadow:inset 0 0 0 1px rgba(29,25,21,.25);touch-action:none;overscroll-behavior:contain;outline:none;cursor:grab;position:relative}.map-viewport.is-panning{cursor:grabbing}.map-viewport:focus{box-shadow:inset 0 0 0 2px rgba(29,25,21,.58),inset 0 0 0 1px rgba(29,25,21,.25)}.map-pan-layer{position:absolute;inset:0;transform-origin:0 0}.zoom-hint{margin-top:8px;color:rgba(29,25,21,.68);font-size:11px;font-weight:700}.room-context-menu{position:absolute;z-index:20;width:238px;border:1px solid rgba(29,25,21,.28);border-radius:12px;background:#efe4ca;color:#1d1915;box-shadow:0 18px 48px rgba(0,0,0,.32);padding:10px;font-size:12px}.room-context-menu__header{display:grid;gap:2px;padding:4px 4px 8px;border-bottom:1px solid rgba(29,25,21,.14);margin-bottom:8px}.room-context-menu__header strong{font-size:13px;line-height:1.2}.room-context-menu__header span{font-size:11px;color:rgba(29,25,21,.62)}.room-context-menu__section{display:grid;gap:6px;margin-bottom:10px}.room-context-menu__label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:rgba(29,25,21,.58)}.room-context-menu__grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.room-context-menu button{border:1px solid rgba(29,25,21,.18);border-radius:8px;background:rgba(255,255,255,.28);color:#1d1915;font-size:11px;font-weight:750;padding:7px 8px;text-align:left;cursor:pointer}.room-context-menu button:hover{background:rgba(255,255,255,.48)}.room-context-menu button.is-active{background:#1d1915;color:#efe4ca;border-color:#1d1915}.room-context-menu button.is-armed{background:#7a241c;color:#fff0dc;border-color:#7a241c}.room-context-menu__actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid rgba(29,25,21,.14);padding-top:8px}.room-context-menu__body{display:grid;gap:4px;margin:8px 0}.room-context-menu__item{position:relative}.room-context-menu__item::after{content:"";position:absolute;left:100%;top:-8px;width:18px;height:calc(100% + 16px);pointer-events:auto}.room-context-menu__trigger{width:100%;display:flex!important;justify-content:space-between;align-items:center;text-align:left}.room-context-menu__trigger span:last-child{opacity:.62}.room-context-submenu{position:absolute;left:calc(100% + 8px);top:0;width:224px;border:1px solid rgba(29,25,21,.24);border-radius:12px;background:#efe4ca;box-shadow:0 18px 48px rgba(0,0,0,.28);padding:8px;display:none;gap:5px}.room-context-menu__item:hover>.room-context-submenu{display:grid}.room-context-submenu button{width:100%;display:flex;justify-content:space-between;align-items:center}.room-context-submenu__hint{font-size:10px;color:rgba(29,25,21,.58);padding:3px 5px 6px}.room-context-menu__active-value{font-size:10px;color:rgba(29,25,21,.58);font-weight:850}.map-action-menu{width:248px}.map-action-menu .room-context-menu__trigger i,.wall-access-context-menu .room-context-menu__trigger i,.room-context-submenu button i{width:15px;text-align:center;margin-right:7px;opacity:.82}.context-menu-toolbar{display:flex;align-items:center;gap:5px;border-bottom:1px solid rgba(29,25,21,.14);padding:0 0 8px;margin-bottom:8px}.context-menu-toolbar button{width:30px;height:30px;display:grid;place-items:center;padding:0!important;text-align:center!important}.context-menu-toolbar button.is-active{background:#1d1915;color:#efe4ca;border-color:#1d1915}.context-menu-toolbar__divider{width:1px;height:22px;background:rgba(29,25,21,.18);margin:0 2px}.map-action-menu .room-context-menu__body{margin-bottom:0}.map-action-menu .room-context-submenu{top:-8px}.cruor-map-svg{display:block;width:100%;height:100%;border-radius:7px;shape-rendering:geometricPrecision;text-rendering:geometricPrecision}.room-key{max-height:280px;overflow:auto;display:grid;gap:8px;padding-right:4px}.room-key__item{display:grid;grid-template-columns:28px 1fr;gap:8px;align-items:start;padding:8px;border:1px solid rgba(245,237,220,.11);border-radius:10px;background:rgba(0,0,0,.14)}.room-key__number{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:rgba(245,237,220,.14);font-size:12px;font-weight:800}.room-key__name{font-size:12px;font-weight:750}.room-key__meta{margin-top:2px;font-size:11px;color:rgba(243,238,227,.55)}@media(max-width:980px){.mvp-shell{grid-template-columns:1fr}.control-panel{position:static}}
-      `}</style>
-      <div className="mvp-shell">
-        <Card className="panel control-panel">
-          <CardContent className="p-0">
-            <h1 className="mvp-title">Cruor Map Generator MVP</h1>
-            <p className="mvp-subtitle">Configuration-led SVG map generation for Darken a Location. This MVP keeps geometry deterministic, grid-based, editable, and exportable.</p>
-            <div className="control-group">
-              <label className="control-label" htmlFor="seed">Seed</label>
-              <input id="seed" className="control-input" value={seed} onChange={(event) => {
-                setSeed(event.target.value);
-                setManualOverrides(resetManualOverrides());
-                clearManualHistory();
-              }} />
+    <div className="cruor-map-mvp cruor-map-workspace" onContextMenu={(event) => event.preventDefault()}>
+      <div className={inspectorCollapsed ? "map-workspace-shell is-inspector-collapsed" : "map-workspace-shell"}>
+        <aside className="map-tool-rail map-tool-rail--left" aria-label="Map actions">
+          <MapToolButton icon="arrows-rotate" label="Refresh from Composer" description="Rebuild the map from the latest Composer regions." disabled={!onRefreshFromComposer} onClick={onRefreshFromComposer} />
+          <MapToolButton icon="shuffle" label="New Seed" description="Generate a new seed and rebuild the current map." onClick={randomizeSeed} />
+          <MapToolButton icon="vector-square" label="Export SVG" onClick={downloadSvg} />
+          <MapToolButton icon="user-secret" label="Export GM SVG" onClick={downloadGmSvg} />
+          <MapToolButton icon="users" label="Export Player SVG" onClick={downloadPlayerSvg} />
+          <MapToolButton icon="print" label="Export Print SVG" onClick={downloadPrintSvg} />
+          <MapToolButton icon="file-export" label="Export State" onClick={exportState} />
+          <MapToolButton icon="file-import" label="Import State" onClick={requestImportState} />
+          <span className="map-tool-rail__divider" aria-hidden="true" />
+          <MapToolButton icon="rotate-left" label="Undo" disabled={manualHistory.past.length === 0} onClick={undoManualEdit} />
+          <MapToolButton icon="rotate-right" label="Redo" disabled={manualHistory.future.length === 0} onClick={redoManualEdit} />
+          <MapToolButton icon="border-all" label="Toggle Grid" active={showGrid} onClick={() => setShowGrid((value) => !value)} />
+          <MapToolButton icon="pen-ruler" label="Toggle Editor" active={showEditor} onClick={() => setShowEditor((value) => !value)} />
+          <MapToolButton icon="signature" label="Toggle Names" active={showNames} onClick={() => setShowNames((value) => !value)} />
+          <MapToolButton icon="boxes-stacked" label="Toggle Props" active={showProps} onClick={() => setShowProps((value) => !value)} />
+          <MapToolButton icon="eraser" label="Reset Edits" onClick={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")} />
+          <span className="map-tool-rail__divider" aria-hidden="true" />
+          <MapToolButton icon="clipboard-check" label="Structural Tests" description="Open the structural test suite." kbd="F2" active={testsModalOpen} onClick={() => setTestsModalOpen(true)} />
+          <input ref={stateFileInputRef} type="file" accept="application/json,.json" style={{ display: "none" }} onChange={importStateFromFile} />
+        </aside>
+
+        <main className="map-canvas-area">
+          <div className="map-canvas-topbar">
+            <div>
+              <p className="map-panel-eyebrow">Map Workspace</p>
+              <div className="map-toolbar__title">
+                {context} {"\u00B7"} {normalizeLevelView(levelView, availableLevels) === LEVEL_VIEW_ALL ? "all levels" : `level ${formatMapLevel(normalizeLevelView(levelView, availableLevels))}`} {"\u00B7"} {String(generatedMap.seed).slice(0, 20)}
+              </div>
             </div>
-            <div className="control-group">
-              <label className="control-label" htmlFor="room-count">Room / Region Count</label>
-              <input id="room-count" className="control-input" type="number" min="1" max="16" value={roomCount} onChange={(event) => {
-                setRoomCount(normalizeRoomCount(event.target.value, roomCount));
-                setManualOverrides(resetManualOverrides());
-                clearManualHistory();
-              }} />
+            <div className="map-canvas-topbar__meta">
+              {importedRegions.length > 0 ? <span>{importedRegions.length} imported regions</span> : <span>{generatedMap.regions.length} regions</span>}
+              <span>{generatedMap.corridors.length} connections</span>
+              <button
+                type="button"
+                className="map-tool-button map-inspector-toggle"
+                {...getGenericTooltipAttrs(inspectorCollapsed ? "Open Inspector" : "Collapse Inspector")}
+                aria-label={inspectorCollapsed ? "Open Inspector" : "Collapse Inspector"}
+                onClick={() => setInspectorCollapsed((value) => !value)}
+              >
+                <i className={inspectorCollapsed ? "fa-solid fa-angles-left" : "fa-solid fa-angles-right"} aria-hidden="true" />
+              </button>
             </div>
-            <div className="control-group">
-              <label className="control-label" htmlFor="context">Context</label>
-              <select id="context" className="control-select" value={context} onChange={(event) => {
-                setContext(event.target.value);
-                setManualOverrides(resetManualOverrides());
-                clearManualHistory();
-              }}>
-                <option>Crypt</option>
-                <option>Chapel</option>
-                <option>Cave</option>
-                <option>Mine</option>
-                <option>Noble House</option>
-                <option>Ruins</option>
-              </select>
-            </div>
-            <div className="control-group">
-              <label className="control-label" htmlFor="grid-style">Grid Style</label>
-              <select id="grid-style" className="control-select" value={gridStyle} onChange={(event) => setGridStyle(normalizeGridStyle(event.target.value))}>
-                <option value="solid">Solid</option>
-                <option value="dotted">Dotted</option>
-                <option value="dashed">Dashed</option>
-                <option value="none">None</option>
-              </select>
-            </div>
-            <div className="control-group">
-              <label className="control-label" htmlFor="level-view">Level View</label>
-              <select id="level-view" className="control-select" value={String(normalizeLevelView(levelView, availableLevels))} onChange={(event) => setLevelView(normalizeLevelView(event.target.value, availableLevels))}>
-                <option value={LEVEL_VIEW_ALL}>All Levels</option>
-                {availableLevels.map((level) => <option key={`level-view-${level}`} value={String(level)}>Level {formatMapLevel(level)}</option>)}
-              </select>
-              <Button className="mvp-button" onClick={() => setFadeOtherLevels((value) => !value)}>{fadeOtherLevels ? "Fade Other Levels" : "Solo Active Level"}</Button>
-            </div>
-            <div className="button-row">
-              <Button className="mvp-button" onClick={randomizeSeed}><RefreshCw size={15} /> New Seed</Button>
-              <Button className="mvp-button" onClick={downloadSvg}><Download size={15} /> Export SVG</Button>
-              <Button className="mvp-button" onClick={downloadGmSvg}>Export GM</Button>
-              <Button className="mvp-button" onClick={downloadPlayerSvg}>Export Player</Button>
-              <Button className="mvp-button" onClick={downloadPrintSvg}>Export Print</Button>
-              <Button className="mvp-button" onClick={exportState}>Export State</Button>
-              <Button className="mvp-button" onClick={requestImportState}>Import State</Button>
-              <Button className="mvp-button" onClick={undoManualEdit} disabled={manualHistory.past.length === 0}>Undo</Button>
-              <Button className="mvp-button" onClick={redoManualEdit} disabled={manualHistory.future.length === 0}>Redo</Button>
-              <Button className="mvp-button" onClick={() => setShowGrid((value) => !value)}><Grid3X3 size={15} /> Grid</Button>
-              <Button className="mvp-button" onClick={() => setShowEditor((value) => !value)}>{showEditor ? <EyeOff size={15} /> : <Eye size={15} />} Editor</Button>
-              <Button className="mvp-button" onClick={() => setShowNames((value) => !value)}>Names</Button>
-              <Button className="mvp-button" onClick={() => setShowProps((value) => !value)}>Props</Button>
-              <Button className="mvp-button" onClick={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")}>Reset Edits</Button>
-            </div>
-            <input ref={stateFileInputRef} type="file" accept="application/json,.json" style={{ display: "none" }} onChange={importStateFromFile} />
+          </div>
+
+          <div className="map-viewport-frame">
+            <MapViewport
+              generatedMap={generatedMap}
+              showGrid={showGrid}
+              gridStyle={gridStyle}
+              showEditor={showEditor}
+              showNames={showNames}
+              showProps={showProps}
+              levelView={levelView}
+              fadeOtherLevels={fadeOtherLevels}
+              availableLevels={availableLevels}
+              onRoomMove={moveRoom}
+              onDoorMove={moveDoor}
+              onDoorTypeChange={updateDoorType}
+              onDoorStairChange={updateDoorStair}
+              onMapAccessMove={setMapAccess}
+              onMapAccessSet={setMapAccessWithHistory}
+              onMapAccessRemove={removeMapAccess}
+              onJunctionTypeChange={updateJunctionType}
+              onWaypointMove={moveWaypoint}
+              onWaypointInsert={insertWaypoint}
+              onWaypointDelete={deleteWaypoint}
+              onConnectionDelete={deleteConnection}
+              onCreateConnection={createConnectionFromWallDrag}
+              manualOverrides={manualOverrides}
+              onRoomStyleChange={updateRoomStyle}
+              onRoomStyleReset={resetRoomStyle}
+              onEditStart={beginManualEdit}
+              onEditCommit={commitManualEdit}
+              onUndo={undoManualEdit}
+              onRedo={redoManualEdit}
+              onNewSeed={randomizeSeed}
+              onToggleGrid={() => setShowGrid((value) => !value)}
+              onGridStyleChange={(value) => setGridStyle(normalizeGridStyle(value))}
+              onToggleEditor={() => setShowEditor((value) => !value)}
+              onToggleNames={() => setShowNames((value) => !value)}
+              onToggleProps={() => setShowProps((value) => !value)}
+              onLevelViewChange={(value) => setLevelView(normalizeLevelView(value, availableLevels))}
+              onToggleFadeOtherLevels={() => setFadeOtherLevels((value) => !value)}
+              onResetEdits={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")}
+              onExportSvg={downloadSvg}
+              onExportGmSvg={downloadGmSvg}
+              onExportPlayerSvg={downloadPlayerSvg}
+              onExportPrintSvg={downloadPrintSvg}
+              onExportState={exportState}
+              onImportState={requestImportState}
+              viewResetKey={`${seed}:${roomCount}:${context}`}
+            />
+          </div>
+        </main>
+
+        <aside className="map-inspector-panel" aria-label="Map inspector" aria-hidden={inspectorCollapsed}>
+          <div className="map-inspector-panel__scroll">
+            <section className="map-inspector-section">
+              <p className="map-panel-eyebrow">Map Setup</p>
+              <div className="control-group">
+                <label className="control-label" htmlFor="seed">Seed</label>
+                <input id="seed" className="control-input" value={seed} onChange={(event) => {
+                  setSeed(event.target.value);
+                  setManualOverrides(resetManualOverrides());
+                  clearManualHistory();
+                }} />
+              </div>
+              <div className="control-group">
+                <label className="control-label" htmlFor="room-count">Room / Region Count</label>
+                <input id="room-count" className="control-input" type="number" min="1" max="16" value={roomCount} onChange={(event) => {
+                  setRoomCount(normalizeRoomCount(event.target.value, roomCount));
+                  setManualOverrides(resetManualOverrides());
+                  clearManualHistory();
+                }} />
+              </div>
+              <div className="control-group">
+                <label className="control-label" htmlFor="context">Context</label>
+                <select id="context" className="control-select" value={context} onChange={(event) => {
+                  setContext(event.target.value);
+                  setManualOverrides(resetManualOverrides());
+                  clearManualHistory();
+                }}>
+                  <option>Crypt</option>
+                  <option>Chapel</option>
+                  <option>Cave</option>
+                  <option>Mine</option>
+                  <option>Noble House</option>
+                  <option>Ruins</option>
+                </select>
+              </div>
+              <div className="control-group">
+                <label className="control-label" htmlFor="grid-style">Grid Style</label>
+                <select id="grid-style" className="control-select" value={gridStyle} onChange={(event) => setGridStyle(normalizeGridStyle(event.target.value))}>
+                  <option value="solid">Solid</option>
+                  <option value="dotted">Dotted</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div className="control-group">
+                <label className="control-label" htmlFor="level-view">Level View</label>
+                <select id="level-view" className="control-select" value={String(normalizeLevelView(levelView, availableLevels))} onChange={(event) => setLevelView(normalizeLevelView(event.target.value, availableLevels))}>
+                  <option value={LEVEL_VIEW_ALL}>All Levels</option>
+                  {availableLevels.map((level) => <option key={`level-view-${level}`} value={String(level)}>Level {formatMapLevel(level)}</option>)}
+                </select>
+                <button type="button" className="mvp-button" onClick={() => setFadeOtherLevels((value) => !value)}>{fadeOtherLevels ? "Fade Other Levels" : "Solo Active Level"}</button>
+              </div>
+            </section>
+
+            {initialRequest?.source === "darken-location" && (
+              <section className="map-inspector-section imported-map-request" aria-label="Imported Darken a Location regions">
+                <strong>Imported from Darken a Location: {importedRegions.length} region{importedRegions.length === 1 ? "" : "s"}</strong>
+                {importedRegions.length > 0 && (
+                  <span>{importedRegions.slice(0, 5).map((region) => region.label || region.id).join(", ")}{importedRegions.length > 5 ? `, +${importedRegions.length - 5} more` : ""}</span>
+                )}
+              </section>
+            )}
+
+            <section className="map-inspector-section">
+              <p className="map-panel-eyebrow">Stats</p>
+              <div className="stats">
+                <div className="stat"><div className="stat__value">{generatedMap.regions.length}</div><div className="stat__label">Regions</div></div>
+                <div className="stat"><div className="stat__value">{generatedMap.corridors.length}</div><div className="stat__label">Connections</div></div>
+                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.floorCells.length}</div><div className="stat__label">Floor Cells</div></div>
+                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.doorSegments.length}</div><div className="stat__label">Doors</div></div>
+                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.mapAccesses?.length || 0}</div><div className="stat__label">Map Accesses</div></div>
+                <div className="stat"><div className="stat__value">{availableLevels.length}</div><div className="stat__label">Levels</div></div>
+              </div>
+            </section>
+
             {stateStatus && <div className="state-status">{stateStatus}</div>}
-            <div className="stats">
-              <div className="stat"><div className="stat__value">{generatedMap.regions.length}</div><div className="stat__label">Regions</div></div>
-              <div className="stat"><div className="stat__value">{generatedMap.corridors.length}</div><div className="stat__label">Connections</div></div>
-              <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.floorCells.length}</div><div className="stat__label">Floor Cells</div></div>
-              <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.doorSegments.length}</div><div className="stat__label">Doors</div></div>
-              <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.mapAccesses?.length || 0}</div><div className="stat__label">Map Accesses</div></div>
-              <div className="stat"><div className="stat__value">{availableLevels.length}</div><div className="stat__label">Levels</div></div>
-            </div>
-            <div className={testSuite.passed ? "test-report is-passing" : "test-report is-failing"}>
-              <div className="test-report__title">Structural Test Suite</div>
-              <div className="test-report__summary">
-                {testSuite.tests.filter((test) => test.passed).length}/{testSuite.tests.length} checks passing
-              </div>
-              <div className="test-report__list">
-                {testSuite.tests.map((test) => (
-                  <div key={test.id} className={test.passed ? "test-report__check is-passing" : "test-report__check is-failing"}>
-                    <span>{test.label}</span>
-                    <strong>{test.passed ? "pass" : "fail"}</strong>
-                    {test.details && <small>{test.details}</small>}
-                  </div>
-                ))}
-              </div>
-              {testSuite.structural.warnings.length > 0 && <div className="test-report__warning">{testSuite.structural.warnings[0]}</div>}
-              {testSuite.structural.errors.length > 0 && <div className="test-report__error">{testSuite.structural.errors[0]}</div>}
-            </div>
-            <RoomKey generatedMap={generatedMap} />
-          </CardContent>
-        </Card>
-        <Card className="panel map-panel">
-          <CardContent className="p-0">
-            <div className="map-toolbar">
-              <div className="map-toolbar__title">{context} / {DEFAULT_CONFIG.biome} · {generatedMap.regions[0]?.placementProfile || "layout"} · {normalizeLevelView(levelView, availableLevels) === LEVEL_VIEW_ALL ? "all levels" : `level ${formatMapLevel(normalizeLevelView(levelView, availableLevels))}`} · {generatedMap.seed}</div>
-              <div className="map-toolbar__actions"><span className="control-label">Editor geometry is separate from clean export layers</span></div>
-            </div>
-            <div className="map-stage">
-              <div className="map-frame">
-                <MapViewport
-                  generatedMap={generatedMap}
-                  showGrid={showGrid}
-                  gridStyle={gridStyle}
-                  showEditor={showEditor}
-                  showNames={showNames}
-                  showProps={showProps}
-                  levelView={levelView}
-                  fadeOtherLevels={fadeOtherLevels}
-                  availableLevels={availableLevels}
-                  onRoomMove={moveRoom}
-                  onDoorMove={moveDoor}
-                  onDoorTypeChange={updateDoorType}
-                  onDoorStairChange={updateDoorStair}
-                  onMapAccessMove={setMapAccess}
-                  onMapAccessSet={setMapAccessWithHistory}
-                  onMapAccessRemove={removeMapAccess}
-                  onJunctionTypeChange={updateJunctionType}
-                  onWaypointMove={moveWaypoint}
-                  onWaypointInsert={insertWaypoint}
-                  onWaypointDelete={deleteWaypoint}
-                  onConnectionDelete={deleteConnection}
-                  onCreateConnection={createConnectionFromWallDrag}
-                  manualOverrides={manualOverrides}
-                  onRoomStyleChange={updateRoomStyle}
-                  onRoomStyleReset={resetRoomStyle}
-                  onEditStart={beginManualEdit}
-                  onEditCommit={commitManualEdit}
-                  onUndo={undoManualEdit}
-                  onRedo={redoManualEdit}
-                  onNewSeed={randomizeSeed}
-                  onToggleGrid={() => setShowGrid((value) => !value)}
-                  onGridStyleChange={(value) => setGridStyle(normalizeGridStyle(value))}
-                  onToggleEditor={() => setShowEditor((value) => !value)}
-                  onToggleNames={() => setShowNames((value) => !value)}
-                  onToggleProps={() => setShowProps((value) => !value)}
-                  onLevelViewChange={(value) => setLevelView(normalizeLevelView(value, availableLevels))}
-                  onToggleFadeOtherLevels={() => setFadeOtherLevels((value) => !value)}
-                  onResetEdits={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")}
-                  onExportSvg={downloadSvg}
-                  onExportGmSvg={downloadGmSvg}
-                  onExportPlayerSvg={downloadPlayerSvg}
-                  onExportPrintSvg={downloadPrintSvg}
-                  onExportState={exportState}
-                  onImportState={requestImportState}
-                  viewResetKey={`${seed}:${roomCount}:${context}`}
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
+            <section className="map-inspector-section">
+              <p className="map-panel-eyebrow">Room Key</p>
+              <RoomKey generatedMap={generatedMap} />
+            </section>
+          </div>
+        </aside>
       </div>
+
+      <MapTestsModal open={testsModalOpen} testSuite={testSuite} onClose={() => setTestsModalOpen(false)} />
     </div>
   );
 }

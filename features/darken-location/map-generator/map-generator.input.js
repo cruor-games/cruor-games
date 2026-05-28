@@ -100,6 +100,62 @@ export const GENERATED_REGION_TEMPLATES = [
   { role: "Clue Room", preferredShape: "rect", size: "Small", tags: ["clue"], sourceAnchors: ["Wax Death Masks"] },
 ];
 
+const SUPPORTED_CONTEXTS = new Set(["Crypt", "Chapel", "Cave", "Mine", "Noble House", "Ruins"]);
+
+function normalizeArray(value) {
+  return Array.isArray(value) ? value.filter(Boolean) : [];
+}
+
+function normalizeRequestRegion(region, index) {
+  if (!region || typeof region !== "object") return null;
+  const metadata = region.metadata && typeof region.metadata === "object" ? region.metadata : {};
+  const tags = [
+    region.role,
+    region.density,
+    ...(normalizeArray(metadata.contexts)),
+    ...(normalizeArray(metadata.horror)),
+  ].filter(Boolean).map((item) => String(item).toLowerCase());
+  return {
+    id: region.id || `region-${index + 1}`,
+    name: region.label || region.name || `Location Region ${index + 1}`,
+    role: region.role || "Location Region",
+    preferredShape: region.shape || region.preferredShape || "rect",
+    size: region.size || "Medium",
+    connectors: Number(region.connectors || (index === 0 ? 2 : 1)),
+    tags,
+    sourceAnchors: normalizeArray(metadata.sourceAnchors || region.sourceAnchors),
+    links: normalizeArray(region.links),
+    isEntrance: index === 0 || tags.some((tag) => tag.includes("entrance") || tag.includes("threshold")),
+    isExit: tags.some((tag) => tag.includes("exit") || tag.includes("outcome")),
+    secret: tags.some((tag) => tag.includes("secret")) || Boolean(metadata.secret),
+    sourceRegionId: region.sourceRegionId,
+    requestMetadata: metadata,
+  };
+}
+
+export function createConfigFromNormalizedMapRequest(initialRequest, baseConfig = DEFAULT_CONFIG) {
+  if (!initialRequest || typeof initialRequest !== "object") return baseConfig;
+  const requiredRegions = normalizeArray(initialRequest.requiredRegions);
+  const regions = requiredRegions
+    .map((region, index) => normalizeRequestRegion(region, index))
+    .filter(Boolean);
+  const requestedContext = initialRequest.mapType || initialRequest.context;
+  const context = SUPPORTED_CONTEXTS.has(requestedContext) ? requestedContext : baseConfig.context;
+  const roomCount = regions.length || normalizeRoomCount(initialRequest.roomCount, baseConfig.roomCount);
+  return {
+    ...baseConfig,
+    seed: initialRequest.seed || baseConfig.seed,
+    context,
+    biome: context,
+    roomCount,
+    horror: normalizeArray(initialRequest.metadata?.horror).length ? normalizeArray(initialRequest.metadata.horror) : baseConfig.horror,
+    sourceAnchors: normalizeArray(initialRequest.metadata?.sourceAnchors).length ? normalizeArray(initialRequest.metadata.sourceAnchors) : baseConfig.sourceAnchors,
+    regions: regions.length ? regions : baseConfig.regions,
+    requiredRegions,
+    normalizedMapRequest: initialRequest,
+  };
+}
+
 export function normalizeRoomCount(value, fallback) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
@@ -126,6 +182,8 @@ export function normalizeInput(config) {
       isEntrance: Boolean(source.isEntrance || index === 0),
       isExit: Boolean(source.isExit),
       secret: Boolean(source.secret || tags.includes("secret")),
+      sourceRegionId: source.sourceRegionId,
+      requestMetadata: source.requestMetadata,
     };
   });
 

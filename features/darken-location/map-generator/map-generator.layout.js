@@ -891,13 +891,21 @@ export function applyRoomSizeOverrides(regions, config) {
 
 export function applyRoomStyleOverrides(regions, config) {
   const styles = config.manualRoomStyles || {};
+  const contextKey = getContextKey(config.context || config.biome);
+  const supportsCavernStyles = contextKey === "cave" || contextKey === "mine";
   return regions.map((region) => {
     const style = styles[region.id];
     if (!style) return region;
-    const shape = style.shape || region.shape;
+    let shape = style.shape || region.shape;
+    let surfaceKind = style.surfaceKind || region.surfaceKind;
+    if (!supportsCavernStyles && (shape === "cave" || surfaceKind === "cave" || surfaceKind === "hybrid")) {
+      shape = "rect";
+      surfaceKind = "structure";
+    }
     return {
       ...region,
       shape,
+      surfaceKind,
       roomType: style.roomType || region.roomType || "none",
       shapeOptions: {
         sizePreset: style.sizePreset || null,

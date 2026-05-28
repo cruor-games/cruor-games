@@ -10,7 +10,6 @@ import {
   createCircleDoorRoomExtensionAnchor,
   addCircleDoorRoomExtensionCellToSet,
   getCircleExtensionCellKeys,
-  getRegionSurfaceKind,
   getSharedEdgeSegment,
   getCellBoundarySegmentsForCell,
   dedupePoints,
@@ -801,14 +800,19 @@ export function routeDirectFallback(start, goal, options) {
 
 export function isCaveLikeRegion(region, config = null) {
   if (!region) return false;
-  if (region.shape === "cave" || region.surfaceKind === "cave" || region.surfaceKind === "hybrid" || region.placementProfile === "cave") return true;
-  if (!config) return false;
-  return getRegionSurfaceKind(region, { config }) === "cave";
+  const contextKey = getContextKey(config?.context || config?.biome || region.placementProfile);
+  if (contextKey === "cave") {
+    return region.shape === "cave" || region.surfaceKind === "cave" || region.placementProfile === "cave";
+  }
+  if (contextKey === "mine") {
+    return region.surfaceKind === "cave" || region.surfaceKind === "hybrid";
+  }
+  return false;
 }
 
 export function shouldUseOrganicTunnel(config, from, to) {
   const contextKey = getContextKey(config?.context || config?.biome);
-  return contextKey === "cave" || (contextKey !== "mine" && (isCaveLikeRegion(from, config) || isCaveLikeRegion(to, config)));
+  return contextKey === "cave" && (isCaveLikeRegion(from, config) || isCaveLikeRegion(to, config));
 }
 
 export function isOrganicCorridor(corridor) {

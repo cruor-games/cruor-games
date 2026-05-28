@@ -1,0 +1,33 @@
+export function createInitialCrucibleState() {
+  return {
+    workflow: 'location',
+    context: 'Any',
+    horror: 'Any',
+    contextSearch: '',
+    horrorSearch: '',
+    briefFilterOpen: '',
+    sourceAnchors: new Set(),
+    horrors: new Set(),
+    readAloudMode: 'compact',
+    sourcePickerSearch: '',
+    sourceTypeFilter: 'Any Type',
+    sourceThemeFilter: 'Any Theme',
+    sourceTypeSearch: '',
+    sourceThemeSearch: '',
+    sourceFilterOpen: '',
+    intrusion: 'Any',
+    activeSlot: 'horrorPremise',
+    activeSensoryKind: '',
+    search: '',
+    tags: new Set(),
+    tagMenuOpen: false,
+    briefWizardStep: 0,
+    briefWizardMaxStep: 0,
+    expandedComponentId: '',
+    dragComponentId: '',
+    view: 'compose',
+    build: {},
+    lockedSlots: new Set(),
+    locationRegions: []
+  };
+}

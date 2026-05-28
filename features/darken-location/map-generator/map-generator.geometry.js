@@ -1566,8 +1566,17 @@ export function createCellBasedCaveSurface(generatedMap) {
   };
 }
 
-export function isOrganicRegionSurface(region) {
-  return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid" || region?.placementProfile === "cave";
+export function isOrganicRegionSurface(region, generatedMap = null) {
+  const contextKey = generatedMap?.config
+    ? getContextKey(generatedMap.config.context || generatedMap.config.biome)
+    : getContextKey(region?.placementProfile || "");
+  if (contextKey === "cave") {
+    return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.placementProfile === "cave";
+  }
+  if (contextKey === "mine") {
+    return region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid";
+  }
+  return false;
 }
 
 export function buildOrganicCellBoundaryPath(region, generatedMap = null, gridSize = DEFAULT_CONFIG.gridSize) {
@@ -1616,7 +1625,7 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
   const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
-  const organicPath = isOrganicRegionSurface(region) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
+  const organicPath = isOrganicRegionSurface(region, generatedMap) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
   const visualFloorPath = organicPath || buildFloorPath(floorCells, gridSize);
   const organicSurface = Boolean(organicPath);
   const boundaryPath = buildBoundarySegmentPath(boundarySegments);
@@ -1777,6 +1786,83 @@ export function createMineCavePassAccesses(connectorPads) {
   }));
 }
 
+export function isMineCaveExternalAccess(access) {
+  return ["entrance", "exit", "passage", "in", "out", "pass"].includes(access?.type);
+}
+
+export function collectMineCaveMapAccesses(generatedMap, caveRegionIds) {
+  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return new Map();
+  const accessesByRegion = new Map();
+  (generatedMap?.mapAccesses || generatedMap?.dungeonMask?.mapAccesses || []).forEach((access) => {
+    if (!access?.regionId || !caveRegionIds.has(access.regionId) || !isMineCaveExternalAccess(access)) return;
+    if (!accessesByRegion.has(access.regionId)) accessesByRegion.set(access.regionId, []);
+    accessesByRegion.get(access.regionId).push(access);
+  });
+  return accessesByRegion;
+}
+
+export function createMineCaveExternalAccessMouthInputs(mapAccesses) {
+  return (mapAccesses || []).map((access) => ({
+    id: access.id,
+    type: access.type,
+    label: access.label,
+    point: access.point,
+    displayPoint: access.displayPoint,
+    wallGap: access.displayWallGap || access.wallGap,
+    segment: access.segment,
+    start: access.start,
+    tangent: access.displayTangent || access.tangent,
+    normal: access.displayNormal || access.normal,
+    mapAccess: access,
+    mineCaveExternalAccess: true,
+  }));
+}
+
+export function createMineCaveAccessMouthFromLoopMouth(mouth, access, regionId) {
+  if (!mouth || !access) return null;
+  const outerCenter = mouth.leftTip && mouth.rightTip
+    ? { x: (mouth.leftTip.x + mouth.rightTip.x) / 2, y: (mouth.leftTip.y + mouth.rightTip.y) / 2 }
+    : mouth.center;
+  return {
+    id: `${access.id}-mine-cave-access-mouth`,
+    accessId: access.id,
+    accessType: access.type,
+    regionId,
+    center: mouth.center,
+    projectedCenter: mouth.projectedCenter || mouth.projected || null,
+    outerCenter,
+    innerCenter: mouth.center,
+    mouthLeft: mouth.leftAttach,
+    mouthRight: mouth.rightAttach,
+    outerLeft: mouth.leftTip,
+    outerRight: mouth.rightTip,
+    innerLeft: mouth.leftAttach,
+    innerRight: mouth.rightAttach,
+    leftAttach: mouth.leftAttach,
+    rightAttach: mouth.rightAttach,
+    leftTip: mouth.leftTip,
+    rightTip: mouth.rightTip,
+    tangent: mouth.tangent,
+    normal: mouth.normal,
+    segment: mouth.segment,
+    wallGap: mouth.wallGap || mouth.segment,
+    side: mouth.side,
+    width: distanceBetweenPoints(mouth.leftAttach, mouth.rightAttach),
+    depth: distanceBetweenPoints(mouth.center, outerCenter),
+    openingType: "external-access",
+    label: access.label,
+    edgeIndex: mouth.edgeIndex,
+    finalBoundaryIndex: mouth.edgeIndex,
+    skippedEdges: mouth.skippedEdges || [],
+    caveBounds: mouth.caveBounds,
+    debugRequestedPoint: mouth.debugRequestedPoint,
+    debugFinalMouthCenter: mouth.debugFinalMouthCenter || mouth.center,
+    debugLeftAttach: mouth.debugLeftAttach || mouth.leftAttach,
+    debugRightAttach: mouth.debugRightAttach || mouth.rightAttach,
+    debugSnapDistance: mouth.debugSnapDistance ?? null,
+  };
+}
+
 export function getMinePassMouthInsertedStart(mouth) {
   const outerSkip = (mouth?.skippedEdges || []).find((edge) => edge.role === "outer-open-edge");
   return Number.isFinite(outerSkip?.from) ? outerSkip.from - 2 : -1;
@@ -1900,7 +1986,7 @@ export function createFallbackMineCaveContourFromCells(floorCells, gridSize, see
   });
 }
 
-export function createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads) {
+export function createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads, mapAccesses = []) {
   const gridSize = generatedMap.config.gridSize;
   const seed = generatedMap?.config?.seed || DEFAULT_CONFIG.seed;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
@@ -1920,8 +2006,10 @@ export function createMineHybridOrganicRegionSurface(region, generatedMap, conne
   }
   if (!Array.isArray(baseContour) || baseContour.length < 3) return null;
   const passAccesses = createMineCavePassAccesses(connectorPads);
+  const externalAccesses = createMineCaveExternalAccessMouthInputs(mapAccesses);
+  const allMouthInputs = [...passAccesses, ...externalAccesses];
   const accessResult = alignMineCavePassMouthsToCorridorSeams(
-    applyCaveAccessMouthsToBoundaryLoop(baseContour, passAccesses, generatedMap.config),
+    applyCaveAccessMouthsToBoundaryLoop(baseContour, allMouthInputs, generatedMap.config),
     passAccesses
   );
   const visualFloorPath = segmentedClosedPath(accessResult.points);
@@ -1929,6 +2017,7 @@ export function createMineHybridOrganicRegionSurface(region, generatedMap, conne
   const boundarySegments = accessResult.points.length > 0 ? loopToSegments(accessResult.points, accessResult.skippedEdges) : baseBoundarySegments;
   const passMouths = (accessResult.mouths || []).map((mouth) => {
     const connectorPad = passAccesses.find((access) => access.id === mouth.accessId)?.connectorPad || null;
+    if (!connectorPad) return null;
     return {
       type: "mine-cave-pass-mouth",
       corridorId: connectorPad?.corridorId || mouth.accessId,
@@ -1955,7 +2044,11 @@ export function createMineHybridOrganicRegionSurface(region, generatedMap, conne
       openingType: "breach",
       skippedEdges: mouth.skippedEdges || [],
     };
-  });
+  }).filter(Boolean);
+  const externalAccessById = new Map(externalAccesses.map((access) => [access.id, access.mapAccess]));
+  const accessMouths = (accessResult.mouths || [])
+    .map((mouth) => createMineCaveAccessMouthFromLoopMouth(mouth, externalAccessById.get(mouth.accessId), region.id))
+    .filter(Boolean);
   return {
     regionId: region.id,
     surfaceKind: getRegionSurfaceKind(region, generatedMap),
@@ -1976,7 +2069,7 @@ export function createMineHybridOrganicRegionSurface(region, generatedMap, conne
     boundarySegments,
     baseBoundaryLoop: baseContour,
     baseBoundarySegments,
-    accessMouths: accessResult.mouths,
+    accessMouths,
     passMouths,
     connectionAnchors: getDoorBoundaryCells(region),
   };
@@ -1988,9 +2081,11 @@ export function finalizeHybridGeometry(generatedMap) {
   if (caveRegions.length === 0) return null;
   const caveRegionIds = new Set(caveRegions.map((region) => region.id));
   const connectorPadsByRegion = collectMineCaveConnectorPads(generatedMap, caveRegionIds);
+  const mapAccessesByRegion = collectMineCaveMapAccesses(generatedMap, caveRegionIds);
   const regions = Object.fromEntries(caveRegions.map((region) => {
     const connectorPads = connectorPadsByRegion.get(region.id) || [];
-    const surface = createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads)
+    const mapAccesses = mapAccessesByRegion.get(region.id) || [];
+    const surface = createMineHybridOrganicRegionSurface(region, generatedMap, connectorPads, mapAccesses)
       || createCellMaskRegionSurface(region, generatedMap, generatedMap.config.gridSize);
     const wallSegments = surface.wallSegments || surface.boundarySegments || [];
     const organicSurface = surface.geometryKind === "organic-cell-mask" && isUsableSvgPath(surface.wallPath || surface.wallArcPath || surface.visualFloorPath);
@@ -2012,6 +2107,7 @@ export function finalizeHybridGeometry(generatedMap) {
       boundarySegments: surface.boundarySegments,
       connectorPads,
       passMouths: surface.passMouths || [],
+      accessMouths: surface.accessMouths || [],
       bounds: {
         x: region.cellRect.x * generatedMap.config.gridSize,
         y: region.cellRect.y * generatedMap.config.gridSize,

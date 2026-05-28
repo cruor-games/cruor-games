@@ -983,8 +983,17 @@ export function buildCorridorsVisualFloorPath(corridors, generatedMap, gridSize)
     .join(" ");
 }
 
-export function isOrganicRegionSurface(region) {
-  return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid" || region?.placementProfile === "cave";
+export function isOrganicRegionSurface(region, generatedMap = null) {
+  const contextKey = generatedMap?.config
+    ? getContextKey(generatedMap.config.context || generatedMap.config.biome)
+    : getContextKey(region?.placementProfile || "");
+  if (contextKey === "cave") {
+    return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.placementProfile === "cave";
+  }
+  if (contextKey === "mine") {
+    return region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid";
+  }
+  return false;
 }
 
 export function buildCircleRoomPath(region, gridSize) {
@@ -1111,7 +1120,7 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
   const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
-  const organicPath = isOrganicRegionSurface(region) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
+  const organicPath = isOrganicRegionSurface(region, generatedMap) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
   const visualFloorPath = organicPath || buildFloorPath(floorCells, gridSize);
   const organicSurface = Boolean(organicPath);
   return {
@@ -1552,12 +1561,17 @@ export function renderFloorGrid(generatedMap, gridStyle = "solid") {
 
 export function renderVisualAccents(generatedMap) {
   const { config, dungeonMask, regions, corridors } = generatedMap;
+  const contextKey = getContextKey(config.context || config.biome);
+  const shouldRenderOrganicFloorAccent = (region) => {
+    if (contextKey === "mine" && (region.surfaceKind === "cave" || region.surfaceKind === "hybrid")) return false;
+    return ["irregular", "cave", "oval", "shaft", "ritual", "broken", "ruined-rect", "apse"].includes(region.shape);
+  };
   return (
     <>
       <path className="room-floor-accent" d={regions.map((region) => buildRegionVisualFloorPath(region, config.gridSize, generatedMap)).join(" ")} fillRule="nonzero" />
       <path className="corridor-floor-accent" d={buildCorridorsVisualFloorPath(corridors, generatedMap, config.gridSize)} fillRule="nonzero" />
       <g className="room-shape-accents">
-        {regions.filter((region) => ["irregular", "cave", "oval", "shaft", "ritual", "broken", "ruined-rect", "apse"].includes(region.shape)).map((region) => (
+        {regions.filter(shouldRenderOrganicFloorAccent).map((region) => (
           <g key={`organic-${region.id}`} clipPath={`url(#clip-${region.id})`}>
             <path className="organic-floor-accent" d={createOrganicPath(region, config.gridSize)} />
             {region.shape === "ritual" && <path className="ritual-floor-ring" d={createOrganicPath(region, config.gridSize)} transform={`scale(.72) translate(${region.labelPoint.x * 0.38} ${region.labelPoint.y * 0.38})`} />}
@@ -2705,7 +2719,8 @@ export function getRenderableMapAccesses(generatedMap) {
 }
 
 export function renderMapAccessFloorExtensions(generatedMap) {
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.floorExtension?.path || access?.caveAccessBoundary);
+  const accesses = getRenderableMapAccesses(generatedMap)
+    .filter((access) => !access?.suppressFloorExtension && (access?.floorExtension?.path || access?.caveAccessBoundary));
   if (accesses.length === 0) return null;
   return (
     <g className="map-access-floor-extensions">
@@ -2759,7 +2774,7 @@ export function renderCaveWallAccessMask(generatedMap) {
 }
 
 export function renderMapAccessWallGaps(generatedMap) {
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.wallGap);
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => !access?.suppressAccessWallGap && access?.wallGap);
   if (accesses.length === 0) return null;
   return (
     <g className="map-access-wall-gaps">
@@ -2836,7 +2851,7 @@ export function createOrganicAccessWallPath(points, config, seed, layer = "main"
 
 export function renderMapAccessTunnelWalls(generatedMap) {
   if (isPureCaveMap(generatedMap)) return null;
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.floorExtension?.points);
+  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => !access?.suppressAccessTunnelWalls && access?.floorExtension?.points);
   if (accesses.length === 0) return null;
   const segments = accesses.flatMap((access, accessIndex) =>
     getMapAccessTunnelWallSegments(access, generatedMap.config).map((wall, segmentIndex) => ({
@@ -3914,6 +3929,12 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
           onPointerEnter={(event) => onRoomPointerEnter?.(event, region)}
           onPointerLeave={(event) => onRoomPointerLeave?.(event, region)}
           onContextMenu={(event) => onRoomContextMenu?.(event, region)}
+          data-key="tooltip-room"
+          data-tooltip={region.id}
+          tabIndex={0}
+          focusable="true"
+          role="button"
+          aria-label={region.name ? `${region.name} region` : `Region ${region.number || ""}`.trim()}
         />
       ))}
       {wallConnectionZones.map((zone) => (

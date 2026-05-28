@@ -211,6 +211,19 @@ export function getCaveAccessMouthForAccess(generatedMap, access) {
   return mouths.find((mouth) => mouth.id === access.id) || null;
 }
 
+export function getHybridCaveAccessMouthForAccess(generatedMap, access) {
+  if (!access) return null;
+  const regionSurface = generatedMap?.finalGeometry?.regions?.[access.regionId];
+  const localMouths = regionSurface?.accessMouths || [];
+  if (Array.isArray(localMouths) && localMouths.length > 0) {
+    const mouth = localMouths.find((item) => item.accessId === access.id || item.id === access.id);
+    if (mouth) return mouth;
+  }
+  const allMouths = Object.values(generatedMap?.finalGeometry?.regions || {})
+    .flatMap((surface) => surface?.accessMouths || []);
+  return allMouths.find((mouth) => mouth.accessId === access.id || mouth.id === access.id) || null;
+}
+
 export function getPureCaveBoundaryAnchors(generatedMap) {
   const segments = getCaveAccessBoundarySegments(generatedMap);
   if (segments.length === 0) return [];
@@ -437,6 +450,13 @@ export function createDisplayMapAccessFromAnchor(access, anchor, generatedMap) {
     : { x: displayStart.x + normal.x * g * 0.32, y: displayStart.y + normal.y * g * 0.32 };
   return {
     ...access,
+    ...(accessMouth?.openingType === "external-access" ? {
+      floorExtension: null,
+      wallGap: null,
+      suppressFloorExtension: true,
+      suppressAccessTunnelWalls: true,
+      suppressAccessWallGap: true,
+    } : {}),
     displayAnchor: serializeMapAccessAnchor(anchor),
     accessMouth,
     displayPoint: center,
@@ -457,15 +477,21 @@ export function createDisplayMapAccessFromAnchor(access, anchor, generatedMap) {
 }
 
 export function reconcileMapAccessesWithFinalGeometry(generatedMap) {
-  if (!isPureCaveAccessMap(generatedMap)) return generatedMap?.mapAccesses || generatedMap?.dungeonMask?.mapAccesses || [];
   const accesses = generatedMap?.mapAccesses || generatedMap?.dungeonMask?.mapAccesses || [];
   if (accesses.length === 0) return accesses;
+  const isPureCaveAccess = isPureCaveAccessMap(generatedMap);
+  const isHybridCaveAccess = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+    && getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) === "mine";
+  if (!isPureCaveAccess && !isHybridCaveAccess) return accesses;
   const regionsById = new Map((generatedMap.regions || []).map((region) => [region.id, region]));
   return accesses.map((access, index) => {
     const region = regionsById.get(access.regionId) || generatedMap.regions?.[0];
-    const mouth = getCaveAccessMouthForAccess(generatedMap, access);
+    const mouth = isPureCaveAccess
+      ? getCaveAccessMouthForAccess(generatedMap, access)
+      : getHybridCaveAccessMouthForAccess(generatedMap, access);
     const mouthAnchor = mouth ? createCaveAccessAnchorFromMouth(mouth, generatedMap, index) : null;
     if (mouthAnchor) return createDisplayMapAccessFromAnchor(access, mouthAnchor, generatedMap);
+    if (isHybridCaveAccess) return access;
     const target = access.point || access.displayPoint || (access.wallGap ? { x: (access.wallGap.x1 + access.wallGap.x2) / 2, y: (access.wallGap.y1 + access.wallGap.y2) / 2 } : null) || access.start || null;
     const anchor = target && region ? getClosestExternalBoundaryAnchorToPoint(region, target, generatedMap) : null;
     return anchor ? createDisplayMapAccessFromAnchor(access, anchor, generatedMap) : access;

@@ -35,13 +35,7 @@ import {
   ANATOMY_BOTTOM_SLOT_IDS,
 } from "./monster-composer.workflow.js";
 
-const SOURCES = [
-  { id: "decomposition", label: "Decomposition", tags: ["Body Horror", "Disease Horror"] },
-  { id: "jikininki", label: "Jikininki", tags: ["Folk Horror", "Religious Horror"] },
-  { id: "gashadokuro", label: "Gashadokuro", tags: ["Folk Horror", "Body Horror"] },
-  { id: "wolf-spiders", label: "Wolf Spiders", tags: ["Body Horror", "Predatory Horror"] },
-  { id: "wax-death-masks", label: "Wax Death Masks", tags: ["Gothic", "Psychological Horror"] },
-];
+import { MONSTER_SOURCES as SOURCES } from "./data/monster-sources.js";
 
 const MONSTER_FAMILY_PRESETS = [
   {

@@ -5527,3 +5527,32 @@
 .monster-shell .monster-topbar-wrap + .monster-layout {
   margin-top: 0;
 }
+
+
+/* Step 30B: keep graft card Details visibly expanded inside the Choose Graft modal. */
+.monster-shell .component-navigator-modal__list .component-card {
+  align-content: start;
+  overflow: visible;
+}
+
+.monster-shell .component-navigator-modal__list .component-details {
+  display: block;
+  overflow: visible;
+  min-width: 0;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-list {
+  display: grid;
+  visibility: visible;
+  opacity: 1;
+  max-height: none;
+  overflow: visible;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-row,
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-values,
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-value {
+  visibility: visible;
+  opacity: 1;
+}

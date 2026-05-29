@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import {
+  STATIC_CONTENT_PACK_PROVENANCE,
   STATIC_CONTENT_REGISTRY,
   getSourceAnchorId,
 } from "../../shared/content/index.js";
@@ -97,10 +98,19 @@ function groupComponentsBySlot(components) {
   }, {});
 }
 
+function getContentPack(collectionName, entry) {
+  return STATIC_CONTENT_PACK_PROVENANCE.getPrimaryPackForEntry(collectionName, entry);
+}
+
+function getContentPackLabel(collectionName, entry) {
+  return STATIC_CONTENT_PACK_PROVENANCE.getPackLabelForEntry(collectionName, entry);
+}
+
 function formatComponentMeta(component) {
   const cost = Number(component.monster?.cost || 0);
   const costText = cost > 0 ? `+${cost}` : String(cost);
-  return `Pressure ${costText} · Complexity ${component.monster?.complexity ?? 0}`;
+  const packLabel = getContentPackLabel("components", component);
+  return `Pressure ${costText} · Complexity ${component.monster?.complexity ?? 0} · ${packLabel}`;
 }
 
 function buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents) {
@@ -225,6 +235,7 @@ export default function InspirationsPage() {
   const activeMotifs = activeInspiration
     ? uniqueArray([...(activeInspiration.motifs || []), ...(activeSourceAnchor?.motifs || [])])
     : [];
+  const activeContentPack = activeInspiration ? getContentPack("inspirations", activeInspiration) : null;
 
   return (
     <section className="inspirations-page" aria-label="Inspirations archive">
@@ -276,6 +287,7 @@ export default function InspirationsPage() {
           const sourceAnchor = getSourceAnchorMeta(inspiration);
           const linkedCount = getLinkedRegistryComponents(inspiration).length;
           const motifs = uniqueArray([...(inspiration.motifs || []), ...(sourceAnchor?.motifs || [])]);
+          const packLabel = getContentPackLabel("inspirations", inspiration);
 
           return (
             <button
@@ -296,7 +308,7 @@ export default function InspirationsPage() {
                 <span>{getInspirationCaption(inspiration)}</span>
                 <em>{motifs.slice(0, 3).join(" / ") || "source anchor"}</em>
                 <small>
-                  {linkedCount
+                  {packLabel} · {linkedCount
                     ? `${linkedCount} registry component${linkedCount === 1 ? "" : "s"}`
                     : "No registry components yet"}
                 </small>
@@ -327,6 +339,11 @@ export default function InspirationsPage() {
                 <p className="eyebrow">Inspiration Archive</p>
                 <h2 id="inspirationPageDetailTitle">{getInspirationTitle(activeInspiration)}</h2>
                 <p>{getSourceType(activeInspiration, activeSourceAnchor)}</p>
+                {activeContentPack && (
+                  <span className="inspirations-page__pack-badge">
+                    Content Pack · {activeContentPack.title}
+                  </span>
+                )}
               </div>
               <button
                 className="icon-btn"

@@ -364,6 +364,20 @@
   text-transform: uppercase;
 }
 
+
+.inspirations-page__pack-badge {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid rgba(95, 7, 22, 0.54);
+  background: rgba(51, 3, 12, 0.24);
+  color: #d0a2aa;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 980px) {
   .inspirations-page__grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -6,6 +6,7 @@ import {
   summarizeContentPack,
   validateContentPack,
 } from "./content-pack-schema.js";
+import { buildContentPackProvenance } from "./content-pack-provenance.js";
 import { CORE_CRUOR_CONTENT_PACK } from "./content-packs/core-cruor-pack.js";
 import { EXISTING_INSPIRATIONS_CONTENT_PACK } from "./content-packs/existing-inspirations-pack.js";
 import { JACK_THE_RIPPER_CONTENT_PACK } from "./content-packs/jack-the-ripper-pack.js";
@@ -15,6 +16,8 @@ export const STATIC_CONTENT_PACKS = Object.freeze([
   EXISTING_INSPIRATIONS_CONTENT_PACK,
   JACK_THE_RIPPER_CONTENT_PACK,
 ]);
+
+export const STATIC_CONTENT_PACK_PROVENANCE = buildContentPackProvenance(STATIC_CONTENT_PACKS);
 
 export const STATIC_CONTENT_PACK = mergeContentPacks(STATIC_CONTENT_PACKS, {
   id: "static-cruor-registry",

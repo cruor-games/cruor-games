@@ -33,6 +33,10 @@ export {
   validateContentPack,
 } from "./content-pack-schema.js";
 export {
+  buildContentPackProvenance,
+  getContentEntryId,
+} from "./content-pack-provenance.js";
+export {
   CORE_CRUOR_CONTENT_PACK,
   CORE_CRUOR_CONTENT_PACK_ID,
 } from "./content-packs/core-cruor-pack.js";
@@ -52,6 +56,7 @@ export { SHARED_MONSTER_SLOTS, SHARED_WORKFLOWS } from "./workflows.js";
 export {
   STATIC_CONTENT_PACK,
   STATIC_CONTENT_PACKS,
+  STATIC_CONTENT_PACK_PROVENANCE,
   STATIC_CONTENT_PACK_ISSUES,
   STATIC_CONTENT_PACK_SUMMARY,
   STATIC_CONTENT_REGISTRY,

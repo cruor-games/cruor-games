@@ -5650,3 +5650,88 @@
   visibility: visible;
   opacity: 1;
 }
+
+
+/* Step 39B: keep the extracted Component Navigator scrollable and allow opened details to expand. */
+.monster-shell .component-navigator-modal__panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.monster-shell .component-navigator-modal__head,
+.monster-shell .monster-navigator-tools,
+.monster-shell .component-navigator-modal__slot-tabs,
+.monster-shell .smart-slot-picks {
+  flex: 0 0 auto;
+}
+
+.monster-shell .component-navigator-modal__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  padding-right: 6px;
+}
+
+.monster-shell .component-navigator-modal__list .component-card {
+  min-height: 0;
+  height: auto;
+  align-content: start;
+  overflow: visible;
+}
+
+.monster-shell .component-navigator-modal__list .component-card .card-top,
+.monster-shell .component-navigator-modal__list .component-card .summary,
+.monster-shell .component-navigator-modal__list .component-card .component-impact-line,
+.monster-shell .component-navigator-modal__list .component-card .compatibility-note,
+.monster-shell .component-navigator-modal__list .component-card .component-details {
+  min-width: 0;
+}
+
+.monster-shell .component-navigator-modal__list .component-details {
+  display: block;
+  overflow: visible;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] {
+  overflow: visible;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-list {
+  display: grid;
+  visibility: visible;
+  opacity: 1;
+  max-height: none;
+  overflow: visible;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-row,
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-values,
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-value {
+  visibility: visible;
+  opacity: 1;
+}
+
+.monster-shell .component-navigator-modal__list .component-toggle-btn,
+.monster-shell .smart-pick-card__top button {
+  white-space: nowrap;
+}
+
+.monster-shell .component-navigator-modal__list .component-card.in-build .component-toggle-btn {
+  min-width: 58px;
+  padding-inline: 7px;
+}
+
+@media (max-width: 700px) {
+  .monster-shell .component-navigator-modal__panel {
+    max-height: calc(100dvh - 28px);
+  }
+
+  .monster-shell .component-navigator-modal__list {
+    grid-template-columns: 1fr;
+  }
+}

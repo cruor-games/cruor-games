@@ -11,6 +11,11 @@ export {
   normalizeSourceAnchorIds,
 } from "./source-anchors.js";
 export {
+  SHARED_INSPIRATIONS,
+  buildSharedInspirations,
+  inspirationCardToSharedInspiration,
+} from "./inspirations.js";
+export {
   SHARED_MONSTER_COMPONENTS,
   buildSharedMonsterComponents,
   monsterGraftToSharedComponent,

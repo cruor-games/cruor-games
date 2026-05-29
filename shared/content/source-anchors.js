@@ -134,6 +134,71 @@ export const SHARED_SOURCE_ANCHORS = [
     summary:
       "A draft Source Anchor for fog-bound spaces, impossible creatures, lost visibility, and social pressure under siege.",
   },
+  {
+    id: "mortuary-totems",
+    label: "Mortuary Totems",
+    type: "Funerary Practice",
+    status: SOURCE_ANCHOR_STATUS.DRAFT,
+    workflows: ["darken-location", "inspiration-archive"],
+    sourceTypes: ["Funerary Practice", "Material Culture"],
+    themes: ["ancestral memory", "taboo boundary", "carved guardianship", "lineage pressure"],
+    motifs: ["carved faces", "ancestor poles", "watchful wood", "borrowed eyes"],
+    horror: ["Folk Horror", "Religious Horror"],
+    summary:
+      "A draft Source Anchor for memorial guardianship, carved ancestry, taboo boundaries, and watchful objects.",
+  },
+  {
+    id: "endocannibalism",
+    label: "Endocannibalism",
+    type: "Funerary Practice",
+    status: SOURCE_ANCHOR_STATUS.DRAFT,
+    workflows: ["darken-location", "inspiration-archive"],
+    sourceTypes: ["Funerary Practice", "Ritual"],
+    themes: ["corpse hunger", "funerary taboo", "ancestral incorporation", "grief made physical"],
+    motifs: ["ancestor meal", "taboo communion", "inherited memory", "ash on the tongue"],
+    horror: ["Folk Horror", "Body Horror"],
+    summary:
+      "A draft Source Anchor for ritual incorporation, inherited memory, family hunger, and grief made physical.",
+  },
+  {
+    id: "genetic-mutations",
+    label: "Genetic Mutations",
+    type: "Medical / Genetic Concept",
+    status: SOURCE_ANCHOR_STATUS.DRAFT,
+    workflows: ["darken-location", "inspiration-archive"],
+    sourceTypes: ["Medical / Genetic Concept"],
+    themes: ["heritable corruption", "recessive horror", "bloodline instability", "beautiful defect"],
+    motifs: ["repeated traits", "family portraits", "extra fingers", "corrected genealogy"],
+    horror: ["Body Horror", "Psychological Horror"],
+    summary:
+      "A draft Source Anchor for bloodline horror, unstable bodies, family repetition, and inheritance made visible.",
+  },
+  {
+    id: "crucifixion",
+    label: "Crucifixion",
+    type: "Punitive Practice",
+    status: SOURCE_ANCHOR_STATUS.DRAFT,
+    workflows: ["darken-location", "inspiration-archive"],
+    sourceTypes: ["Punitive Practice", "Religious Image"],
+    themes: ["public martyrdom", "ritualized suffering", "witnessed punishment", "sacred shame"],
+    motifs: ["nails", "raised bodies", "witnesses", "splintered wood", "warm iron"],
+    horror: ["Religious Horror", "Gothic"],
+    summary:
+      "A draft Source Anchor for public suffering, sacred shame, witness guilt, and pain turned into spectacle.",
+  },
+  {
+    id: "impalement",
+    label: "Impalement",
+    type: "Punitive Practice",
+    status: SOURCE_ANCHOR_STATUS.DRAFT,
+    workflows: ["darken-location", "inspiration-archive"],
+    sourceTypes: ["Punitive Practice"],
+    themes: ["vertical execution", "tyrant justice", "border terror", "warning display"],
+    motifs: ["stakes", "raised bodies", "crows", "empty poles", "slow descent"],
+    horror: ["Gothic", "War Horror"],
+    summary:
+      "A draft Source Anchor for warning landscapes, borders, cruelty, authority, and bodies turned into signs.",
+  },
 ];
 
 export const SOURCE_ANCHOR_ALIASES = {
@@ -160,6 +225,13 @@ export const SOURCE_ANCHOR_ALIASES = {
   "mustard gas": "mustard-gas",
   "the-mist": "the-mist",
   "the mist": "the-mist",
+  "mortuary-totems": "mortuary-totems",
+  "mortuary totems": "mortuary-totems",
+  endocannibalism: "endocannibalism",
+  "genetic-mutations": "genetic-mutations",
+  "genetic mutations": "genetic-mutations",
+  crucifixion: "crucifixion",
+  impalement: "impalement",
 };
 
 export function getSourceAnchorId(value) {

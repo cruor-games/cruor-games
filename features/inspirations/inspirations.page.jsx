@@ -6,6 +6,7 @@ import {
 } from "../../shared/content/index.js";
 import "./styles.css";
 
+const ANY_PACK = "Any Pack";
 const MONSTER_COMPONENT_DISPLAY_LIMIT = 18;
 const INSPIRATION_WORKFLOW_ID = "inspiration-archive";
 const MONSTER_WORKFLOW_ID = "monster-composer";
@@ -102,6 +103,14 @@ function getContentPack(collectionName, entry) {
   return STATIC_CONTENT_PACK_PROVENANCE.getPrimaryPackForEntry(collectionName, entry);
 }
 
+function getContentPacks(collectionName, entry) {
+  return STATIC_CONTENT_PACK_PROVENANCE.getPacksForEntry(collectionName, entry);
+}
+
+function getContentPackIds(collectionName, entry) {
+  return STATIC_CONTENT_PACK_PROVENANCE.getPackIdsForEntry(collectionName, entry);
+}
+
 function getContentPackLabel(collectionName, entry) {
   return STATIC_CONTENT_PACK_PROVENANCE.getPackLabelForEntry(collectionName, entry);
 }
@@ -126,6 +135,7 @@ function buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents) {
     sourceAnchor?.label,
     sourceAnchor?.summary,
     sourceAnchor?.type,
+    ...getContentPacks("inspirations", inspiration).map((pack) => pack.title),
     ...(inspiration.sourceTypes || []),
     ...(inspiration.themes || []),
     ...(inspiration.motifs || []),
@@ -136,6 +146,7 @@ function buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents) {
     ...(sourceAnchor?.horror || []),
     ...linkedComponents.map((component) => component.title),
     ...linkedComponents.map((component) => component.summary),
+    ...linkedComponents.flatMap((component) => getContentPacks("components", component).map((pack) => pack.title)),
   ]
     .filter(Boolean)
     .join(" ")
@@ -166,6 +177,7 @@ export default function InspirationsPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("Any Type");
   const [themeFilter, setThemeFilter] = useState("Any Theme");
+  const [packFilter, setPackFilter] = useState(ANY_PACK);
   const [activeInspirationId, setActiveInspirationId] = useState("");
 
   const allInspirations = useMemo(() => {
@@ -173,6 +185,19 @@ export default function InspirationsPage() {
       getInspirationTitle(a).localeCompare(getInspirationTitle(b)),
     );
   }, []);
+
+  const packOptions = useMemo(() => {
+    const inspirationPackIds = new Set(
+      allInspirations.flatMap((inspiration) => getContentPackIds("inspirations", inspiration)),
+    );
+
+    return [
+      { id: ANY_PACK, title: ANY_PACK },
+      ...STATIC_CONTENT_PACK_PROVENANCE.packs
+        .filter((pack) => inspirationPackIds.has(pack.id))
+        .sort((a, b) => a.title.localeCompare(b.title)),
+    ];
+  }, [allInspirations]);
 
   const sourceTypes = useMemo(() => {
     return [
@@ -206,6 +231,11 @@ export default function InspirationsPage() {
       const linkedComponents = getLinkedRegistryComponents(inspiration);
       const sourceType = getSourceType(inspiration, sourceAnchor);
       const themeValues = uniqueArray([...(inspiration.themes || []), ...(sourceAnchor?.themes || [])]);
+      const packIds = getContentPackIds("inspirations", inspiration);
+
+      if (packFilter !== ANY_PACK && !packIds.includes(packFilter)) {
+        return false;
+      }
 
       if (typeFilter !== "Any Type" && sourceType !== typeFilter && !inspiration.sourceTypes?.includes(typeFilter)) {
         return false;
@@ -219,7 +249,7 @@ export default function InspirationsPage() {
 
       return buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents).includes(query);
     });
-  }, [allInspirations, search, typeFilter, themeFilter]);
+  }, [allInspirations, search, typeFilter, themeFilter, packFilter]);
 
   const activeInspiration = allInspirations.find((item) => item.id === activeInspirationId) || null;
   const activeSourceAnchor = activeInspiration ? getSourceAnchorMeta(activeInspiration) : null;
@@ -262,6 +292,17 @@ export default function InspirationsPage() {
           placeholder="Search inspirations, themes, motifs, components..."
           aria-label="Search inspirations"
         />
+        <select
+          value={packFilter}
+          onChange={(event) => setPackFilter(event.target.value)}
+          aria-label="Filter by content pack"
+        >
+          {packOptions.map((pack) => (
+            <option key={pack.id} value={pack.id}>
+              {pack.title}
+            </option>
+          ))}
+        </select>
         <select
           value={typeFilter}
           onChange={(event) => setTypeFilter(event.target.value)}

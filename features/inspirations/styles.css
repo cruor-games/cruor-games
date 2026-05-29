@@ -44,7 +44,7 @@
 
 .inspirations-page__tools {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.35fr) minmax(180px, 0.35fr);
+  grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(170px, 0.3fr));
   gap: 10px;
   max-width: 1440px;
   margin: 0 auto 20px;
@@ -363,7 +363,6 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-
 
 .inspirations-page__pack-badge {
   display: inline-flex;

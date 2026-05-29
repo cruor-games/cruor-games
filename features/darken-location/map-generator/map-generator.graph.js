@@ -1,4 +1,10 @@
-import { classifyRegion, getRegionText, getPlacementProfile, getPlacementRole, roleDepth } from "./map-generator.profile.js";
+import {
+  classifyRegion,
+  getRegionText,
+  getPlacementProfile,
+  getPlacementRole,
+  roleDepth,
+} from "./map-generator.profile.js";
 
 function hashStringToSeed(...parts) {
   const text = parts.join("::");
@@ -17,17 +23,23 @@ function clamp(value, min, max) {
 export function getRegionGraphScore(region, seed) {
   const flags = classifyRegion(region);
   if (flags.entrance) return 0;
-  if (flags.connector) return 16 + (hashStringToSeed(seed, region.id, "connector-order") % 8);
-  if (flags.clue) return 28 + (hashStringToSeed(seed, region.id, "clue-order") % 8);
-  if (flags.hazard) return 42 + (hashStringToSeed(seed, region.id, "hazard-order") % 10);
-  if (flags.climax) return 70 + (hashStringToSeed(seed, region.id, "climax-order") % 8);
+  if (flags.connector)
+    return 16 + (hashStringToSeed(seed, region.id, "connector-order") % 8);
+  if (flags.clue)
+    return 28 + (hashStringToSeed(seed, region.id, "clue-order") % 8);
+  if (flags.hazard)
+    return 42 + (hashStringToSeed(seed, region.id, "hazard-order") % 10);
+  if (flags.climax)
+    return 70 + (hashStringToSeed(seed, region.id, "climax-order") % 8);
   if (flags.outcome || flags.exit) return 88;
   if (flags.secret) return 96;
   return 48 + (hashStringToSeed(seed, region.id, "neutral-order") % 12);
 }
 
 export function createGraphEdge(config, from, to, options = {}) {
-  const baseId = options.id || `edge-${from}-${to}${options.suffix ? `-${options.suffix}` : ""}`;
+  const baseId =
+    options.id ||
+    `edge-${from}-${to}${options.suffix ? `-${options.suffix}` : ""}`;
   return {
     id: baseId,
     from,
@@ -36,13 +48,21 @@ export function createGraphEdge(config, from, to, options = {}) {
     secret: Boolean(options.secret),
     locked: Boolean(options.locked),
     reason: options.reason || "generated",
-    manualWaypoints: Array.isArray(config.manualCorridorWaypoints?.[baseId]) ? config.manualCorridorWaypoints[baseId] : [],
+    manualWaypoints: Array.isArray(config.manualCorridorWaypoints?.[baseId])
+      ? config.manualCorridorWaypoints[baseId]
+      : [],
   };
 }
 
 export function addGraphEdge(edges, config, from, to, options = {}) {
   if (!from || !to || from === to) return null;
-  const duplicate = options.allowDuplicate ? null : edges.find((edge) => (edge.from === from && edge.to === to) || (edge.from === to && edge.to === from));
+  const duplicate = options.allowDuplicate
+    ? null
+    : edges.find(
+        (edge) =>
+          (edge.from === from && edge.to === to) ||
+          (edge.from === to && edge.to === from),
+      );
   if (duplicate) return duplicate;
   const edge = createGraphEdge(config, from, to, options);
   edges.push(edge);
@@ -50,7 +70,11 @@ export function addGraphEdge(edges, config, from, to, options = {}) {
 }
 
 export function selectRegionByFlags(regions, predicate, fallback, seed) {
-  const candidates = regions.filter(predicate).sort((a, b) => getRegionGraphScore(a, seed) - getRegionGraphScore(b, seed));
+  const candidates = regions
+    .filter(predicate)
+    .sort(
+      (a, b) => getRegionGraphScore(a, seed) - getRegionGraphScore(b, seed),
+    );
   return candidates[0] || fallback || regions[0];
 }
 
@@ -60,7 +84,12 @@ export function getFinalRegionPriority(region, seed) {
   let score = getRegionGraphScore(region, seed);
   if (flags.outcome) score += 80;
   if (flags.exit) score += 70;
-  if (text.includes("final") || text.includes("boss") || text.includes("climax")) score += 60;
+  if (
+    text.includes("final") ||
+    text.includes("boss") ||
+    text.includes("climax")
+  )
+    score += 60;
   if (text.includes("main")) score += 50;
   if (text.includes("setpiece")) score += 30;
   if (flags.hazard) score -= 8;
@@ -73,42 +102,92 @@ export function selectFinalRegion(regions, seed) {
     return flags.outcome || flags.exit || flags.climax;
   });
   const pool = candidates.length > 0 ? candidates : regions;
-  return [...pool].sort((a, b) => getFinalRegionPriority(b, seed) - getFinalRegionPriority(a, seed))[0] || null;
+  return (
+    [...pool].sort(
+      (a, b) =>
+        getFinalRegionPriority(b, seed) - getFinalRegionPriority(a, seed),
+    )[0] || null
+  );
 }
 
 export function buildCriticalPathRegions(config, rng) {
   const regions = [...config.regions];
   if (regions.length === 0) return [];
-  const flagsById = new Map(regions.map((region) => [region.id, classifyRegion(region)]));
-  const entrance = selectRegionByFlags(regions, (region) => flagsById.get(region.id).entrance, regions[0], config.seed);
+  const flagsById = new Map(
+    regions.map((region) => [region.id, classifyRegion(region)]),
+  );
+  const entrance = selectRegionByFlags(
+    regions,
+    (region) => flagsById.get(region.id).entrance,
+    regions[0],
+    config.seed,
+  );
   const nonEntrance = regions.filter((region) => region.id !== entrance.id);
-  const nonSecret = nonEntrance.filter((region) => !flagsById.get(region.id).secret);
-  const finalRoom = selectFinalRegion(nonSecret, config.seed) || [...nonSecret].sort((a, b) => getRegionGraphScore(b, config.seed) - getRegionGraphScore(a, config.seed))[0];
+  const nonSecret = nonEntrance.filter(
+    (region) => !flagsById.get(region.id).secret,
+  );
+  const finalRoom =
+    selectFinalRegion(nonSecret, config.seed) ||
+    [...nonSecret].sort(
+      (a, b) =>
+        getRegionGraphScore(b, config.seed) -
+        getRegionGraphScore(a, config.seed),
+    )[0];
   const middlePool = nonSecret.filter((region) => region.id !== finalRoom?.id);
   const required = [];
-  const firstConnector = selectRegionByFlags(middlePool, (region) => flagsById.get(region.id).connector, null, config.seed);
-  const firstClue = selectRegionByFlags(middlePool, (region) => flagsById.get(region.id).clue, null, config.seed);
-  const firstHazard = selectRegionByFlags(middlePool, (region) => flagsById.get(region.id).hazard, null, config.seed);
+  const firstConnector = selectRegionByFlags(
+    middlePool,
+    (region) => flagsById.get(region.id).connector,
+    null,
+    config.seed,
+  );
+  const firstClue = selectRegionByFlags(
+    middlePool,
+    (region) => flagsById.get(region.id).clue,
+    null,
+    config.seed,
+  );
+  const firstHazard = selectRegionByFlags(
+    middlePool,
+    (region) => flagsById.get(region.id).hazard,
+    null,
+    config.seed,
+  );
   [firstConnector, firstClue, firstHazard].forEach((region) => {
-    if (region && !required.some((item) => item.id === region.id)) required.push(region);
+    if (region && !required.some((item) => item.id === region.id))
+      required.push(region);
   });
 
   const remaining = middlePool
     .filter((region) => !required.some((item) => item.id === region.id))
-    .sort((a, b) => getRegionGraphScore(a, config.seed) - getRegionGraphScore(b, config.seed));
-  const mainBudget = Math.max(0, Math.ceil(nonSecret.length * 0.68) - required.length - (finalRoom ? 1 : 0));
+    .sort(
+      (a, b) =>
+        getRegionGraphScore(a, config.seed) -
+        getRegionGraphScore(b, config.seed),
+    );
+  const mainBudget = Math.max(
+    0,
+    Math.ceil(nonSecret.length * 0.68) - required.length - (finalRoom ? 1 : 0),
+  );
   const mainExtras = remaining.slice(0, mainBudget);
-  const orderedMiddle = [...required, ...mainExtras].sort((a, b) => getRegionGraphScore(a, config.seed) - getRegionGraphScore(b, config.seed));
+  const orderedMiddle = [...required, ...mainExtras].sort(
+    (a, b) =>
+      getRegionGraphScore(a, config.seed) - getRegionGraphScore(b, config.seed),
+  );
   return [entrance, ...orderedMiddle, finalRoom].filter(Boolean);
 }
 
 export function chooseSideAnchor(mainPath, sideRegion, seed) {
   const flags = classifyRegion(sideRegion);
-  const usable = mainPath.slice(0, -1).length > 0 ? mainPath.slice(0, -1) : mainPath;
+  const usable =
+    mainPath.slice(0, -1).length > 0 ? mainPath.slice(0, -1) : mainPath;
   if (flags.clue) return usable[Math.min(1, usable.length - 1)] || usable[0];
   if (flags.hazard) return usable[Math.min(2, usable.length - 1)] || usable[0];
-  if (flags.connector || flags.loop) return usable[Math.max(0, Math.floor(usable.length / 2))] || usable[0];
-  const index = hashStringToSeed(seed, sideRegion.id, "side-anchor") % Math.max(1, usable.length);
+  if (flags.connector || flags.loop)
+    return usable[Math.max(0, Math.floor(usable.length / 2))] || usable[0];
+  const index =
+    hashStringToSeed(seed, sideRegion.id, "side-anchor") %
+    Math.max(1, usable.length);
   return usable[index];
 }
 
@@ -138,7 +217,12 @@ export function buildRegionGraph(config, rng) {
 
   if (config.connections.length > 0) {
     config.connections
-      .filter((edge) => regionIds.has(edge.from) && regionIds.has(edge.to) && edge.from !== edge.to)
+      .filter(
+        (edge) =>
+          regionIds.has(edge.from) &&
+          regionIds.has(edge.to) &&
+          edge.from !== edge.to,
+      )
       .forEach((edge, index) => {
         const id = edge.id || `edge-${edge.from}-${edge.to}-${index}`;
         edges.push({
@@ -151,7 +235,9 @@ export function buildRegionGraph(config, rng) {
           reason: edge.reason || "explicit-connection",
           manualWaypoints: Array.isArray(config.manualCorridorWaypoints?.[id])
             ? config.manualCorridorWaypoints[id]
-            : Array.isArray(edge.manualWaypoints) ? edge.manualWaypoints : [],
+            : Array.isArray(edge.manualWaypoints)
+              ? edge.manualWaypoints
+              : [],
         });
       });
   }
@@ -165,9 +251,15 @@ export function buildRegionGraph(config, rng) {
   }
 
   const mainPathIds = new Set(mainPath.map((region) => region.id));
-  const unassigned = config.regions.filter((region) => !mainPathIds.has(region.id));
-  const secretRegions = unassigned.filter((region) => classifyRegion(region).secret);
-  const sideRegions = unassigned.filter((region) => !classifyRegion(region).secret);
+  const unassigned = config.regions.filter(
+    (region) => !mainPathIds.has(region.id),
+  );
+  const secretRegions = unassigned.filter(
+    (region) => classifyRegion(region).secret,
+  );
+  const sideRegions = unassigned.filter(
+    (region) => !classifyRegion(region).secret,
+  );
 
   sideRegions.forEach((region) => {
     const anchor = chooseSideAnchor(mainPath, region, config.seed);
@@ -180,7 +272,16 @@ export function buildRegionGraph(config, rng) {
     });
     if (flags.loop && mainPath.length > 2 && rng() < profile.sideLoopChance) {
       const anchorIndex = mainPath.findIndex((item) => item.id === anchor.id);
-      const exitAnchor = mainPath[clamp(anchorIndex + 1 + (hashStringToSeed(config.seed, region.id, "loop-exit") % 2), 1, mainPath.length - 1)];
+      const exitAnchor =
+        mainPath[
+          clamp(
+            anchorIndex +
+              1 +
+              (hashStringToSeed(config.seed, region.id, "loop-exit") % 2),
+            1,
+            mainPath.length - 1,
+          )
+        ];
       if (exitAnchor) {
         addGraphEdge(edges, config, region.id, exitAnchor.id, {
           kind: "loop",
@@ -216,10 +317,20 @@ export function buildRegionGraph(config, rng) {
     });
   });
 
-  const loopBudget = Math.max(0, Math.floor((config.regions.length / 6) * profile.loopBudgetMultiplier));
+  const loopBudget = Math.max(
+    0,
+    Math.floor((config.regions.length / 6) * profile.loopBudgetMultiplier),
+  );
   for (let i = 0; i < loopBudget && mainPath.length > 4; i += 1) {
-    const fromIndex = 1 + (hashStringToSeed(config.seed, i, "loop-a") % Math.max(1, mainPath.length - 3));
-    const toIndex = clamp(fromIndex + 2 + (hashStringToSeed(config.seed, i, "loop-b") % 2), fromIndex + 1, mainPath.length - 1);
+    const fromIndex =
+      1 +
+      (hashStringToSeed(config.seed, i, "loop-a") %
+        Math.max(1, mainPath.length - 3));
+    const toIndex = clamp(
+      fromIndex + 2 + (hashStringToSeed(config.seed, i, "loop-b") % 2),
+      fromIndex + 1,
+      mainPath.length - 1,
+    );
     addGraphEdge(edges, config, mainPath[fromIndex].id, mainPath[toIndex].id, {
       kind: "loop",
       suffix: `main-loop-${i}`,
@@ -238,23 +349,60 @@ export function buildChapelPhysicalGraph(config) {
   const edges = [];
   const regions = [...config.regions];
   if (regions.length <= 1) return edges;
-  const roleWeight = { entrance: 0, connector: 1, clue: 2, hazard: 3, side: 4, final: 5, secret: 6 };
-  const ordered = [...regions].sort((a, b) => (roleWeight[getPlacementRole(a)] ?? 4) - (roleWeight[getPlacementRole(b)] ?? 4) || roleDepth(a) - roleDepth(b) || a.id.localeCompare(b.id));
-  const entrance = ordered.find((region) => getPlacementRole(region) === "entrance") || ordered[0];
-  const finalRoom = [...ordered].reverse().find((region) => getPlacementRole(region) === "final") || ordered[ordered.length - 1];
-  const naveRegion = ordered.find((region) => getPlacementRole(region) === "connector" && region.id !== entrance?.id && region.id !== finalRoom?.id)
-    || ordered.find((region) => region.id !== entrance?.id && region.id !== finalRoom?.id)
-    || entrance;
+  const roleWeight = {
+    entrance: 0,
+    connector: 1,
+    clue: 2,
+    hazard: 3,
+    side: 4,
+    final: 5,
+    secret: 6,
+  };
+  const ordered = [...regions].sort(
+    (a, b) =>
+      (roleWeight[getPlacementRole(a)] ?? 4) -
+        (roleWeight[getPlacementRole(b)] ?? 4) ||
+      roleDepth(a) - roleDepth(b) ||
+      a.id.localeCompare(b.id),
+  );
+  const entrance =
+    ordered.find((region) => getPlacementRole(region) === "entrance") ||
+    ordered[0];
+  const finalRoom =
+    [...ordered]
+      .reverse()
+      .find((region) => getPlacementRole(region) === "final") ||
+    ordered[ordered.length - 1];
+  const naveRegion =
+    ordered.find(
+      (region) =>
+        getPlacementRole(region) === "connector" &&
+        region.id !== entrance?.id &&
+        region.id !== finalRoom?.id,
+    ) ||
+    ordered.find(
+      (region) => region.id !== entrance?.id && region.id !== finalRoom?.id,
+    ) ||
+    entrance;
 
   if (entrance && naveRegion && entrance.id !== naveRegion.id) {
-    addGraphEdge(edges, config, entrance.id, naveRegion.id, { kind: "critical", reason: "chapel-narthex-to-nave" });
+    addGraphEdge(edges, config, entrance.id, naveRegion.id, {
+      kind: "critical",
+      reason: "chapel-narthex-to-nave",
+    });
   }
   if (naveRegion && finalRoom && naveRegion.id !== finalRoom.id) {
-    addGraphEdge(edges, config, naveRegion.id, finalRoom.id, { kind: "critical", reason: "chapel-nave-to-sanctuary" });
+    addGraphEdge(edges, config, naveRegion.id, finalRoom.id, {
+      kind: "critical",
+      reason: "chapel-nave-to-sanctuary",
+    });
   }
 
   regions
-    .filter((region) => ![entrance?.id, naveRegion?.id, finalRoom?.id].includes(region.id))
+    .filter(
+      (region) =>
+        ![entrance?.id, naveRegion?.id, finalRoom?.id].includes(region.id),
+    )
     .forEach((region) => {
       const role = getPlacementRole(region);
       const anchor = role === "secret" ? finalRoom : naveRegion;
@@ -263,14 +411,20 @@ export function buildChapelPhysicalGraph(config) {
         kind: role === "secret" ? "secret" : "side",
         secret: role === "secret",
         suffix: role === "secret" ? "chapel-secret" : "chapel-side",
-        reason: role === "secret" ? "chapel-hidden-sacristy" : "chapel-side-chamber",
+        reason:
+          role === "secret" ? "chapel-hidden-sacristy" : "chapel-side-chamber",
       });
     });
 
   config.regions.forEach((region) => {
     region.links.forEach((rawLink, index) => {
       const link = parseRegionLink(rawLink);
-      if (!link || !regions.some((item) => item.id === link.to) || link.to === region.id) return;
+      if (
+        !link ||
+        !regions.some((item) => item.id === link.to) ||
+        link.to === region.id
+      )
+        return;
       addGraphEdge(edges, config, region.id, link.to, {
         id: link.id || `edge-${region.id}-${link.to}-link-${index}`,
         kind: link.kind,
@@ -285,13 +439,27 @@ export function buildChapelPhysicalGraph(config) {
 }
 
 export function applyManualConnectionsToGraph(config, graph) {
-  const deletedConnections = new Set(Array.isArray(config.manualDeletedConnections) ? config.manualDeletedConnections : []);
+  const deletedConnections = new Set(
+    Array.isArray(config.manualDeletedConnections)
+      ? config.manualDeletedConnections
+      : [],
+  );
   const edges = graph.filter((edge) => !deletedConnections.has(edge.id));
-  const manualConnections = Array.isArray(config.manualCustomConnections) ? config.manualCustomConnections : [];
+  const manualConnections = Array.isArray(config.manualCustomConnections)
+    ? config.manualCustomConnections
+    : [];
   manualConnections.forEach((connection, index) => {
-    if (!connection?.from || !connection?.to || connection.from === connection.to || deletedConnections.has(connection.id)) return;
+    if (
+      !connection?.from ||
+      !connection?.to ||
+      connection.from === connection.to ||
+      deletedConnections.has(connection.id)
+    )
+      return;
     addGraphEdge(edges, config, connection.from, connection.to, {
-      id: connection.id || `manual-edge-${connection.from}-${connection.to}-${index}`,
+      id:
+        connection.id ||
+        `manual-edge-${connection.from}-${connection.to}-${index}`,
       kind: "manual",
       reason: "manual-editor-connection",
       secret: Boolean(connection.secret),
@@ -308,12 +476,16 @@ export function adaptGeneratedGraphForContext(config, graph) {
 }
 
 export function adaptGraphForContext(config, graph) {
-  return applyManualConnectionsToGraph(config, adaptGeneratedGraphForContext(config, graph));
+  return applyManualConnectionsToGraph(
+    config,
+    adaptGeneratedGraphForContext(config, graph),
+  );
 }
 
 export function computeGraphDepths(regions, graph) {
   if (regions.length === 0) return new Map();
-  const entrance = regions.find((region) => classifyRegion(region).entrance) || regions[0];
+  const entrance =
+    regions.find((region) => classifyRegion(region).entrance) || regions[0];
   const adjacency = new Map(regions.map((region) => [region.id, []]));
   graph.forEach((edge) => {
     adjacency.get(edge.from)?.push(edge.to);
@@ -348,7 +520,19 @@ export function annotateRegionsWithGraphMetadata(regions, graph) {
     return {
       ...region,
       graphDepth: normalizedDepth,
-      graphRole: flags.secret ? "secret" : flags.climax || flags.outcome || flags.exit ? "final" : flags.hazard ? "hazard" : flags.clue ? "clue" : flags.connector ? "connector" : flags.entrance ? "entrance" : "side",
+      graphRole: flags.secret
+        ? "secret"
+        : flags.climax || flags.outcome || flags.exit
+          ? "final"
+          : flags.hazard
+            ? "hazard"
+            : flags.clue
+              ? "clue"
+              : flags.connector
+                ? "connector"
+                : flags.entrance
+                  ? "entrance"
+                  : "side",
     };
   });
 }
@@ -372,8 +556,11 @@ export function getEdgeEndpointForRegion(edge, regionId) {
 }
 
 export function findGraphEdgeBetween(graph, fromRegionId, toRegionId) {
-  return graph.find((edge) =>
-    (edge.from === fromRegionId && edge.to === toRegionId) ||
-    (edge.from === toRegionId && edge.to === fromRegionId)
-  ) || null;
+  return (
+    graph.find(
+      (edge) =>
+        (edge.from === fromRegionId && edge.to === toRegionId) ||
+        (edge.from === toRegionId && edge.to === fromRegionId),
+    ) || null
+  );
 }

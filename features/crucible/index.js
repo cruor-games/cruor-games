@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import { mountCrucible } from './crucible.mount.js';
+import React, { useEffect, useRef } from "react";
+import { mountCrucible } from "./crucible.mount.js";
 
 export { mountCrucible };
 
@@ -8,10 +8,13 @@ export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady } = {}) {
 
   useEffect(() => {
     if (!rootRef.current) return undefined;
-    return mountCrucible(rootRef.current, { onOpenMapGenerator, onSnapshotProviderReady });
+    return mountCrucible(rootRef.current, {
+      onOpenMapGenerator,
+      onSnapshotProviderReady,
+    });
   }, [onOpenMapGenerator, onSnapshotProviderReady]);
 
-  return React.createElement('div', { ref: rootRef });
+  return React.createElement("div", { ref: rootRef });
 }
 
 export default Crucible;

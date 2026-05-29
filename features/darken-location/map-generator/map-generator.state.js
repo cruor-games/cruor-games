@@ -12,14 +12,27 @@ export function createEmptyLevelOverrides() {
   };
 }
 
-export function normalizeLevelOverrides(levels = {}, legacyStairTransitions = {}) {
+export function normalizeLevelOverrides(
+  levels = {},
+  legacyStairTransitions = {},
+) {
   const source = levels && typeof levels === "object" ? levels : {};
   return {
-    regions: source.regions && typeof source.regions === "object" ? source.regions : {},
-    corridors: source.corridors && typeof source.corridors === "object" ? source.corridors : {},
+    regions:
+      source.regions && typeof source.regions === "object"
+        ? source.regions
+        : {},
+    corridors:
+      source.corridors && typeof source.corridors === "object"
+        ? source.corridors
+        : {},
     stairs: {
-      ...(legacyStairTransitions && typeof legacyStairTransitions === "object" ? legacyStairTransitions : {}),
-      ...(source.stairs && typeof source.stairs === "object" ? source.stairs : {}),
+      ...(legacyStairTransitions && typeof legacyStairTransitions === "object"
+        ? legacyStairTransitions
+        : {}),
+      ...(source.stairs && typeof source.stairs === "object"
+        ? source.stairs
+        : {}),
     },
   };
 }
@@ -47,31 +60,54 @@ export function createEmptyManualOverrides() {
 }
 
 export function normalizeManualOverrides(overrides = {}) {
-  const sequence = Number(overrides.manualConnectionSequence ?? overrides.connectionSequence ?? 0);
-  const levels = normalizeLevelOverrides(overrides.levels || overrides.manualLevels || {}, getLegacyStairTransitionsFromOverrides(overrides));
+  const sequence = Number(
+    overrides.manualConnectionSequence ?? overrides.connectionSequence ?? 0,
+  );
+  const levels = normalizeLevelOverrides(
+    overrides.levels || overrides.manualLevels || {},
+    getLegacyStairTransitionsFromOverrides(overrides),
+  );
   return {
     schemaVersion: MANUAL_OVERRIDE_SCHEMA_VERSION,
-    roomPositions: overrides.roomPositions || overrides.manualRoomPositions || {},
+    roomPositions:
+      overrides.roomPositions || overrides.manualRoomPositions || {},
     doorAnchors: overrides.doorAnchors || overrides.manualDoorAnchors || {},
     doorTypes: overrides.doorTypes || overrides.manualDoorTypes || {},
     stairTransitions: levels.stairs,
     levels,
     mapAccesses: overrides.mapAccesses || overrides.manualMapAccesses || {},
-    corridorJunctions: overrides.corridorJunctions || overrides.manualCorridorJunctions || {},
-    corridorWaypoints: overrides.corridorWaypoints || overrides.manualCorridorWaypoints || {},
-    customConnections: Array.isArray(overrides.customConnections || overrides.manualCustomConnections) ? (overrides.customConnections || overrides.manualCustomConnections) : [],
+    corridorJunctions:
+      overrides.corridorJunctions || overrides.manualCorridorJunctions || {},
+    corridorWaypoints:
+      overrides.corridorWaypoints || overrides.manualCorridorWaypoints || {},
+    customConnections: Array.isArray(
+      overrides.customConnections || overrides.manualCustomConnections,
+    )
+      ? overrides.customConnections || overrides.manualCustomConnections
+      : [],
     roomStyles: overrides.roomStyles || overrides.manualRoomStyles || {},
-    deletedConnections: Array.isArray(overrides.deletedConnections || overrides.manualDeletedConnections) ? (overrides.deletedConnections || overrides.manualDeletedConnections) : [],
-    manualConnectionSequence: Number.isFinite(sequence) ? Math.max(0, Math.round(sequence)) : 0,
+    deletedConnections: Array.isArray(
+      overrides.deletedConnections || overrides.manualDeletedConnections,
+    )
+      ? overrides.deletedConnections || overrides.manualDeletedConnections
+      : [],
+    manualConnectionSequence: Number.isFinite(sequence)
+      ? Math.max(0, Math.round(sequence))
+      : 0,
   };
 }
 
 export function cloneManualOverrides(overrides = {}) {
-  return normalizeManualOverrides(JSON.parse(JSON.stringify(normalizeManualOverrides(overrides))));
+  return normalizeManualOverrides(
+    JSON.parse(JSON.stringify(normalizeManualOverrides(overrides))),
+  );
 }
 
 export function areManualOverridesEqual(a, b) {
-  return JSON.stringify(cloneManualOverrides(a)) === JSON.stringify(cloneManualOverrides(b));
+  return (
+    JSON.stringify(cloneManualOverrides(a)) ===
+    JSON.stringify(cloneManualOverrides(b))
+  );
 }
 
 export function applyManualOverridesToConfig(config, manualOverrides = {}) {
@@ -122,12 +158,30 @@ export function normalizeStairTransition(value, fallback = "none") {
   return STAIR_TRANSITION_OPTIONS.includes(value) ? value : fallback;
 }
 
-export function getManualStairTransition(stairTransitions, corridorId, endpoint, fallback = "none") {
-  return normalizeStairTransition(stairTransitions?.[stairTransitionKey(corridorId, endpoint)], fallback);
+export function getManualStairTransition(
+  stairTransitions,
+  corridorId,
+  endpoint,
+  fallback = "none",
+) {
+  return normalizeStairTransition(
+    stairTransitions?.[stairTransitionKey(corridorId, endpoint)],
+    fallback,
+  );
 }
 
-export function resolveStairTransition(config, corridorId, endpoint, fallback = "none") {
-  return getManualStairTransition(config.manualStairTransitions || {}, corridorId, endpoint, fallback);
+export function resolveStairTransition(
+  config,
+  corridorId,
+  endpoint,
+  fallback = "none",
+) {
+  return getManualStairTransition(
+    config.manualStairTransitions || {},
+    corridorId,
+    endpoint,
+    fallback,
+  );
 }
 
 export function normalizeJunctionType(value, fallback = "merge") {
@@ -135,11 +189,14 @@ export function normalizeJunctionType(value, fallback = "merge") {
 }
 
 export function normalizeJunctionOverride(value, fallback = "merge") {
-  if (typeof value === "string") return { type: normalizeJunctionType(value, fallback), sideIndex: 0 };
+  if (typeof value === "string")
+    return { type: normalizeJunctionType(value, fallback), sideIndex: 0 };
   if (value && typeof value === "object") {
     return {
       type: normalizeJunctionType(value.type, fallback),
-      sideIndex: Number.isFinite(value.sideIndex) ? clamp(Math.round(value.sideIndex), 0, 3) : 0,
+      sideIndex: Number.isFinite(value.sideIndex)
+        ? clamp(Math.round(value.sideIndex), 0, 3)
+        : 0,
     };
   }
   return { type: normalizeJunctionType(fallback, "merge"), sideIndex: 0 };
@@ -157,10 +214,28 @@ export function getManualJunctionSideIndex(junctions, key, fallback = "merge") {
   return getManualJunctionOverride(junctions, key, fallback).sideIndex;
 }
 
-export function getManualDoorType(doorTypes, corridorId, endpoint, fallback = "default") {
-  return normalizeDoorType(doorTypes?.[doorTypeKey(corridorId, endpoint)], fallback);
+export function getManualDoorType(
+  doorTypes,
+  corridorId,
+  endpoint,
+  fallback = "default",
+) {
+  return normalizeDoorType(
+    doorTypes?.[doorTypeKey(corridorId, endpoint)],
+    fallback,
+  );
 }
 
-export function resolveDoorType(config, corridorId, endpoint, fallbackSecret = false) {
-  return getManualDoorType(config.manualDoorTypes || {}, corridorId, endpoint, fallbackSecret ? "secret" : "default");
+export function resolveDoorType(
+  config,
+  corridorId,
+  endpoint,
+  fallbackSecret = false,
+) {
+  return getManualDoorType(
+    config.manualDoorTypes || {},
+    corridorId,
+    endpoint,
+    fallbackSecret ? "secret" : "default",
+  );
 }

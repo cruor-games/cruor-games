@@ -1,7 +1,17 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { registerTooltipProvider } from "../../../shared/tooltips/tooltip.registry.js";
-import { DEFAULT_CONFIG, createConfigFromNormalizedMapRequest, normalizeRoomCount } from "./map-generator.input.js";
+import {
+  DEFAULT_CONFIG,
+  createConfigFromNormalizedMapRequest,
+  normalizeRoomCount,
+} from "./map-generator.input.js";
 import {
   LEVEL_VIEW_ALL,
   MANUAL_OVERRIDE_SCHEMA_VERSION,
@@ -199,7 +209,8 @@ function hashStringToSeed(...parts) {
 }
 
 function createSeededRng(seed) {
-  let state = typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
+  let state =
+    typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
   return function rng() {
     state += 0x6d2b79f5;
     let t = state;
@@ -223,11 +234,21 @@ function clamp(value, min, max) {
 
 function getFixedContextMenuPosition(event, width = 250, height = 280) {
   const margin = 8;
-  const viewportWidth = typeof window === "undefined" ? width + margin * 2 : window.innerWidth;
-  const viewportHeight = typeof window === "undefined" ? height + margin * 2 : window.innerHeight;
+  const viewportWidth =
+    typeof window === "undefined" ? width + margin * 2 : window.innerWidth;
+  const viewportHeight =
+    typeof window === "undefined" ? height + margin * 2 : window.innerHeight;
   return {
-    x: clamp(event.clientX, margin, Math.max(margin, viewportWidth - width - margin)),
-    y: clamp(event.clientY, margin, Math.max(margin, viewportHeight - height - margin)),
+    x: clamp(
+      event.clientX,
+      margin,
+      Math.max(margin, viewportWidth - width - margin),
+    ),
+    y: clamp(
+      event.clientY,
+      margin,
+      Math.max(margin, viewportHeight - height - margin),
+    ),
   };
 }
 
@@ -237,10 +258,61 @@ function roundTo(value, decimals = 2) {
 }
 
 function rectsOverlapWithMargin(a, b, margin = 2) {
-  return !(a.x + a.w + margin <= b.x || b.x + b.w + margin <= a.x || a.y + a.h + margin <= b.y || b.y + b.h + margin <= a.y);
+  return !(
+    a.x + a.w + margin <= b.x ||
+    b.x + b.w + margin <= a.x ||
+    a.y + a.h + margin <= b.y ||
+    b.y + b.h + margin <= a.y
+  );
 }
 
-export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, showNames, showProps, levelView = LEVEL_VIEW_ALL, fadeOtherLevels = true, availableLevels = [], manualOverrides, onRoomMove, onDoorMove, onDoorTypeChange, onDoorStairChange, onMapAccessMove, onMapAccessSet, onMapAccessRemove, onJunctionTypeChange, onWaypointMove, onWaypointInsert, onWaypointDelete, onConnectionDelete, onCreateConnection, onRoomStyleChange, onRoomStyleReset, onEditStart, onEditCommit, onUndo, onRedo, onNewSeed, onToggleGrid, onGridStyleChange, onToggleEditor, onToggleNames, onToggleProps, onLevelViewChange, onToggleFadeOtherLevels, onResetEdits, onExportSvg, onExportGmSvg, onExportPlayerSvg, onExportPrintSvg, onExportState, onImportState, viewResetKey }) {
+export function MapViewport({
+  generatedMap,
+  showGrid,
+  gridStyle,
+  showEditor,
+  showNames,
+  showProps,
+  levelView = LEVEL_VIEW_ALL,
+  fadeOtherLevels = true,
+  availableLevels = [],
+  manualOverrides,
+  onRoomMove,
+  onDoorMove,
+  onDoorTypeChange,
+  onDoorStairChange,
+  onMapAccessMove,
+  onMapAccessSet,
+  onMapAccessRemove,
+  onJunctionTypeChange,
+  onWaypointMove,
+  onWaypointInsert,
+  onWaypointDelete,
+  onConnectionDelete,
+  onCreateConnection,
+  onRoomStyleChange,
+  onRoomStyleReset,
+  onEditStart,
+  onEditCommit,
+  onUndo,
+  onRedo,
+  onNewSeed,
+  onToggleGrid,
+  onGridStyleChange,
+  onToggleEditor,
+  onToggleNames,
+  onToggleProps,
+  onLevelViewChange,
+  onToggleFadeOtherLevels,
+  onResetEdits,
+  onExportSvg,
+  onExportGmSvg,
+  onExportPlayerSvg,
+  onExportPrintSvg,
+  onExportState,
+  onImportState,
+  viewResetKey,
+}) {
   const viewportRef = useRef(null);
   const panRef = useRef(null);
   const roomDragRef = useRef(null);
@@ -272,7 +344,10 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   const pureCaveEditor = isPureCaveMap(generatedMap);
   const [mapContextMenu, setMapContextMenu] = useState(null);
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
-  const [viewportSize, setViewportSize] = useState({ width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight });
+  const [viewportSize, setViewportSize] = useState({
+    width: generatedMap.config.mapWidth,
+    height: generatedMap.config.mapHeight,
+  });
 
   contentBoundsRef.current = generatedMap.contentBounds;
 
@@ -281,7 +356,10 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!viewport) return;
     const updateSize = () => {
       const rect = viewport.getBoundingClientRect();
-      setViewportSize({ width: Math.max(1, rect.width), height: Math.max(1, rect.height) });
+      setViewportSize({
+        width: Math.max(1, rect.width),
+        height: Math.max(1, rect.height),
+      });
     };
     updateSize();
     const observer = new ResizeObserver(updateSize);
@@ -289,20 +367,29 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     return () => observer.disconnect();
   }, []);
 
-  const constrainView = useCallback((candidate) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return candidate;
-    const rect = viewport.getBoundingClientRect();
-    const scaledWidth = generatedMap.config.mapWidth * candidate.scale;
-    const scaledHeight = generatedMap.config.mapHeight * candidate.scale;
-    const minX = Math.min(0, rect.width - scaledWidth);
-    const minY = Math.min(0, rect.height - scaledHeight);
-    return {
-      ...candidate,
-      x: scaledWidth <= rect.width ? (rect.width - scaledWidth) / 2 : clamp(candidate.x, minX, 0),
-      y: scaledHeight <= rect.height ? (rect.height - scaledHeight) / 2 : clamp(candidate.y, minY, 0),
-    };
-  }, [generatedMap.config.mapWidth, generatedMap.config.mapHeight]);
+  const constrainView = useCallback(
+    (candidate) => {
+      const viewport = viewportRef.current;
+      if (!viewport) return candidate;
+      const rect = viewport.getBoundingClientRect();
+      const scaledWidth = generatedMap.config.mapWidth * candidate.scale;
+      const scaledHeight = generatedMap.config.mapHeight * candidate.scale;
+      const minX = Math.min(0, rect.width - scaledWidth);
+      const minY = Math.min(0, rect.height - scaledHeight);
+      return {
+        ...candidate,
+        x:
+          scaledWidth <= rect.width
+            ? (rect.width - scaledWidth) / 2
+            : clamp(candidate.x, minX, 0),
+        y:
+          scaledHeight <= rect.height
+            ? (rect.height - scaledHeight) / 2
+            : clamp(candidate.y, minY, 0),
+      };
+    },
+    [generatedMap.config.mapWidth, generatedMap.config.mapHeight],
+  );
 
   const fitView = useCallback(() => {
     const viewport = viewportRef.current;
@@ -312,12 +399,18 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     const margin = 64;
     const availableWidth = Math.max(120, rect.width - margin * 2);
     const availableHeight = Math.max(120, rect.height - margin * 2);
-    const nextScale = clamp(Math.min(availableWidth / bounds.width, availableHeight / bounds.height), 0.35, 1.45);
-    setView(constrainView({
-      scale: nextScale,
-      x: (rect.width - bounds.width * nextScale) / 2 - bounds.x * nextScale,
-      y: (rect.height - bounds.height * nextScale) / 2 - bounds.y * nextScale,
-    }));
+    const nextScale = clamp(
+      Math.min(availableWidth / bounds.width, availableHeight / bounds.height),
+      0.35,
+      1.45,
+    );
+    setView(
+      constrainView({
+        scale: nextScale,
+        x: (rect.width - bounds.width * nextScale) / 2 - bounds.x * nextScale,
+        y: (rect.height - bounds.height * nextScale) / 2 - bounds.y * nextScale,
+      }),
+    );
   }, [constrainView]);
 
   useEffect(() => {
@@ -328,30 +421,40 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     return () => window.cancelAnimationFrame(frame);
   }, [fitView, viewResetKey]);
 
-  const zoomAtPoint = useCallback((clientX, clientY, factor) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
-    const px = clientX - rect.left;
-    const py = clientY - rect.top;
-    setView((current) => {
-      const nextScale = clamp(current.scale * factor, 0.35, 4);
-      const mapX = (px - current.x) / current.scale;
-      const mapY = (py - current.y) / current.scale;
-      return constrainView({
-        scale: nextScale,
-        x: px - mapX * nextScale,
-        y: py - mapY * nextScale,
+  const zoomAtPoint = useCallback(
+    (clientX, clientY, factor) => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const rect = viewport.getBoundingClientRect();
+      const px = clientX - rect.left;
+      const py = clientY - rect.top;
+      setView((current) => {
+        const nextScale = clamp(current.scale * factor, 0.35, 4);
+        const mapX = (px - current.x) / current.scale;
+        const mapY = (py - current.y) / current.scale;
+        return constrainView({
+          scale: nextScale,
+          x: px - mapX * nextScale,
+          y: py - mapY * nextScale,
+        });
       });
-    });
-  }, [constrainView]);
+    },
+    [constrainView],
+  );
 
-  const zoomAtCenter = useCallback((factor) => {
-    const viewport = viewportRef.current;
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
-    zoomAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
-  }, [zoomAtPoint]);
+  const zoomAtCenter = useCallback(
+    (factor) => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const rect = viewport.getBoundingClientRect();
+      zoomAtPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+        factor,
+      );
+    },
+    [zoomAtPoint],
+  );
 
   function clientToMapPoint(event) {
     const viewport = viewportRef.current;
@@ -367,12 +470,21 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     return `${-view.x / view.scale} ${-view.y / view.scale} ${viewportSize.width / view.scale} ${viewportSize.height / view.scale}`;
   }
 
-  const handleWheel = useCallback((event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
-    zoomAtPoint(event.clientX, event.clientY, event.deltaY > 0 ? 0.9 : 1.1);
-  }, [zoomAtPoint]);
+  const handleWheel = useCallback(
+    (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (
+        roomDragRef.current ||
+        corridorDragRef.current ||
+        accessDragRef.current ||
+        connectionDragRef.current
+      )
+        return;
+      zoomAtPoint(event.clientX, event.clientY, event.deltaY > 0 ? 0.9 : 1.1);
+    },
+    [zoomAtPoint],
+  );
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -381,10 +493,15 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     return () => viewport.removeEventListener("wheel", handleWheel);
   }, [handleWheel]);
 
-  useEffect(() => () => {
-    if (roomMoveFrameRef.current) window.cancelAnimationFrame(roomMoveFrameRef.current);
-    if (accessMoveFrameRef.current) window.cancelAnimationFrame(accessMoveFrameRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (roomMoveFrameRef.current)
+        window.cancelAnimationFrame(roomMoveFrameRef.current);
+      if (accessMoveFrameRef.current)
+        window.cancelAnimationFrame(accessMoveFrameRef.current);
+    },
+    [],
+  );
 
   function openMapContextMenu(event) {
     event.preventDefault();
@@ -415,7 +532,14 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function handleRoomPointerEnter(event, region) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     setHoverWallHandle(null);
     setHoverCorridorHandle(null);
@@ -426,7 +550,7 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   function handleRoomPointerLeave(event, region) {
     if (!showEditor || roomDragRef.current) return;
     event.stopPropagation();
-    setHoveredRegionId((current) => current === region.id ? null : current);
+    setHoveredRegionId((current) => (current === region.id ? null : current));
   }
 
   function handleRoomPointerDown(event, region) {
@@ -456,17 +580,22 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function getPureCaveWallAnchorFromEvent(event, zone) {
-    if (!pureCaveEditor || !zone?.anchor?.finalGeometry || !zone.anchor.segment) return zone?.anchor || null;
+    if (!pureCaveEditor || !zone?.anchor?.finalGeometry || !zone.anchor.segment)
+      return zone?.anchor || null;
     const point = clientToMapPoint(event) || zone.point || zone.anchor.point;
-    const segments = generatedMap.finalGeometry?.caveSurface?.boundarySegments || [];
-    const bounds = zone.anchor.caveBounds || getCaveAccessBounds(segments, generatedMap);
-    return createCaveAccessBoundaryAnchor(
-      zone.anchor.segment,
-      generatedMap,
-      zone.anchor.finalBoundaryIndex,
-      bounds,
-      point,
-    ) || zone.anchor;
+    const segments =
+      generatedMap.finalGeometry?.caveSurface?.boundarySegments || [];
+    const bounds =
+      zone.anchor.caveBounds || getCaveAccessBounds(segments, generatedMap);
+    return (
+      createCaveAccessBoundaryAnchor(
+        zone.anchor.segment,
+        generatedMap,
+        zone.anchor.finalBoundaryIndex,
+        bounds,
+        point,
+      ) || zone.anchor
+    );
   }
 
   function anchorsMatchEditorLocation(a, b) {
@@ -483,18 +612,28 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function handleWallZonePointerMove(event, zone) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     const anchor = getPureCaveWallAnchorFromEvent(event, zone) || zone.anchor;
-    const point = anchor ? getAnchorHandlePoint(anchor, generatedMap.config.gridSize) : zone.point;
+    const point = anchor
+      ? getAnchorHandlePoint(anchor, generatedMap.config.gridSize)
+      : zone.point;
     setHoveredRegionId(zone.regionId);
-    setHoverCorridorHandle((current) => current ? null : current);
-    setHoveredCorridorId((current) => current ? null : current);
+    setHoverCorridorHandle((current) => (current ? null : current));
+    setHoveredCorridorId((current) => (current ? null : current));
     setHoverWallHandle((current) => {
       if (
         current?.regionId === zone.regionId &&
         anchorsMatchEditorLocation(current?.anchor, anchor)
-      ) return current;
+      )
+        return current;
       return {
         regionId: zone.regionId,
         adjacentRegionId: zone.adjacentRegionId,
@@ -517,40 +656,83 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       current &&
       zoneOrHandle &&
       current.regionId === zoneOrHandle.regionId &&
-      anchorsMatchEditorLocation(current.anchor, zoneOrHandle.anchor)
+      anchorsMatchEditorLocation(current.anchor, zoneOrHandle.anchor),
     );
   }
 
   function handleWallZonePointerLeave(event, zone) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     if (eventRelatedTargetHasClass(event, "wall-connect-handle")) return;
-    setHoverWallHandle((current) => isSameWallHoverHandle(current, zone) ? null : current);
-    setHoveredRegionId((current) => current === zone.regionId ? null : current);
+    setHoverWallHandle((current) =>
+      isSameWallHoverHandle(current, zone) ? null : current,
+    );
+    setHoveredRegionId((current) =>
+      current === zone.regionId ? null : current,
+    );
   }
 
   function handleWallHandlePointerLeave(event, handle) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     if (eventRelatedTargetHasClass(event, "wall-hover-zone")) return;
-    setHoverWallHandle((current) => isSameWallHoverHandle(current, handle) ? null : current);
-    setHoveredRegionId((current) => current === handle.regionId ? null : current);
+    setHoverWallHandle((current) =>
+      isSameWallHoverHandle(current, handle) ? null : current,
+    );
+    setHoveredRegionId((current) =>
+      current === handle.regionId ? null : current,
+    );
   }
 
   function isExternalMapBoundaryZone(zone) {
     if (!zone?.anchor) return false;
-    if (pureCaveEditor && zone.anchor.finalGeometry && zone.anchor.caveAccessBoundary) return true;
-    const floorSet = new Set(generatedMap.dungeonMask.floorCells.map((cell) => cellKey(cell.x, cell.y)));
-    return !floorSet.has(cellKey(zone.anchor.outsideCell.x, zone.anchor.outsideCell.y));
+    if (
+      pureCaveEditor &&
+      zone.anchor.finalGeometry &&
+      zone.anchor.caveAccessBoundary
+    )
+      return true;
+    const floorSet = new Set(
+      generatedMap.dungeonMask.floorCells.map((cell) =>
+        cellKey(cell.x, cell.y),
+      ),
+    );
+    return !floorSet.has(
+      cellKey(zone.anchor.outsideCell.x, zone.anchor.outsideCell.y),
+    );
   }
 
   function getMapAccessForRegion(regionId) {
-    return (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).find((access) => access.regionId === regionId) || null;
+    return (
+      (
+        generatedMap.dungeonMask.mapAccesses ||
+        generatedMap.mapAccesses ||
+        []
+      ).find((access) => access.regionId === regionId) || null
+    );
   }
 
   function mapAccessMatchesAnchor(access, anchor) {
     const accessAnchor = access?.displayAnchor || access;
-    return Boolean(accessAnchor && anchor) && (anchorsShareFinalGeometry(accessAnchor, anchor) || anchorsShareSideAndCell(accessAnchor, anchor));
+    return (
+      Boolean(accessAnchor && anchor) &&
+      (anchorsShareFinalGeometry(accessAnchor, anchor) ||
+        anchorsShareSideAndCell(accessAnchor, anchor))
+    );
   }
 
   function openWallAccessContextMenu(event, zone) {
@@ -584,9 +766,15 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     if (!showEditor || !handle?.access) return;
     event.preventDefault();
     event.stopPropagation();
-    const region = generatedMap.regions.find((item) => item.id === handle.regionId);
+    const region = generatedMap.regions.find(
+      (item) => item.id === handle.regionId,
+    );
     if (!region) return;
-    const anchor = resolveMapAccessAnchor(region, handle.access.displayAnchor || handle.access, generatedMap);
+    const anchor = resolveMapAccessAnchor(
+      region,
+      handle.access.displayAnchor || handle.access,
+      generatedMap,
+    );
     if (!anchor) return;
     const zone = { regionId: region.id, anchor };
     openWallAccessContextMenu(event, zone);
@@ -618,7 +806,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     }
     const pending = pendingAccessMoveRef.current;
     pendingAccessMoveRef.current = null;
-    if (pending) onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
+    if (pending)
+      onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
   }
 
   function scheduleMapAccessMove(regionId, anchor, accessType) {
@@ -640,7 +829,10 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       accessMoveFrameRef.current = null;
       const pending = pendingAccessMoveRef.current;
       if (!pending) return;
-      const point = getAnchorHandlePoint(pending.anchor, generatedMap.config.gridSize);
+      const point = getAnchorHandlePoint(
+        pending.anchor,
+        generatedMap.config.gridSize,
+      );
       setMapAccessDragPreview({
         id: accessId,
         regionId: pending.regionId,
@@ -659,9 +851,15 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.stopPropagation();
     const point = clientToMapPoint(event);
     if (!point) return true;
-    const region = generatedMap.regions.find((item) => item.id === drag.regionId);
+    const region = generatedMap.regions.find(
+      (item) => item.id === drag.regionId,
+    );
     if (!region) return true;
-    const anchor = getClosestExternalBoundaryAnchorToPoint(region, point, generatedMap);
+    const anchor = getClosestExternalBoundaryAnchorToPoint(
+      region,
+      point,
+      generatedMap,
+    );
     if (!anchor) return true;
     if (pureCaveEditor) {
       scheduleMapAccessPreview(drag.regionId, drag.id, anchor, drag.accessType);
@@ -683,7 +881,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
         accessMoveFrameRef.current = null;
       }
       pendingAccessMoveRef.current = null;
-      if (pending) onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
+      if (pending)
+        onMapAccessMove?.(pending.regionId, pending.anchor, pending.accessType);
     } else {
       flushPendingMapAccessMove();
     }
@@ -728,7 +927,14 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function handleCorridorZonePointerMove(event, zone) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     setHoveredRegionId(null);
     setHoverWallHandle(null);
@@ -741,23 +947,51 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function handleCorridorZonePointerLeave(event, zone) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     if (eventRelatedTargetHasClass(event, "corridor-add-handle")) return;
-    setHoverCorridorHandle((current) => isSameCorridorHoverHandle(current, zone) ? null : current);
-    setHoveredCorridorId((current) => current === zone.corridor.id ? null : current);
+    setHoverCorridorHandle((current) =>
+      isSameCorridorHoverHandle(current, zone) ? null : current,
+    );
+    setHoveredCorridorId((current) =>
+      current === zone.corridor.id ? null : current,
+    );
   }
 
   function handleCorridorAddPointerLeave(event, handle) {
-    if (!showEditor || roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     if (eventRelatedTargetHasClass(event, "corridor-hover-zone")) return;
-    setHoverCorridorHandle((current) => isSameCorridorHoverHandle(current, handle) ? null : current);
-    setHoveredCorridorId((current) => current === handle.corridor.id ? null : current);
+    setHoverCorridorHandle((current) =>
+      isSameCorridorHoverHandle(current, handle) ? null : current,
+    );
+    setHoveredCorridorId((current) =>
+      current === handle.corridor.id ? null : current,
+    );
   }
 
   function handleCorridorHandlePointerEnter(event, handle) {
-    if (!showEditor || roomDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      !showEditor ||
+      roomDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     event.stopPropagation();
     setHoveredCorridorId(handle.corridor.id);
   }
@@ -765,7 +999,9 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   function handleCorridorHandlePointerLeave(event, handle) {
     if (!showEditor || corridorDragRef.current) return;
     event.stopPropagation();
-    setHoveredCorridorId((current) => current === handle.corridor.id ? null : current);
+    setHoveredCorridorId((current) =>
+      current === handle.corridor.id ? null : current,
+    );
   }
 
   function handleRoomPointerMove(event) {
@@ -775,13 +1011,20 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.stopPropagation();
     const point = clientToMapPoint(event);
     if (!point) return;
-    const dx = Math.round((point.x - drag.startX) / generatedMap.config.gridSize);
-    const dy = Math.round((point.y - drag.startY) / generatedMap.config.gridSize);
+    const dx = Math.round(
+      (point.x - drag.startX) / generatedMap.config.gridSize,
+    );
+    const dy = Math.round(
+      (point.y - drag.startY) / generatedMap.config.gridSize,
+    );
     const nextPosition = { x: drag.originX + dx, y: drag.originY + dy };
     if (drag.lastX === nextPosition.x && drag.lastY === nextPosition.y) return;
     drag.lastX = nextPosition.x;
     drag.lastY = nextPosition.y;
-    pendingRoomMoveRef.current = { regionId: drag.regionId, position: nextPosition };
+    pendingRoomMoveRef.current = {
+      regionId: drag.regionId,
+      position: nextPosition,
+    };
     if (roomMoveFrameRef.current) return;
     roomMoveFrameRef.current = window.requestAnimationFrame(() => {
       roomMoveFrameRef.current = null;
@@ -837,7 +1080,14 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.stopPropagation();
     const point = clientToMapPoint(event);
     if (!point) return true;
-    const target = findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId, generatedMap.config.gridSize * 1.35, generatedMap);
+    const target = findClosestBoundaryAnchorAcrossRegions(
+      generatedMap.regions,
+      point,
+      generatedMap.config.gridSize,
+      drag.fromRegionId,
+      generatedMap.config.gridSize * 1.35,
+      generatedMap,
+    );
     setConnectionDraft({
       start: drag.start,
       current: target ? target.point : point,
@@ -852,7 +1102,16 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     event.preventDefault();
     event.stopPropagation();
     const point = clientToMapPoint(event);
-    const target = point ? findClosestBoundaryAnchorAcrossRegions(generatedMap.regions, point, generatedMap.config.gridSize, drag.fromRegionId, generatedMap.config.gridSize * 1.35, generatedMap) : null;
+    const target = point
+      ? findClosestBoundaryAnchorAcrossRegions(
+          generatedMap.regions,
+          point,
+          generatedMap.config.gridSize,
+          drag.fromRegionId,
+          generatedMap.config.gridSize * 1.35,
+          generatedMap,
+        )
+      : null;
     if (target) {
       onCreateConnection?.({
         fromRegionId: drag.fromRegionId,
@@ -914,14 +1173,17 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     setJunctionContextMenu(null);
     setWaypointContextMenu(null);
     setMapContextMenu(null);
-    const junction = getCorridorIntersectionCells(generatedMap.corridors).find((item) => item.key === cellKey(handle.cell.x, handle.cell.y));
+    const junction = getCorridorIntersectionCells(generatedMap.corridors).find(
+      (item) => item.key === cellKey(handle.cell.x, handle.cell.y),
+    );
     setAddWaypointContextMenu({
       corridorId: handle.corridor.id,
       insertIndex: handle.insertIndex,
       point: handle.point,
       cell: handle.cell,
       junctionKey: junction?.key || null,
-      junctionCorridorIds: junction?.corridors?.map((corridor) => corridor.id) || [],
+      junctionCorridorIds:
+        junction?.corridors?.map((corridor) => corridor.id) || [],
       ...getFixedContextMenuPosition(event, 250, 220),
     });
     setHoveredCorridorId(handle.corridor.id);
@@ -935,7 +1197,9 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       x: Math.floor(handle.x / generatedMap.config.gridSize),
       y: Math.floor(handle.y / generatedMap.config.gridSize),
     };
-    const junction = getCorridorIntersectionCells(generatedMap.corridors).find((item) => item.key === cellKey(cell.x, cell.y));
+    const junction = getCorridorIntersectionCells(generatedMap.corridors).find(
+      (item) => item.key === cellKey(cell.x, cell.y),
+    );
     setRoomContextMenu(null);
     setDoorContextMenu(null);
     setJunctionContextMenu(null);
@@ -947,7 +1211,8 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       source: handle.source,
       cell,
       junctionKey: junction?.key || null,
-      junctionCorridorIds: junction?.corridors?.map((corridor) => corridor.id) || [],
+      junctionCorridorIds:
+        junction?.corridors?.map((corridor) => corridor.id) || [],
       ...getFixedContextMenuPosition(event, 250, 280),
     });
     setHoverCorridorHandle(null);
@@ -993,7 +1258,9 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     } catch (error) {
       void error;
     }
-    setDraggingCorridorHandle(`new-waypoint-${handle.corridor.id}-${handle.insertIndex}`);
+    setDraggingCorridorHandle(
+      `new-waypoint-${handle.corridor.id}-${handle.insertIndex}`,
+    );
     setHoverCorridorHandle(null);
   }
 
@@ -1061,7 +1328,13 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
   }
 
   function handlePointerDown(event) {
-    if (roomDragRef.current || corridorDragRef.current || accessDragRef.current || connectionDragRef.current) return;
+    if (
+      roomDragRef.current ||
+      corridorDragRef.current ||
+      accessDragRef.current ||
+      connectionDragRef.current
+    )
+      return;
     if (event.button !== 0) return;
     setRoomContextMenu(null);
     setMapContextMenu(null);
@@ -1144,22 +1417,30 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
     }
     if (event.key === "ArrowUp") {
       event.preventDefault();
-      setView((current) => constrainView({ ...current, y: current.y + panAmount }));
+      setView((current) =>
+        constrainView({ ...current, y: current.y + panAmount }),
+      );
       return;
     }
     if (event.key === "ArrowDown") {
       event.preventDefault();
-      setView((current) => constrainView({ ...current, y: current.y - panAmount }));
+      setView((current) =>
+        constrainView({ ...current, y: current.y - panAmount }),
+      );
       return;
     }
     if (event.key === "ArrowLeft") {
       event.preventDefault();
-      setView((current) => constrainView({ ...current, x: current.x + panAmount }));
+      setView((current) =>
+        constrainView({ ...current, x: current.x + panAmount }),
+      );
       return;
     }
     if (event.key === "ArrowRight") {
       event.preventDefault();
-      setView((current) => constrainView({ ...current, x: current.x - panAmount }));
+      setView((current) =>
+        constrainView({ ...current, x: current.x - panAmount }),
+      );
     }
   }
 
@@ -1310,18 +1591,50 @@ export function MapViewport({ generatedMap, showGrid, gridStyle, showEditor, sho
       </div>
       <div className="map-canvas-bottombar">
         <div className="zoom-toolbar" aria-label="Map zoom controls">
-          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Zoom In", "Increase the map zoom.", "+")} aria-label="Zoom In" onClick={() => zoomAtCenter(1.15)}>
+          <button
+            type="button"
+            className="map-tool-button zoom-button"
+            {...getGenericTooltipAttrs(
+              "Zoom In",
+              "Increase the map zoom.",
+              "+",
+            )}
+            aria-label="Zoom In"
+            onClick={() => zoomAtCenter(1.15)}
+          >
             <i className="fa-solid fa-plus" aria-hidden="true" />
           </button>
-          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Zoom Out", "Decrease the map zoom.", "-")} aria-label="Zoom Out" onClick={() => zoomAtCenter(0.85)}>
+          <button
+            type="button"
+            className="map-tool-button zoom-button"
+            {...getGenericTooltipAttrs(
+              "Zoom Out",
+              "Decrease the map zoom.",
+              "-",
+            )}
+            aria-label="Zoom Out"
+            onClick={() => zoomAtCenter(0.85)}
+          >
             <i className="fa-solid fa-minus" aria-hidden="true" />
           </button>
-          <button type="button" className="map-tool-button zoom-button" {...getGenericTooltipAttrs("Fit Map", "Fit the whole map in view.", "0")} aria-label="Fit Map" onClick={fitView}>
+          <button
+            type="button"
+            className="map-tool-button zoom-button"
+            {...getGenericTooltipAttrs(
+              "Fit Map",
+              "Fit the whole map in view.",
+              "0",
+            )}
+            aria-label="Fit Map"
+            onClick={fitView}
+          >
             <i className="fa-solid fa-expand" aria-hidden="true" />
           </button>
           <span className="zoom-scale">{Math.round(view.scale * 100)}%</span>
         </div>
-        <div className="zoom-hint">Wheel zooms. Drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.</div>
+        <div className="zoom-hint">
+          Wheel zooms. Drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.
+        </div>
       </div>
     </>
   );
@@ -1334,19 +1647,29 @@ function getRoomStyleMenuOptions(contextKey) {
     { value: "l-shape", label: "L-Shape" },
     { value: "circle", label: "Circle" },
     { value: "shaft", label: "Shaft / Oval" },
-    ...(contextKey === "cave" || contextKey === "mine" ? [{ value: "cave", label: "Cave" }] : []),
+    ...(contextKey === "cave" || contextKey === "mine"
+      ? [{ value: "cave", label: "Cave" }]
+      : []),
   ];
   const types = [
     { value: "none", label: "None" },
     { value: "archive", label: "Archive" },
-    ...(contextKey === "crypt" ? [{ value: "alcove", label: "Crypt Alcoves" }] : []),
+    ...(contextKey === "crypt"
+      ? [{ value: "alcove", label: "Crypt Alcoves" }]
+      : []),
     ...(contextKey === "chapel" ? [{ value: "apse", label: "Apse" }] : []),
-    ...(contextKey === "ruins" ? [{ value: "ruined", label: "Ruined Room" }] : []),
+    ...(contextKey === "ruins"
+      ? [{ value: "ruined", label: "Ruined Room" }]
+      : []),
   ];
   return {
     shapes,
     types,
-    sizes: Object.keys(ROOM_SIZE_MENU_PRESETS).map((value) => ({ value, label: value, dimensions: `${ROOM_SIZE_MENU_PRESETS[value].w}\u00D7${ROOM_SIZE_MENU_PRESETS[value].h}` })),
+    sizes: Object.keys(ROOM_SIZE_MENU_PRESETS).map((value) => ({
+      value,
+      label: value,
+      dimensions: `${ROOM_SIZE_MENU_PRESETS[value].w}\u00D7${ROOM_SIZE_MENU_PRESETS[value].h}`,
+    })),
     toggles: [
       { key: "notch", label: "Notch" },
       { key: "ruined", label: "Ruined" },
@@ -1359,12 +1682,18 @@ function inferGeneratedRoomType(region) {
   if (region.shape === "archive") return "archive";
   if (region.shape === "alcove") return "alcove";
   if (region.shape === "apse") return "apse";
-  if (region.shape === "ruined-rect" || region.shape === "broken") return "ruined";
+  if (region.shape === "ruined-rect" || region.shape === "broken")
+    return "ruined";
   return "none";
 }
 
 function inferGeneratedRoomShape(region) {
-  if (["archive", "alcove", "apse", "ruined-rect", "broken"].includes(region.shape)) return "rect";
+  if (
+    ["archive", "alcove", "apse", "ruined-rect", "broken"].includes(
+      region.shape,
+    )
+  )
+    return "rect";
   return region.shape || "rect";
 }
 
@@ -1380,7 +1709,12 @@ function getRoomStyleForMenu(region, manualOverrides) {
   };
 }
 
-function ConfirmingDeleteButton({ label = "Delete", confirmLabel = "Confirm Delete", onConfirm, onClose }) {
+function ConfirmingDeleteButton({
+  label = "Delete",
+  confirmLabel = "Confirm Delete",
+  onConfirm,
+  onClose,
+}) {
   const [armed, setArmed] = useState(false);
   return (
     <button
@@ -1432,30 +1766,58 @@ function useContextMenuDismiss(isOpen, onClose) {
   return menuRef;
 }
 
-function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, onReset, onClose }) {
+function RoomStyleContextMenu({
+  menu,
+  generatedMap,
+  manualOverrides,
+  onChange,
+  onReset,
+  onClose,
+}) {
   const [activeGroup, setActiveGroup] = useState("type");
   if (!menu) return null;
   const region = generatedMap.regions.find((item) => item.id === menu.regionId);
   if (!region) return null;
-  const contextKey = getContextKey(generatedMap.config.context || generatedMap.config.biome);
+  const contextKey = getContextKey(
+    generatedMap.config.context || generatedMap.config.biome,
+  );
   const options = getRoomStyleMenuOptions(contextKey);
   const cavernSupported = contextKey === "cave" || contextKey === "mine";
   let style = getRoomStyleForMenu(region, manualOverrides);
-  if (!cavernSupported && (style.shape === "cave" || style.surfaceKind === "cave" || style.surfaceKind === "hybrid")) {
+  if (
+    !cavernSupported &&
+    (style.shape === "cave" ||
+      style.surfaceKind === "cave" ||
+      style.surfaceKind === "hybrid")
+  ) {
     style = {
       ...style,
       shape: "rect",
       surfaceKind: "structure",
     };
   }
-  const roomKind = style.shape === "cave" || style.surfaceKind === "cave" || style.surfaceKind === "hybrid" ? "cavern" : "building";
-  const activeShape = options.shapes.find((shape) => shape.value === style.shape)?.label || style.shape;
+  const roomKind =
+    style.shape === "cave" ||
+    style.surfaceKind === "cave" ||
+    style.surfaceKind === "hybrid"
+      ? "cavern"
+      : "building";
+  const activeShape =
+    options.shapes.find((shape) => shape.value === style.shape)?.label ||
+    style.shape;
   const activeType = roomKind === "cavern" ? "Cavern" : "Building";
-  const activeSize = options.sizes.find((size) => size.value === style.sizePreset)?.label || style.sizePreset;
-  const activeRoomType = options.types.find((type) => type.value === style.roomType)?.label || style.roomType || "None";
+  const activeSize =
+    options.sizes.find((size) => size.value === style.sizePreset)?.label ||
+    style.sizePreset;
+  const activeRoomType =
+    options.types.find((type) => type.value === style.roomType)?.label ||
+    style.roomType ||
+    "None";
   const activeModifiers = [
     ...(style.roomType && style.roomType !== "none" ? [activeRoomType] : []),
-    ...options.toggles.filter((toggle) => style[toggle.key]).map((toggle) => toggle.label),
+    ...options.toggles
+      .filter((toggle) => style[toggle.key])
+      .map((toggle) => toggle.label),
   ];
 
   return (
@@ -1467,21 +1829,37 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
     >
       <div className="room-context-menu__header">
         <strong>{region.name}</strong>
-        <span>{region.number} {"\u00B7"} {contextKey} {"\u00B7"} {region.cellRect.w}{"\u00D7"}{region.cellRect.h}</span>
+        <span>
+          {region.number} {"\u00B7"} {contextKey} {"\u00B7"} {region.cellRect.w}
+          {"\u00D7"}
+          {region.cellRect.h}
+        </span>
       </div>
       <div className="room-context-menu__body">
-        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("type")}>
+        <div
+          className="room-context-menu__item"
+          onPointerEnter={() => setActiveGroup("type")}
+        >
           <button type="button" className="room-context-menu__trigger">
             <span>Type</span>
-            <span>{activeType} {"\u203A"}</span>
+            <span>
+              {activeType} {"\u203A"}
+            </span>
           </button>
           {activeGroup === "type" && (
             <div className="room-context-submenu">
-              <div className="room-context-submenu__hint">Region surface model</div>
+              <div className="room-context-submenu__hint">
+                Region surface model
+              </div>
               <button
                 type="button"
                 className={roomKind === "building" ? "is-active" : ""}
-                onClick={() => onChange(region.id, { shape: "rect", surfaceKind: "structure" })}
+                onClick={() =>
+                  onChange(region.id, {
+                    shape: "rect",
+                    surfaceKind: "structure",
+                  })
+                }
               >
                 <span>Building</span>
                 <span>{roomKind === "building" ? "Active" : ""}</span>
@@ -1490,18 +1868,37 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                 type="button"
                 className={roomKind === "cavern" ? "is-active" : ""}
                 disabled={!cavernSupported}
-                onClick={() => onChange(region.id, { shape: "cave", surfaceKind: "cave", roomType: "none", notch: false, ruined: false })}
+                onClick={() =>
+                  onChange(region.id, {
+                    shape: "cave",
+                    surfaceKind: "cave",
+                    roomType: "none",
+                    notch: false,
+                    ruined: false,
+                  })
+                }
               >
                 <span>Cavern</span>
-                <span>{!cavernSupported ? "Unavailable" : roomKind === "cavern" ? "Active" : ""}</span>
+                <span>
+                  {!cavernSupported
+                    ? "Unavailable"
+                    : roomKind === "cavern"
+                      ? "Active"
+                      : ""}
+                </span>
               </button>
             </div>
           )}
         </div>
-        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("shape")}>
+        <div
+          className="room-context-menu__item"
+          onPointerEnter={() => setActiveGroup("shape")}
+        >
           <button type="button" className="room-context-menu__trigger">
             <span>Shape</span>
-            <span>{roomKind === "cavern" ? "Not available" : activeShape} {"\u203A"}</span>
+            <span>
+              {roomKind === "cavern" ? "Not available" : activeShape} {"\u203A"}
+            </span>
           </button>
           {activeGroup === "shape" && (
             <div className="room-context-submenu">
@@ -1511,50 +1908,76 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                   <span>Not available</span>
                   <span />
                 </button>
-              ) : options.shapes.map((shape) => (
-                <button
-                  key={shape.value}
-                  type="button"
-                  className={style.shape === shape.value ? "is-active" : ""}
-                  onClick={() => onChange(region.id, { shape: shape.value })}
-                >
-                  <span>{shape.label}</span>
-                  <span>{style.shape === shape.value ? "Active" : ""}</span>
-                </button>
-              ))}
+              ) : (
+                options.shapes.map((shape) => (
+                  <button
+                    key={shape.value}
+                    type="button"
+                    className={style.shape === shape.value ? "is-active" : ""}
+                    onClick={() => onChange(region.id, { shape: shape.value })}
+                  >
+                    <span>{shape.label}</span>
+                    <span>{style.shape === shape.value ? "Active" : ""}</span>
+                  </button>
+                ))
+              )}
             </div>
           )}
         </div>
-        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("size")}>
+        <div
+          className="room-context-menu__item"
+          onPointerEnter={() => setActiveGroup("size")}
+        >
           <button type="button" className="room-context-menu__trigger">
             <span>Size</span>
-            <span>{activeSize} {"\u203A"}</span>
+            <span>
+              {activeSize} {"\u203A"}
+            </span>
           </button>
           {activeGroup === "size" && (
             <div className="room-context-submenu">
-              <div className="room-context-submenu__hint">Room bounding box</div>
+              <div className="room-context-submenu__hint">
+                Room bounding box
+              </div>
               {options.sizes.map((size) => (
                 <button
                   key={size.value}
                   type="button"
                   className={style.sizePreset === size.value ? "is-active" : ""}
-                  onClick={() => onChange(region.id, { sizePreset: size.value })}
+                  onClick={() =>
+                    onChange(region.id, { sizePreset: size.value })
+                  }
                 >
                   <span>{size.label}</span>
-                  <span>{size.dimensions}{style.sizePreset === size.value ? " Active" : ""}</span>
+                  <span>
+                    {size.dimensions}
+                    {style.sizePreset === size.value ? " Active" : ""}
+                  </span>
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className="room-context-menu__item" onPointerEnter={() => setActiveGroup("modifiers")}>
+        <div
+          className="room-context-menu__item"
+          onPointerEnter={() => setActiveGroup("modifiers")}
+        >
           <button type="button" className="room-context-menu__trigger">
             <span>Modifiers</span>
-            <span>{roomKind === "cavern" ? "Not available" : activeModifiers.length > 0 ? activeModifiers.length : "None"} {"\u203A"}</span>
+            <span>
+              {roomKind === "cavern"
+                ? "Not available"
+                : activeModifiers.length > 0
+                  ? activeModifiers.length
+                  : "None"}{" "}
+              {"\u203A"}
+            </span>
           </button>
           {activeGroup === "modifiers" && (
             <div className="room-context-submenu">
-              <div className="room-context-submenu__hint">Room-specific structure</div>
+              <div className="room-context-submenu__hint">
+                Room-specific structure
+              </div>
               {roomKind === "cavern" ? (
                 <button type="button" disabled>
                   <span>Not available</span>
@@ -1566,11 +1989,17 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                     <button
                       key={type.value}
                       type="button"
-                      className={style.roomType === type.value ? "is-active" : ""}
-                      onClick={() => onChange(region.id, { roomType: type.value })}
+                      className={
+                        style.roomType === type.value ? "is-active" : ""
+                      }
+                      onClick={() =>
+                        onChange(region.id, { roomType: type.value })
+                      }
                     >
                       <span>{type.label}</span>
-                      <span>{style.roomType === type.value ? "Active" : ""}</span>
+                      <span>
+                        {style.roomType === type.value ? "Active" : ""}
+                      </span>
                     </button>
                   ))}
                   {options.toggles.map((toggle) => (
@@ -1578,7 +2007,11 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
                       key={toggle.key}
                       type="button"
                       className={style[toggle.key] ? "is-active" : ""}
-                      onClick={() => onChange(region.id, { [toggle.key]: !style[toggle.key] })}
+                      onClick={() =>
+                        onChange(region.id, {
+                          [toggle.key]: !style[toggle.key],
+                        })
+                      }
                     >
                       <span>{toggle.label}</span>
                       <span>{style[toggle.key] ? "Active" : ""}</span>
@@ -1591,8 +2024,18 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
         </div>
       </div>
       <div className="room-context-menu__actions">
-        <button type="button" onClick={() => { onReset(region.id); onClose?.(); }}>Reset Room</button>
-        <button type="button" onClick={onClose}>Close</button>
+        <button
+          type="button"
+          onClick={() => {
+            onReset(region.id);
+            onClose?.();
+          }}
+        >
+          Reset Room
+        </button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
@@ -1601,7 +2044,11 @@ function RoomStyleContextMenu({ menu, generatedMap, manualOverrides, onChange, o
 function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
   const menuRef = useContextMenuDismiss(Boolean(menu), onClose);
   if (!menu) return null;
-  const actionLabel = menu.hasAccessAtAnchor ? "Remove Passage" : menu.hasRegionAccess ? "Move Passage Here" : "Add Passage";
+  const actionLabel = menu.hasAccessAtAnchor
+    ? "Remove Passage"
+    : menu.hasRegionAccess
+      ? "Move Passage Here"
+      : "Add Passage";
   return (
     <div
       ref={menuRef}
@@ -1612,7 +2059,9 @@ function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
     >
       <div className="room-context-menu__header">
         <strong>Map Passage</strong>
-        <span>{menu.regionId} {"\u00B7"} {menu.anchor?.side || "wall"}</span>
+        <span>
+          {menu.regionId} {"\u00B7"} {menu.anchor?.side || "wall"}
+        </span>
       </div>
       <div className="room-context-menu__body">
         <button
@@ -1628,22 +2077,37 @@ function WallAccessContextMenu({ menu, onSet, onRemove, onClose }) {
             onClose?.();
           }}
         >
-          <span><i className="fa-solid fa-route" aria-hidden="true" /> {actionLabel}</span>
+          <span>
+            <i className="fa-solid fa-route" aria-hidden="true" /> {actionLabel}
+          </span>
           <span aria-hidden="true">{"\u203A"}</span>
         </button>
       </div>
       <div className="room-context-menu__actions">
-        <button type="button" onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onAddWaypoint, onJunctionChange, onClose }) {
+function AddWaypointContextMenu({
+  menu,
+  manualOverrides,
+  isPureCave = false,
+  onAddWaypoint,
+  onJunctionChange,
+  onClose,
+}) {
   if (!menu) return null;
   const hasJunction = Boolean(menu.junctionKey);
   const currentJunctionType = hasJunction
-    ? getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.junctionKey, "merge")
+    ? getManualJunctionType(
+        manualOverrides.corridorJunctions || {},
+        menu.junctionKey,
+        "merge",
+      )
     : null;
   const junctionLabels = {
     merge: isPureCave ? "Natural Merge" : "Normal Merge",
@@ -1651,7 +2115,9 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
     door: isPureCave ? "Passage" : "Door",
   };
   const pointLabel = isPureCave ? "Tunnel Point" : "Corridor Point";
-  const junctionPointLabel = isPureCave ? "Tunnel Junction Point" : "Corridor Junction Point";
+  const junctionPointLabel = isPureCave
+    ? "Tunnel Junction Point"
+    : "Corridor Junction Point";
   const addLabel = isPureCave ? "Add Tunnel Point" : "Add Waypoint";
   const junctionLabel = isPureCave ? "Connection" : "Junction";
   return (
@@ -1663,13 +2129,18 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
     >
       <div className="room-context-menu__header">
         <strong>{hasJunction ? junctionPointLabel : pointLabel}</strong>
-        <span>{menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}</span>
+        <span>
+          {menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}
+        </span>
       </div>
       <div className="room-context-menu__body">
         <button
           type="button"
           className="room-context-menu__trigger"
-          onClick={() => { onAddWaypoint?.(menu.corridorId, menu.insertIndex, menu.point); onClose?.(); }}
+          onClick={() => {
+            onAddWaypoint?.(menu.corridorId, menu.insertIndex, menu.point);
+            onClose?.();
+          }}
         >
           <span>{addLabel}</span>
           <span aria-hidden="true">{"\u203A"}</span>
@@ -1681,8 +2152,14 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
               <button
                 key={type}
                 type="button"
-                className={currentJunctionType === type ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"}
-                onClick={() => { onJunctionChange?.(menu.junctionKey, type); }}
+                className={
+                  currentJunctionType === type
+                    ? "room-context-menu__trigger is-active"
+                    : "room-context-menu__trigger"
+                }
+                onClick={() => {
+                  onJunctionChange?.(menu.junctionKey, type);
+                }}
               >
                 <span>{junctionLabels[type]}</span>
                 <span>{currentJunctionType === type ? "\u2713" : ""}</span>
@@ -1692,17 +2169,31 @@ function AddWaypointContextMenu({ menu, manualOverrides, isPureCave = false, onA
         )}
       </div>
       <div className="room-context-menu__actions">
-        <button type="button" onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDeleteWaypoint, onDeleteConnection, onJunctionChange, onClose }) {
+function WaypointContextMenu({
+  menu,
+  manualOverrides,
+  isPureCave = false,
+  onDeleteWaypoint,
+  onDeleteConnection,
+  onJunctionChange,
+  onClose,
+}) {
   if (!menu) return null;
   const hasJunction = Boolean(menu.junctionKey);
   const currentJunctionType = hasJunction
-    ? getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.junctionKey, "merge")
+    ? getManualJunctionType(
+        manualOverrides.corridorJunctions || {},
+        menu.junctionKey,
+        "merge",
+      )
     : null;
   const junctionLabels = {
     merge: isPureCave ? "Natural Merge" : "Normal Merge",
@@ -1710,9 +2201,13 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
     door: isPureCave ? "Passage" : "Door",
   };
   const waypointLabel = isPureCave ? "Tunnel Point" : "Corridor Waypoint";
-  const junctionWaypointLabel = isPureCave ? "Tunnel Junction Point" : "Corridor Junction Waypoint";
+  const junctionWaypointLabel = isPureCave
+    ? "Tunnel Junction Point"
+    : "Corridor Junction Waypoint";
   const deleteLabel = isPureCave ? "Delete Tunnel Point" : "Delete Waypoint";
-  const confirmDeleteLabel = isPureCave ? "Confirm Delete Tunnel Point" : "Confirm Delete Waypoint";
+  const confirmDeleteLabel = isPureCave
+    ? "Confirm Delete Tunnel Point"
+    : "Confirm Delete Waypoint";
   const junctionLabel = isPureCave ? "Connection" : "Junction";
   return (
     <div
@@ -1723,13 +2218,17 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
     >
       <div className="room-context-menu__header">
         <strong>{hasJunction ? junctionWaypointLabel : waypointLabel}</strong>
-        <span>{menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}</span>
+        <span>
+          {menu.corridorId} {"\u00B7"} Cell {menu.cell.x},{menu.cell.y}
+        </span>
       </div>
       <div className="room-context-menu__body">
         <ConfirmingDeleteButton
           label={deleteLabel}
           confirmLabel={confirmDeleteLabel}
-          onConfirm={() => onDeleteWaypoint?.(menu.corridorId, menu.waypointIndex, menu.source)}
+          onConfirm={() =>
+            onDeleteWaypoint?.(menu.corridorId, menu.waypointIndex, menu.source)
+          }
           onClose={onClose}
         />
         {hasJunction && (
@@ -1739,8 +2238,14 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
               <button
                 key={type}
                 type="button"
-                className={currentJunctionType === type ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"}
-                onClick={() => { onJunctionChange?.(menu.junctionKey, type); }}
+                className={
+                  currentJunctionType === type
+                    ? "room-context-menu__trigger is-active"
+                    : "room-context-menu__trigger"
+                }
+                onClick={() => {
+                  onJunctionChange?.(menu.junctionKey, type);
+                }}
               >
                 <span>{junctionLabels[type]}</span>
                 <span>{currentJunctionType === type ? "\u2713" : ""}</span>
@@ -1750,15 +2255,27 @@ function WaypointContextMenu({ menu, manualOverrides, isPureCave = false, onDele
         )}
       </div>
       <div className="room-context-menu__actions">
-        <button type="button" onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false, onChange, onClose }) {
+function CorridorJunctionContextMenu({
+  menu,
+  manualOverrides,
+  isPureCave = false,
+  onChange,
+  onClose,
+}) {
   if (!menu) return null;
-  const currentType = getManualJunctionType(manualOverrides.corridorJunctions || {}, menu.key, "merge");
+  const currentType = getManualJunctionType(
+    manualOverrides.corridorJunctions || {},
+    menu.key,
+    "merge",
+  );
   const labels = {
     merge: isPureCave ? "Natural Merge" : "Normal Merge",
     wall: isPureCave ? "Blocked Passage" : "Wall",
@@ -1772,16 +2289,27 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="room-context-menu__header">
-        <strong>{isPureCave ? "Tunnel Connection" : "Corridor Junction"}</strong>
-        <span>Cell {menu.cell.x},{menu.cell.y} {"\u00B7"} {menu.corridorIds.length} {isPureCave ? "passages" : "corridors"}</span>
+        <strong>
+          {isPureCave ? "Tunnel Connection" : "Corridor Junction"}
+        </strong>
+        <span>
+          Cell {menu.cell.x},{menu.cell.y} {"\u00B7"} {menu.corridorIds.length}{" "}
+          {isPureCave ? "passages" : "corridors"}
+        </span>
       </div>
       <div className="room-context-menu__body">
         {JUNCTION_TYPE_OPTIONS.map((type) => (
           <button
             key={type}
             type="button"
-            className={currentType === type ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"}
-            onClick={() => { onChange?.(menu.key, type); }}
+            className={
+              currentType === type
+                ? "room-context-menu__trigger is-active"
+                : "room-context-menu__trigger"
+            }
+            onClick={() => {
+              onChange?.(menu.key, type);
+            }}
           >
             <span>{labels[type]}</span>
             <span>{currentType === type ? "\u2713" : ""}</span>
@@ -1789,17 +2317,44 @@ function CorridorJunctionContextMenu({ menu, manualOverrides, isPureCave = false
         ))}
       </div>
       <div className="room-context-menu__actions">
-        <button type="button" onClick={() => { onChange?.(menu.key, "merge"); }}>Reset</button>
-        <button type="button" onClick={onClose}>Close</button>
+        <button
+          type="button"
+          onClick={() => {
+            onChange?.(menu.key, "merge");
+          }}
+        >
+          Reset
+        </button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChange, onStairChange, onDelete, onClose }) {
+function DoorContextMenu({
+  menu,
+  manualOverrides,
+  isPureCave = false,
+  onTypeChange,
+  onStairChange,
+  onDelete,
+  onClose,
+}) {
   if (!menu) return null;
-  const currentType = getManualDoorType(manualOverrides.doorTypes || {}, menu.corridorId, menu.endpoint, menu.fallbackType || "default");
-  const currentStair = getManualStairTransition(manualOverrides.stairTransitions || {}, menu.corridorId, menu.endpoint, "none");
+  const currentType = getManualDoorType(
+    manualOverrides.doorTypes || {},
+    menu.corridorId,
+    menu.endpoint,
+    menu.fallbackType || "default",
+  );
+  const currentStair = getManualStairTransition(
+    manualOverrides.stairTransitions || {},
+    menu.corridorId,
+    menu.endpoint,
+    "none",
+  );
   const labels = {
     default: "Default",
     secret: "Secret",
@@ -1820,15 +2375,23 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
     >
       <div className="room-context-menu__header">
         <strong>{isPureCave ? "Passage" : "Door"}</strong>
-        <span>{menu.corridorId} {"\u00B7"} {menu.endpoint}</span>
+        <span>
+          {menu.corridorId} {"\u00B7"} {menu.endpoint}
+        </span>
       </div>
       <div className="room-context-menu__body">
         {DOOR_TYPE_OPTIONS.map((type) => (
           <button
             key={type}
             type="button"
-            className={currentType === type ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"}
-            onClick={() => { onTypeChange?.(menu.corridorId, menu.endpoint, type); }}
+            className={
+              currentType === type
+                ? "room-context-menu__trigger is-active"
+                : "room-context-menu__trigger"
+            }
+            onClick={() => {
+              onTypeChange?.(menu.corridorId, menu.endpoint, type);
+            }}
           >
             <span>{labels[type]}</span>
             <span>{currentType === type ? "\u2713" : ""}</span>
@@ -1839,8 +2402,14 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
           <button
             key={type}
             type="button"
-            className={currentStair === type ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"}
-            onClick={() => { onStairChange?.(menu.corridorId, menu.endpoint, type); }}
+            className={
+              currentStair === type
+                ? "room-context-menu__trigger is-active"
+                : "room-context-menu__trigger"
+            }
+            onClick={() => {
+              onStairChange?.(menu.corridorId, menu.endpoint, type);
+            }}
           >
             <span>{stairLabels[type]}</span>
             <span>{currentStair === type ? "\u2713" : ""}</span>
@@ -1854,13 +2423,40 @@ function DoorContextMenu({ menu, manualOverrides, isPureCave = false, onTypeChan
           onConfirm={() => onDelete?.(menu.corridorId)}
           onClose={onClose}
         />
-        <button type="button" onClick={onClose}>Close</button>
+        <button type="button" onClick={onClose}>
+          Close
+        </button>
       </div>
     </div>
   );
 }
 
-function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView = LEVEL_VIEW_ALL, availableLevels = [], fadeOtherLevels = true, gridStyle, onNewSeed, onToggleGrid, onGridStyleChange, onToggleEditor, onToggleProps, onLevelViewChange, onToggleFadeOtherLevels, onExportSvg, onExportGmSvg, onExportPlayerSvg, onExportPrintSvg, onExportState, onImportState, onUndo, onRedo, onClose }) {
+function MapActionContextMenu({
+  menu,
+  showGrid,
+  showEditor,
+  showProps,
+  levelView = LEVEL_VIEW_ALL,
+  availableLevels = [],
+  fadeOtherLevels = true,
+  gridStyle,
+  onNewSeed,
+  onToggleGrid,
+  onGridStyleChange,
+  onToggleEditor,
+  onToggleProps,
+  onLevelViewChange,
+  onToggleFadeOtherLevels,
+  onExportSvg,
+  onExportGmSvg,
+  onExportPlayerSvg,
+  onExportPrintSvg,
+  onExportState,
+  onImportState,
+  onUndo,
+  onRedo,
+  onClose,
+}) {
   if (!menu) return null;
   const gridLabels = {
     solid: "Solid",
@@ -1876,12 +2472,18 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
     onClose?.();
   };
   const normalizedLevelView = normalizeLevelView(levelView, availableLevels);
-  const levelLabel = normalizedLevelView === LEVEL_VIEW_ALL ? "All Levels" : `Level ${formatMapLevel(normalizedLevelView)}`;
-  const levelIconName = (level) => level > 0 ? "arrow-up" : level < 0 ? "arrow-down" : "minus";
+  const levelLabel =
+    normalizedLevelView === LEVEL_VIEW_ALL
+      ? "All Levels"
+      : `Level ${formatMapLevel(normalizedLevelView)}`;
+  const levelIconName = (level) =>
+    level > 0 ? "arrow-up" : level < 0 ? "arrow-down" : "minus";
   const setGridStyleOnly = (style) => {
     onGridStyleChange?.(style);
   };
-  const icon = (name) => <i className={`fa-solid fa-${name}`} aria-hidden="true" />;
+  const icon = (name) => (
+    <i className={`fa-solid fa-${name}`} aria-hidden="true" />
+  );
 
   return (
     <div
@@ -1891,25 +2493,61 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
       onContextMenu={(event) => event.preventDefault()}
     >
       <div className="context-menu-toolbar" aria-label="Quick map actions">
-        <button type="button" {...getGenericTooltipAttrs("Undo")} aria-label="Undo" onClick={() => run(onUndo)}>{icon("rotate-left")}</button>
-        <button type="button" {...getGenericTooltipAttrs("Redo")} aria-label="Redo" onClick={() => run(onRedo)}>{icon("rotate-right")}</button>
+        <button
+          type="button"
+          {...getGenericTooltipAttrs("Undo")}
+          aria-label="Undo"
+          onClick={() => run(onUndo)}
+        >
+          {icon("rotate-left")}
+        </button>
+        <button
+          type="button"
+          {...getGenericTooltipAttrs("Redo")}
+          aria-label="Redo"
+          onClick={() => run(onRedo)}
+        >
+          {icon("rotate-right")}
+        </button>
         <span className="context-menu-toolbar__divider" />
-        <button type="button" className={showGrid ? "is-active" : ""} {...getGenericTooltipAttrs("Toggle Grid")} aria-label="Toggle Grid" onClick={() => run(onToggleGrid)}>{icon("border-all")}</button>
-        <button type="button" className={showEditor ? "is-active" : ""} {...getGenericTooltipAttrs("Toggle Editor View")} aria-label="Toggle Editor View" onClick={() => run(onToggleEditor)}>{icon("pen-ruler")}</button>
+        <button
+          type="button"
+          className={showGrid ? "is-active" : ""}
+          {...getGenericTooltipAttrs("Toggle Grid")}
+          aria-label="Toggle Grid"
+          onClick={() => run(onToggleGrid)}
+        >
+          {icon("border-all")}
+        </button>
+        <button
+          type="button"
+          className={showEditor ? "is-active" : ""}
+          {...getGenericTooltipAttrs("Toggle Editor View")}
+          aria-label="Toggle Editor View"
+          onClick={() => run(onToggleEditor)}
+        >
+          {icon("pen-ruler")}
+        </button>
       </div>
       <div className="room-context-menu__header">
         <strong>Map Actions</strong>
         <span>Generator controls</span>
       </div>
       <div className="room-context-menu__body">
-        <button type="button" className="room-context-menu__trigger" onClick={() => runAndClose(onNewSeed)}>
+        <button
+          type="button"
+          className="room-context-menu__trigger"
+          onClick={() => runAndClose(onNewSeed)}
+        >
           <span>{icon("shuffle")} New Seed</span>
           <span aria-hidden="true">{"\u203A"}</span>
         </button>
         <div className="room-context-menu__item">
           <button type="button" className="room-context-menu__trigger">
             <span>{icon("border-all")} Grid</span>
-            <span>{gridLabels[normalizeGridStyle(gridStyle)]} {"\u203A"}</span>
+            <span>
+              {gridLabels[normalizeGridStyle(gridStyle)]} {"\u203A"}
+            </span>
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Grid rendering</div>
@@ -1917,33 +2555,62 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
               <button
                 key={style}
                 type="button"
-                className={normalizeGridStyle(gridStyle) === style ? "is-active" : ""}
+                className={
+                  normalizeGridStyle(gridStyle) === style ? "is-active" : ""
+                }
                 onClick={() => setGridStyleOnly(style)}
               >
-                <span>{icon(style === "solid" ? "table-cells" : style === "dotted" ? "braille" : style === "dashed" ? "grip-lines" : "eye-slash")} {gridLabels[style]}</span>
-                <span>{normalizeGridStyle(gridStyle) === style ? "\u2713" : ""}</span>
+                <span>
+                  {icon(
+                    style === "solid"
+                      ? "table-cells"
+                      : style === "dotted"
+                        ? "braille"
+                        : style === "dashed"
+                          ? "grip-lines"
+                          : "eye-slash",
+                  )}{" "}
+                  {gridLabels[style]}
+                </span>
+                <span>
+                  {normalizeGridStyle(gridStyle) === style ? "\u2713" : ""}
+                </span>
               </button>
             ))}
           </div>
         </div>
-        <button type="button" className={showProps ? "room-context-menu__trigger is-active" : "room-context-menu__trigger"} onClick={() => run(onToggleProps)}>
+        <button
+          type="button"
+          className={
+            showProps
+              ? "room-context-menu__trigger is-active"
+              : "room-context-menu__trigger"
+          }
+          onClick={() => run(onToggleProps)}
+        >
           <span>{icon("boxes-stacked")} Props</span>
           <span>{showProps ? "On" : "Off"}</span>
         </button>
         <div className="room-context-menu__item">
           <button type="button" className="room-context-menu__trigger">
             <span>{icon("layer-group")} Levels</span>
-            <span>{levelLabel} {"\u203A"}</span>
+            <span>
+              {levelLabel} {"\u203A"}
+            </span>
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Level visibility</div>
             <button
               type="button"
-              className={normalizedLevelView === LEVEL_VIEW_ALL ? "is-active" : ""}
+              className={
+                normalizedLevelView === LEVEL_VIEW_ALL ? "is-active" : ""
+              }
               onClick={() => onLevelViewChange?.(LEVEL_VIEW_ALL)}
             >
               <span>{icon("layer-group")} All Levels</span>
-              <span>{normalizedLevelView === LEVEL_VIEW_ALL ? "\u2713" : ""}</span>
+              <span>
+                {normalizedLevelView === LEVEL_VIEW_ALL ? "\u2713" : ""}
+              </span>
             </button>
             {availableLevels.map((level) => (
               <button
@@ -1952,7 +2619,9 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
                 className={normalizedLevelView === level ? "is-active" : ""}
                 onClick={() => onLevelViewChange?.(level)}
               >
-                <span>{icon(levelIconName(level))} Level {formatMapLevel(level)}</span>
+                <span>
+                  {icon(levelIconName(level))} Level {formatMapLevel(level)}
+                </span>
                 <span>{normalizedLevelView === level ? "\u2713" : ""}</span>
               </button>
             ))}
@@ -1973,14 +2642,33 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
           </button>
           <div className="room-context-submenu">
             <div className="room-context-submenu__hint">Output format</div>
-            <button type="button" onClick={() => run(onExportSvg)}><span>{icon("vector-square")} Current SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
-            <button type="button" onClick={() => run(onExportGmSvg)}><span>{icon("user-secret")} GM SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
-            <button type="button" onClick={() => run(onExportPlayerSvg)}><span>{icon("users")} Player SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
-            <button type="button" onClick={() => run(onExportPrintSvg)}><span>{icon("print")} Print SVG</span><span aria-hidden="true">{"\u203A"}</span></button>
-            <button type="button" onClick={() => run(onExportState)}><span>{icon("floppy-disk")} State JSON</span><span aria-hidden="true">{"\u203A"}</span></button>
+            <button type="button" onClick={() => run(onExportSvg)}>
+              <span>{icon("vector-square")} Current SVG</span>
+              <span aria-hidden="true">{"\u203A"}</span>
+            </button>
+            <button type="button" onClick={() => run(onExportGmSvg)}>
+              <span>{icon("user-secret")} GM SVG</span>
+              <span aria-hidden="true">{"\u203A"}</span>
+            </button>
+            <button type="button" onClick={() => run(onExportPlayerSvg)}>
+              <span>{icon("users")} Player SVG</span>
+              <span aria-hidden="true">{"\u203A"}</span>
+            </button>
+            <button type="button" onClick={() => run(onExportPrintSvg)}>
+              <span>{icon("print")} Print SVG</span>
+              <span aria-hidden="true">{"\u203A"}</span>
+            </button>
+            <button type="button" onClick={() => run(onExportState)}>
+              <span>{icon("floppy-disk")} State JSON</span>
+              <span aria-hidden="true">{"\u203A"}</span>
+            </button>
           </div>
         </div>
-        <button type="button" className="room-context-menu__trigger" onClick={() => run(onImportState)}>
+        <button
+          type="button"
+          className="room-context-menu__trigger"
+          onClick={() => run(onImportState)}
+        >
           <span>{icon("file-import")} Import State</span>
           <span aria-hidden="true">{"\u203A"}</span>
         </button>
@@ -1992,15 +2680,28 @@ function MapActionContextMenu({ menu, showGrid, showEditor, showProps, levelView
 function RoomKey({ generatedMap }) {
   return (
     <div className="room-key">
-      {[...generatedMap.regions].sort((a, b) => a.number - b.number).map((region) => (
-        <div key={region.id} className="room-key__item">
-          <span className="room-key__number">{region.number}</span>
-          <div>
-            <div className="room-key__name">{region.name}</div>
-            <div className="room-key__meta">{region.role} {"\u00B7"} {region.graphRole || "region"} {"\u00B7"} level {region.level ?? 0} {"\u00B7"} depth {region.graphDepth ?? "\u2014"} {"\u00B7"} {region.placementProfile || "layout"} {"\u00B7"} surface {getRegionSurfaceKind(region, generatedMap)} {"\u00B7"} {region.shape || "rect"} {"\u00B7"} {region.roomType || region.shapeOptions?.roomType || "none"} {"\u00B7"} {region.cellRect.w}{"\u00D7"}{region.cellRect.h}</div>
+      {[...generatedMap.regions]
+        .sort((a, b) => a.number - b.number)
+        .map((region) => (
+          <div key={region.id} className="room-key__item">
+            <span className="room-key__number">{region.number}</span>
+            <div>
+              <div className="room-key__name">{region.name}</div>
+              <div className="room-key__meta">
+                {region.role} {"\u00B7"} {region.graphRole || "region"}{" "}
+                {"\u00B7"} level {region.level ?? 0} {"\u00B7"} depth{" "}
+                {region.graphDepth ?? "\u2014"} {"\u00B7"}{" "}
+                {region.placementProfile || "layout"} {"\u00B7"} surface{" "}
+                {getRegionSurfaceKind(region, generatedMap)} {"\u00B7"}{" "}
+                {region.shape || "rect"} {"\u00B7"}{" "}
+                {region.roomType || region.shapeOptions?.roomType || "none"}{" "}
+                {"\u00B7"} {region.cellRect.w}
+                {"\u00D7"}
+                {region.cellRect.h}
+              </div>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
     </div>
   );
 }
@@ -2011,18 +2712,23 @@ function formatTooltipList(values) {
 }
 
 function getRegionMetadata(region) {
-  return region?.metadata && typeof region.metadata === "object" ? region.metadata : {};
+  return region?.metadata && typeof region.metadata === "object"
+    ? region.metadata
+    : {};
 }
 
 function getImportedRegionForTooltip(region, importedRegions) {
   if (!region || !Array.isArray(importedRegions)) return null;
-  return importedRegions.find((item) => (
-    item.id === region.id
-    || item.sourceRegionId === region.id
-    || item.id === region.sourceRegionId
-    || item.sourceRegionId === region.sourceRegionId
-    || item.label === region.name
-  )) || null;
+  return (
+    importedRegions.find(
+      (item) =>
+        item.id === region.id ||
+        item.sourceRegionId === region.id ||
+        item.id === region.sourceRegionId ||
+        item.sourceRegionId === region.sourceRegionId ||
+        item.label === region.name,
+    ) || null
+  );
 }
 
 function getImportedRegionValue(importedRegion, key) {
@@ -2039,33 +2745,77 @@ function getTooltipReadAloud(value) {
 
 function createRoomTooltipPayload(region, generatedMap, importedRegion = null) {
   if (!region) return null;
-  const requestMetadata = region.requestMetadata && typeof region.requestMetadata === "object" ? region.requestMetadata : {};
+  const requestMetadata =
+    region.requestMetadata && typeof region.requestMetadata === "object"
+      ? region.requestMetadata
+      : {};
   const role = importedRegion?.role || region.role || "Location Region";
-  const shape = importedRegion?.shape || region.shape || region.roomType || region.shapeOptions?.roomType || "room";
-  const size = importedRegion?.size || region.size || `${region.cellRect?.w || "?"}\u00D7${region.cellRect?.h || "?"}`;
-  const generatedLinks = generatedMap.corridors.filter((corridor) => corridor.from === region.id || corridor.to === region.id).length;
+  const shape =
+    importedRegion?.shape ||
+    region.shape ||
+    region.roomType ||
+    region.shapeOptions?.roomType ||
+    "room";
+  const size =
+    importedRegion?.size ||
+    region.size ||
+    `${region.cellRect?.w || "?"}\u00D7${region.cellRect?.h || "?"}`;
+  const generatedLinks = generatedMap.corridors.filter(
+    (corridor) => corridor.from === region.id || corridor.to === region.id,
+  ).length;
   const importedConnectors = Number(importedRegion?.connectors);
-  const linkCount = Number.isFinite(importedConnectors) ? importedConnectors : generatedLinks;
+  const linkCount = Number.isFinite(importedConnectors)
+    ? importedConnectors
+    : generatedLinks;
   const metaParts = [
     role,
     shape,
     size,
     `${linkCount} link${linkCount === 1 ? "" : "s"}`,
   ].filter(Boolean);
-  const importedReadAloud = getTooltipReadAloud(getImportedRegionValue(importedRegion, "readAloud")) || getImportedRegionValue(importedRegion, "read");
-  const generatedReadAloud = getTooltipReadAloud(requestMetadata.readAloud) || getTooltipReadAloud(region.readAloud) || requestMetadata.read || region.read || "";
+  const importedReadAloud =
+    getTooltipReadAloud(getImportedRegionValue(importedRegion, "readAloud")) ||
+    getImportedRegionValue(importedRegion, "read");
+  const generatedReadAloud =
+    getTooltipReadAloud(requestMetadata.readAloud) ||
+    getTooltipReadAloud(region.readAloud) ||
+    requestMetadata.read ||
+    region.read ||
+    "";
 
   return {
     type: "room",
-    title: importedRegion?.label || region.name || `Region ${region.number || ""}`.trim(),
+    title:
+      importedRegion?.label ||
+      region.name ||
+      `Region ${region.number || ""}`.trim(),
     role,
     shape,
     meta: metaParts.join(" \u00B7 "),
     readAloud: importedReadAloud || generatedReadAloud,
-    feature: getImportedRegionValue(importedRegion, "feature") || requestMetadata.feature || region.feature || "",
-    interaction: getImportedRegionValue(importedRegion, "interaction") || getImportedRegionValue(importedRegion, "interact") || requestMetadata.interaction || requestMetadata.interact || region.interaction || region.interact || "",
-    danger: getImportedRegionValue(importedRegion, "danger") || requestMetadata.danger || region.danger || "",
-    secret: getImportedRegionValue(importedRegion, "secret") || requestMetadata.secret || region.secret || "",
+    feature:
+      getImportedRegionValue(importedRegion, "feature") ||
+      requestMetadata.feature ||
+      region.feature ||
+      "",
+    interaction:
+      getImportedRegionValue(importedRegion, "interaction") ||
+      getImportedRegionValue(importedRegion, "interact") ||
+      requestMetadata.interaction ||
+      requestMetadata.interact ||
+      region.interaction ||
+      region.interact ||
+      "",
+    danger:
+      getImportedRegionValue(importedRegion, "danger") ||
+      requestMetadata.danger ||
+      region.danger ||
+      "",
+    secret:
+      getImportedRegionValue(importedRegion, "secret") ||
+      requestMetadata.secret ||
+      region.secret ||
+      "",
   };
 }
 
@@ -2079,7 +2829,15 @@ function getGenericTooltipAttrs(label, description = "", kbd = "") {
   return attrs;
 }
 
-function MapToolButton({ icon, label, description = "", kbd = "", active = false, disabled = false, onClick }) {
+function MapToolButton({
+  icon,
+  label,
+  description = "",
+  kbd = "",
+  active = false,
+  disabled = false,
+  onClick,
+}) {
   return (
     <button
       type="button"
@@ -2097,21 +2855,41 @@ function MapToolButton({ icon, label, description = "", kbd = "", active = false
 
 function TestReport({ testSuite }) {
   return (
-    <div className={testSuite.passed ? "test-report is-passing" : "test-report is-failing"}>
+    <div
+      className={
+        testSuite.passed ? "test-report is-passing" : "test-report is-failing"
+      }
+    >
       <div className="test-report__summary">
-        {testSuite.tests.filter((test) => test.passed).length}/{testSuite.tests.length} checks passing
+        {testSuite.tests.filter((test) => test.passed).length}/
+        {testSuite.tests.length} checks passing
       </div>
       <div className="test-report__list">
         {testSuite.tests.map((test) => (
-          <div key={test.id} className={test.passed ? "test-report__check is-passing" : "test-report__check is-failing"}>
+          <div
+            key={test.id}
+            className={
+              test.passed
+                ? "test-report__check is-passing"
+                : "test-report__check is-failing"
+            }
+          >
             <span>{test.label}</span>
             <strong>{test.passed ? "pass" : "fail"}</strong>
             {test.details && <small>{test.details}</small>}
           </div>
         ))}
       </div>
-      {testSuite.structural.warnings.length > 0 && <div className="test-report__warning">{testSuite.structural.warnings[0]}</div>}
-      {testSuite.structural.errors.length > 0 && <div className="test-report__error">{testSuite.structural.errors[0]}</div>}
+      {testSuite.structural.warnings.length > 0 && (
+        <div className="test-report__warning">
+          {testSuite.structural.warnings[0]}
+        </div>
+      )}
+      {testSuite.structural.errors.length > 0 && (
+        <div className="test-report__error">
+          {testSuite.structural.errors[0]}
+        </div>
+      )}
     </div>
   );
 }
@@ -2119,7 +2897,11 @@ function TestReport({ testSuite }) {
 function MapTestsModal({ open, testSuite, onClose }) {
   if (!open) return null;
   return (
-    <div className="map-tests-modal" role="presentation" onPointerDown={onClose}>
+    <div
+      className="map-tests-modal"
+      role="presentation"
+      onPointerDown={onClose}
+    >
       <section
         className="map-tests-modal__dialog"
         role="dialog"
@@ -2132,7 +2914,17 @@ function MapTestsModal({ open, testSuite, onClose }) {
             <p className="map-panel-eyebrow">Diagnostics</p>
             <h2 id="map-tests-modal-title">Structural Test Suite</h2>
           </div>
-          <button type="button" className="map-tool-button" {...getGenericTooltipAttrs("Close Tests", "Close the structural test suite.", "Esc")} aria-label="Close Tests" onClick={onClose}>
+          <button
+            type="button"
+            className="map-tool-button"
+            {...getGenericTooltipAttrs(
+              "Close Tests",
+              "Close the structural test suite.",
+              "Esc",
+            )}
+            aria-label="Close Tests"
+            onClick={onClose}
+          >
             <i className="fa-solid fa-xmark" aria-hidden="true" />
           </button>
         </header>
@@ -2142,8 +2934,14 @@ function MapTestsModal({ open, testSuite, onClose }) {
   );
 }
 
-export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshFromComposer = null } = {}) {
-  const initialConfig = useMemo(() => createConfigFromNormalizedMapRequest(initialRequest, DEFAULT_CONFIG), [initialRequest]);
+export default function CruorMapGeneratorMvp({
+  initialRequest = null,
+  onRefreshFromComposer = null,
+} = {}) {
+  const initialConfig = useMemo(
+    () => createConfigFromNormalizedMapRequest(initialRequest, DEFAULT_CONFIG),
+    [initialRequest],
+  );
   const stateFileInputRef = useRef(null);
   const manualEditSnapshotRef = useRef(null);
   const [stateStatus, setStateStatus] = useState("");
@@ -2157,27 +2955,44 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   const [showEditor, setShowEditor] = useState(true);
   const [showNames, setShowNames] = useState(false);
   const [showProps, setShowProps] = useState(false);
-  const [manualOverrides, setManualOverrides] = useState(createEmptyManualOverrides());
+  const [manualOverrides, setManualOverrides] = useState(
+    createEmptyManualOverrides(),
+  );
   const [manualHistory, setManualHistory] = useState({ past: [], future: [] });
   const [isManualEditActive, setIsManualEditActive] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [testsModalOpen, setTestsModalOpen] = useState(false);
   const lastTestSuiteRef = useRef(null);
-  const importedRegions = Array.isArray(initialRequest?.requiredRegions) ? initialRequest.requiredRegions : [];
+  const importedRegions = Array.isArray(initialRequest?.requiredRegions)
+    ? initialRequest.requiredRegions
+    : [];
 
-  const config = useMemo(() => ({
-    ...initialConfig,
-    seed,
-    context,
-    roomCount,
-    showGrid,
-    gridStyle,
-  }), [initialConfig, seed, context, roomCount, showGrid, gridStyle]);
-  const generatedMap = useMemo(() => generateMap(config, manualOverrides), [config, manualOverrides]);
+  const config = useMemo(
+    () => ({
+      ...initialConfig,
+      seed,
+      context,
+      roomCount,
+      showGrid,
+      gridStyle,
+    }),
+    [initialConfig, seed, context, roomCount, showGrid, gridStyle],
+  );
+  const generatedMap = useMemo(
+    () => generateMap(config, manualOverrides),
+    [config, manualOverrides],
+  );
   const pureCaveMap = isPureCaveMap(generatedMap);
-  const availableLevels = useMemo(() => getAvailableMapLevels(generatedMap), [generatedMap]);
+  const availableLevels = useMemo(
+    () => getAvailableMapLevels(generatedMap),
+    [generatedMap],
+  );
   const availableLevelsKey = availableLevels.join(":");
-  const [exportValidation, setExportValidation] = useState({ passed: false, missingSvg: true, leakedTokens: [] });
+  const [exportValidation, setExportValidation] = useState({
+    passed: false,
+    missingSvg: true,
+    leakedTokens: [],
+  });
 
   useEffect(() => {
     setLevelView((current) => normalizeLevelView(current, availableLevels));
@@ -2190,11 +3005,22 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
       setExportValidation(validateExportSvgString(serializeSvg(svg)));
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [generatedMap, showEditor, showGrid, gridStyle, showNames, showProps, isManualEditActive]);
+  }, [
+    generatedMap,
+    showEditor,
+    showGrid,
+    gridStyle,
+    showNames,
+    showProps,
+    isManualEditActive,
+  ]);
 
   const computedTestSuite = useMemo(
-    () => isManualEditActive ? null : buildFullStructuralTestSuite(generatedMap, config, exportValidation),
-    [generatedMap, config, exportValidation, isManualEditActive]
+    () =>
+      isManualEditActive
+        ? null
+        : buildFullStructuralTestSuite(generatedMap, config, exportValidation),
+    [generatedMap, config, exportValidation, isManualEditActive],
   );
   if (computedTestSuite) lastTestSuiteRef.current = computedTestSuite;
   const testSuite = lastTestSuiteRef.current || {
@@ -2209,7 +3035,10 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     function handleTestsShortcut(event) {
       if (event.key !== "F2") return;
       const target = event.target;
-      if (target?.closest?.("input, select, textarea, [contenteditable='true']")) return;
+      if (
+        target?.closest?.("input, select, textarea, [contenteditable='true']")
+      )
+        return;
       event.preventDefault();
       setTestsModalOpen((value) => !value);
     }
@@ -2232,9 +3061,15 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
 
   useEffect(() => {
     return registerTooltipProvider("tooltip-room", (id) => {
-      const region = generatedMap.regions.find((item) => item.id === id || item.sourceRegionId === id);
+      const region = generatedMap.regions.find(
+        (item) => item.id === id || item.sourceRegionId === id,
+      );
       if (!region) return null;
-      return createRoomTooltipPayload(region, generatedMap, getImportedRegionForTooltip(region, importedRegions));
+      return createRoomTooltipPayload(
+        region,
+        generatedMap,
+        getImportedRegionForTooltip(region, importedRegions),
+      );
     });
   }, [generatedMap, importedRegions]);
 
@@ -2253,7 +3088,9 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
 
   function updateManualOverridesWithHistory(updater, status = "") {
     const previous = cloneManualOverrides(manualOverrides);
-    const next = cloneManualOverrides(typeof updater === "function" ? updater(manualOverrides) : updater);
+    const next = cloneManualOverrides(
+      typeof updater === "function" ? updater(manualOverrides) : updater,
+    );
     if (areManualOverridesEqual(previous, next)) return;
     pushManualHistorySnapshot(previous);
     setManualOverrides(next);
@@ -2277,7 +3114,9 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   function undoManualEdit() {
     setManualHistory((history) => {
       if (history.past.length === 0) return history;
-      const previous = cloneManualOverrides(history.past[history.past.length - 1]);
+      const previous = cloneManualOverrides(
+        history.past[history.past.length - 1],
+      );
       const current = cloneManualOverrides(manualOverrides);
       setManualOverrides(previous);
       setStateStatus("Undone.");
@@ -2303,7 +3142,12 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function randomizeSeed() {
-    const nextSeed = hashStringToSeed(seed, roomCount, context, "next-seed").toString(36);
+    const nextSeed = hashStringToSeed(
+      seed,
+      roomCount,
+      context,
+      "next-seed",
+    ).toString(36);
     setSeed(`cruor-${nextSeed}`);
     setManualOverrides(resetManualOverrides());
     clearManualHistory();
@@ -2311,7 +3155,19 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function exportState() {
-    downloadMapState(config, manualOverrides, { showEditor, showNames, showProps, gridStyle, levelView, fadeOtherLevels }, generatedMap);
+    downloadMapState(
+      config,
+      manualOverrides,
+      {
+        showEditor,
+        showNames,
+        showProps,
+        gridStyle,
+        levelView,
+        fadeOtherLevels,
+      },
+      generatedMap,
+    );
     setStateStatus("State exported.");
   }
 
@@ -2329,21 +3185,34 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
         const importedConfig = payload.config || {};
         setSeed(String(importedConfig.seed || DEFAULT_CONFIG.seed));
         setContext(String(importedConfig.context || DEFAULT_CONFIG.context));
-        setRoomCount(normalizeRoomCount(importedConfig.roomCount, DEFAULT_CONFIG.roomCount));
+        setRoomCount(
+          normalizeRoomCount(
+            importedConfig.roomCount,
+            DEFAULT_CONFIG.roomCount,
+          ),
+        );
         setShowGrid(Boolean(importedConfig.showGrid));
         if (payload.uiState && typeof payload.uiState === "object") {
-          if (typeof payload.uiState.showEditor === "boolean") setShowEditor(payload.uiState.showEditor);
-          if (typeof payload.uiState.showNames === "boolean") setShowNames(payload.uiState.showNames);
-          if (typeof payload.uiState.showProps === "boolean") setShowProps(payload.uiState.showProps);
-          if (typeof payload.uiState.gridStyle === "string") setGridStyle(normalizeGridStyle(payload.uiState.gridStyle));
-          if (typeof payload.uiState.fadeOtherLevels === "boolean") setFadeOtherLevels(payload.uiState.fadeOtherLevels);
-          if (typeof payload.uiState.levelView !== "undefined") setLevelView(normalizeLevelView(payload.uiState.levelView));
+          if (typeof payload.uiState.showEditor === "boolean")
+            setShowEditor(payload.uiState.showEditor);
+          if (typeof payload.uiState.showNames === "boolean")
+            setShowNames(payload.uiState.showNames);
+          if (typeof payload.uiState.showProps === "boolean")
+            setShowProps(payload.uiState.showProps);
+          if (typeof payload.uiState.gridStyle === "string")
+            setGridStyle(normalizeGridStyle(payload.uiState.gridStyle));
+          if (typeof payload.uiState.fadeOtherLevels === "boolean")
+            setFadeOtherLevels(payload.uiState.fadeOtherLevels);
+          if (typeof payload.uiState.levelView !== "undefined")
+            setLevelView(normalizeLevelView(payload.uiState.levelView));
         }
         setManualOverrides(normalizeManualOverrides(payload.manualOverrides));
         clearManualHistory();
         setStateStatus("State imported.");
       } catch (error) {
-        setStateStatus(error instanceof Error ? error.message : "Could not import state.");
+        setStateStatus(
+          error instanceof Error ? error.message : "Could not import state.",
+        );
       } finally {
         event.target.value = "";
       }
@@ -2352,23 +3221,41 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function moveRoom(regionId, position) {
-    const target = generatedMap.regions.find((region) => region.id === regionId);
+    const target = generatedMap.regions.find(
+      (region) => region.id === regionId,
+    );
     if (!target) return;
-    const gridW = Math.floor(generatedMap.config.mapWidth / generatedMap.config.gridSize);
-    const gridH = Math.floor(generatedMap.config.mapHeight / generatedMap.config.gridSize);
+    const gridW = Math.floor(
+      generatedMap.config.mapWidth / generatedMap.config.gridSize,
+    );
+    const gridH = Math.floor(
+      generatedMap.config.mapHeight / generatedMap.config.gridSize,
+    );
     const candidate = {
       ...target.cellRect,
-      x: clamp(Math.round(position.x), 1, Math.max(1, gridW - target.cellRect.w - 1)),
-      y: clamp(Math.round(position.y), 1, Math.max(1, gridH - target.cellRect.h - 1)),
+      x: clamp(
+        Math.round(position.x),
+        1,
+        Math.max(1, gridW - target.cellRect.w - 1),
+      ),
+      y: clamp(
+        Math.round(position.y),
+        1,
+        Math.max(1, gridH - target.cellRect.h - 1),
+      ),
     };
     const dx = candidate.x - target.cellRect.x;
     const dy = candidate.y - target.cellRect.y;
     const occupiedCells = new Set();
     generatedMap.regions.forEach((region) => {
       if (region.id === regionId) return;
-      region.floorCells.forEach((cell) => occupiedCells.add(cellKey(cell.x, cell.y)));
+      region.floorCells.forEach((cell) =>
+        occupiedCells.add(cellKey(cell.x, cell.y)),
+      );
     });
-    const overlaps = target.floorCells.some((cell) => occupiedCells.has(cellKey(cell.x + dx, cell.y + dy)));
+    const overlaps = target.floorCells.some((cell) =>
+      occupiedCells.has(cellKey(cell.x + dx, cell.y + dy)),
+    );
     if (overlaps) return;
     setManualOverrides((current) => ({
       ...current,
@@ -2380,24 +3267,47 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function areSerializedAnchorsEqual(a, b) {
-    return Boolean(a && b) && a.side === b.side && a.cell?.x === b.cell?.x && a.cell?.y === b.cell?.y;
+    return (
+      Boolean(a && b) &&
+      a.side === b.side &&
+      a.cell?.x === b.cell?.x &&
+      a.cell?.y === b.cell?.y
+    );
   }
 
   function moveDoor(corridorId, endpoint, point) {
-    const corridor = generatedMap.corridors.find((item) => item.id === corridorId);
+    const corridor = generatedMap.corridors.find(
+      (item) => item.id === corridorId,
+    );
     if (!corridor) return;
     if (corridor.isRoomLink || endpoint === "shared") {
-      const fromRegion = generatedMap.regions.find((item) => item.id === corridor.from);
-      const toRegion = generatedMap.regions.find((item) => item.id === corridor.to);
+      const fromRegion = generatedMap.regions.find(
+        (item) => item.id === corridor.from,
+      );
+      const toRegion = generatedMap.regions.find(
+        (item) => item.id === corridor.to,
+      );
       if (!fromRegion || !toRegion) return;
-      const sharedConnection = getClosestSharedRoomConnectionToPoint(fromRegion, toRegion, point, generatedMap.config.gridSize);
+      const sharedConnection = getClosestSharedRoomConnectionToPoint(
+        fromRegion,
+        toRegion,
+        point,
+        generatedMap.config.gridSize,
+      );
       if (!sharedConnection) return;
       const nextFromAnchor = serializeManualAnchor(sharedConnection.fromAnchor);
       const nextToAnchor = serializeManualAnchor(sharedConnection.toAnchor);
       setManualOverrides((current) => {
         const fromKey = corridorEndpointKey(corridorId, "from");
         const toKey = corridorEndpointKey(corridorId, "to");
-        if (areSerializedAnchorsEqual(current.doorAnchors?.[fromKey], nextFromAnchor) && areSerializedAnchorsEqual(current.doorAnchors?.[toKey], nextToAnchor)) return current;
+        if (
+          areSerializedAnchorsEqual(
+            current.doorAnchors?.[fromKey],
+            nextFromAnchor,
+          ) &&
+          areSerializedAnchorsEqual(current.doorAnchors?.[toKey], nextToAnchor)
+        )
+          return current;
         return {
           ...current,
           doorAnchors: {
@@ -2412,12 +3322,18 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     const regionId = endpoint === "from" ? corridor.from : corridor.to;
     const region = generatedMap.regions.find((item) => item.id === regionId);
     if (!region) return;
-    const anchor = getClosestBoundaryAnchorToPoint(region, point, generatedMap.config.gridSize, generatedMap);
+    const anchor = getClosestBoundaryAnchorToPoint(
+      region,
+      point,
+      generatedMap.config.gridSize,
+      generatedMap,
+    );
     if (!anchor) return;
     const nextAnchor = serializeManualAnchor(anchor);
     setManualOverrides((current) => {
       const key = corridorEndpointKey(corridorId, endpoint);
-      if (areSerializedAnchorsEqual(current.doorAnchors?.[key], nextAnchor)) return current;
+      if (areSerializedAnchorsEqual(current.doorAnchors?.[key], nextAnchor))
+        return current;
       return {
         ...current,
         doorAnchors: {
@@ -2429,11 +3345,22 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function moveWaypoint(corridorId, waypointIndex, point, source) {
-    const corridor = generatedMap.corridors.find((item) => item.id === corridorId);
+    const corridor = generatedMap.corridors.find(
+      (item) => item.id === corridorId,
+    );
     if (!corridor) return;
-    const gridW = Math.floor(generatedMap.config.mapWidth / generatedMap.config.gridSize);
-    const gridH = Math.floor(generatedMap.config.mapHeight / generatedMap.config.gridSize);
-    const cell = normalizeManualWaypoint(point, generatedMap.config.gridSize, gridW, gridH);
+    const gridW = Math.floor(
+      generatedMap.config.mapWidth / generatedMap.config.gridSize,
+    );
+    const gridH = Math.floor(
+      generatedMap.config.mapHeight / generatedMap.config.gridSize,
+    );
+    const cell = normalizeManualWaypoint(
+      point,
+      generatedMap.config.gridSize,
+      gridW,
+      gridH,
+    );
     if (!cell) return;
     const roomCells = getRoomCellSet(generatedMap.regions);
     if (roomCells.has(cellKey(cell.x, cell.y))) return;
@@ -2445,7 +3372,13 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
       let nextWaypoints;
       if (source === "manual") {
         nextWaypoints = [...currentManual];
-        const safeIndex = clamp(Number.isInteger(waypointIndex) ? waypointIndex : nextWaypoints.length, 0, nextWaypoints.length);
+        const safeIndex = clamp(
+          Number.isInteger(waypointIndex)
+            ? waypointIndex
+            : nextWaypoints.length,
+          0,
+          nextWaypoints.length,
+        );
         nextWaypoints[safeIndex] = cell;
       } else {
         nextWaypoints = [cell];
@@ -2461,11 +3394,22 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function insertWaypoint(corridorId, insertIndex, point) {
-    const corridor = generatedMap.corridors.find((item) => item.id === corridorId);
+    const corridor = generatedMap.corridors.find(
+      (item) => item.id === corridorId,
+    );
     if (!corridor) return;
-    const gridW = Math.floor(generatedMap.config.mapWidth / generatedMap.config.gridSize);
-    const gridH = Math.floor(generatedMap.config.mapHeight / generatedMap.config.gridSize);
-    const cell = normalizeManualWaypoint(point, generatedMap.config.gridSize, gridW, gridH);
+    const gridW = Math.floor(
+      generatedMap.config.mapWidth / generatedMap.config.gridSize,
+    );
+    const gridH = Math.floor(
+      generatedMap.config.mapHeight / generatedMap.config.gridSize,
+    );
+    const cell = normalizeManualWaypoint(
+      point,
+      generatedMap.config.gridSize,
+      gridW,
+      gridH,
+    );
     if (!cell) return;
     const roomCells = getRoomCellSet(generatedMap.regions);
     if (roomCells.has(cellKey(cell.x, cell.y))) return;
@@ -2474,7 +3418,11 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
       const currentManual = Array.isArray(currentWaypoints[corridorId])
         ? currentWaypoints[corridorId].filter(isValidPoint)
         : [];
-      const safeIndex = clamp(Number.isInteger(insertIndex) ? insertIndex : currentManual.length, 0, currentManual.length);
+      const safeIndex = clamp(
+        Number.isInteger(insertIndex) ? insertIndex : currentManual.length,
+        0,
+        currentManual.length,
+      );
       const nextWaypoints = [...currentManual];
       nextWaypoints.splice(safeIndex, 0, cell);
       return {
@@ -2496,7 +3444,9 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
         : [];
       const safeIndex = Number.isInteger(waypointIndex) ? waypointIndex : -1;
       if (safeIndex < 0 || safeIndex >= currentManual.length) return current;
-      const nextWaypoints = currentManual.filter((_, index) => index !== safeIndex);
+      const nextWaypoints = currentManual.filter(
+        (_, index) => index !== safeIndex,
+      );
       return {
         ...current,
         corridorWaypoints: {
@@ -2511,9 +3461,13 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     if (!corridorId) return;
     updateManualOverridesWithHistory((current) => {
       const normalized = normalizeManualOverrides(current);
-      const deletedConnections = Array.isArray(normalized.deletedConnections) ? normalized.deletedConnections : [];
+      const deletedConnections = Array.isArray(normalized.deletedConnections)
+        ? normalized.deletedConnections
+        : [];
       const customConnections = Array.isArray(normalized.customConnections)
-        ? normalized.customConnections.filter((connection) => connection.id !== corridorId)
+        ? normalized.customConnections.filter(
+            (connection) => connection.id !== corridorId,
+          )
         : [];
       const doorAnchors = { ...(normalized.doorAnchors || {}) };
       delete doorAnchors[corridorEndpointKey(corridorId, "from")];
@@ -2542,7 +3496,9 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
         stairTransitions,
         levels,
         corridorWaypoints,
-        deletedConnections: deletedConnections.includes(corridorId) ? deletedConnections : [...deletedConnections, corridorId],
+        deletedConnections: deletedConnections.includes(corridorId)
+          ? deletedConnections
+          : [...deletedConnections, corridorId],
       };
     });
   }
@@ -2583,7 +3539,8 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     if (access.displayAnchor) {
       return {
         ...access.displayAnchor,
-        finalBoundaryIndex: access.finalBoundaryIndex ?? access.displayAnchor.finalBoundaryIndex,
+        finalBoundaryIndex:
+          access.finalBoundaryIndex ?? access.displayAnchor.finalBoundaryIndex,
         segment: access.segment || access.displayAnchor.segment,
         point: access.point || access.displayAnchor.point,
         normal: access.normal || access.displayAnchor.normal,
@@ -2610,9 +3567,16 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     if (!regionId || !anchor) return null;
     const region = generatedMap.regions.find((item) => item.id === regionId);
     if (!region) return null;
-    const existingAccess = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).find((access) => access.regionId === regionId);
+    const existingAccess = (
+      generatedMap.dungeonMask.mapAccesses ||
+      generatedMap.mapAccesses ||
+      []
+    ).find((access) => access.regionId === regionId);
     const fallbackIntent = getFallbackMapAccessIntent(region, generatedMap);
-    const type = normalizeMapAccessType(accessType || existingAccess?.type || fallbackIntent.type, fallbackIntent.type || "passage");
+    const type = normalizeMapAccessType(
+      accessType || existingAccess?.type || fallbackIntent.type,
+      fallbackIntent.type || "passage",
+    );
     const serializedAnchor = serializeMapAccessAnchor(anchor);
     if (!serializedAnchor) return null;
     return {
@@ -2626,17 +3590,33 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function mapAccessOverrideEquals(previous, nextOverride) {
-    return Boolean(previous && !previous.disabled && nextOverride) &&
+    return (
+      Boolean(previous && !previous.disabled && nextOverride) &&
       previous.type === nextOverride.type &&
-      JSON.stringify(previous.anchor || null) === JSON.stringify(nextOverride.anchor || null);
+      JSON.stringify(previous.anchor || null) ===
+        JSON.stringify(nextOverride.anchor || null)
+    );
   }
 
   function preservePureCaveAccessOverrides(mapAccesses, targetRegionId) {
     if (!pureCaveMap) return mapAccesses;
-    (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).forEach((access) => {
-      if (!access?.regionId || access.regionId === targetRegionId || mapAccesses[access.regionId]?.disabled) return;
+    (
+      generatedMap.dungeonMask.mapAccesses ||
+      generatedMap.mapAccesses ||
+      []
+    ).forEach((access) => {
+      if (
+        !access?.regionId ||
+        access.regionId === targetRegionId ||
+        mapAccesses[access.regionId]?.disabled
+      )
+        return;
       const anchor = getMapAccessAnchorForOverride(access);
-      const frozenOverride = buildMapAccessOverride(access.regionId, anchor, access.type);
+      const frozenOverride = buildMapAccessOverride(
+        access.regionId,
+        anchor,
+        access.type,
+      );
       if (frozenOverride) mapAccesses[access.regionId] = frozenOverride;
     });
     return mapAccesses;
@@ -2689,12 +3669,22 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
     if (!junctionKey) return;
     updateManualOverridesWithHistory((current) => {
       const corridorJunctions = { ...(current.corridorJunctions || {}) };
-      const previous = getManualJunctionOverride(corridorJunctions, junctionKey, "merge");
+      const previous = getManualJunctionOverride(
+        corridorJunctions,
+        junctionKey,
+        "merge",
+      );
       const nextType = normalizeJunctionType(junctionType);
       if (nextType === "merge") delete corridorJunctions[junctionKey];
       else {
-        const nextSideIndex = previous.type === nextType ? (previous.sideIndex + 1) % 4 : previous.sideIndex;
-        corridorJunctions[junctionKey] = { type: nextType, sideIndex: nextSideIndex };
+        const nextSideIndex =
+          previous.type === nextType
+            ? (previous.sideIndex + 1) % 4
+            : previous.sideIndex;
+        corridorJunctions[junctionKey] = {
+          type: nextType,
+          sideIndex: nextSideIndex,
+        };
       }
       return {
         ...current,
@@ -2704,14 +3694,21 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   function createConnectionFromWallDrag(connection) {
-    if (!connection?.fromRegionId || !connection?.toRegionId || connection.fromRegionId === connection.toRegionId) return;
+    if (
+      !connection?.fromRegionId ||
+      !connection?.toRegionId ||
+      connection.fromRegionId === connection.toRegionId
+    )
+      return;
     const fromAnchor = serializeManualAnchor(connection.fromAnchor);
     const toAnchor = serializeManualAnchor(connection.toAnchor);
     if (!fromAnchor || !toAnchor) return;
 
     updateManualOverridesWithHistory((current) => {
       const normalized = normalizeManualOverrides(current);
-      const customConnections = Array.isArray(normalized.customConnections) ? normalized.customConnections : [];
+      const customConnections = Array.isArray(normalized.customConnections)
+        ? normalized.customConnections
+        : [];
       const nextSequence = normalized.manualConnectionSequence + 1;
       const edgeId = `manual-edge-${connection.fromRegionId}-${connection.toRegionId}-${nextSequence.toString(36)}`;
       const deletedConnections = Array.isArray(normalized.deletedConnections)
@@ -2721,7 +3718,16 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
         ...current,
         deletedConnections,
         manualConnectionSequence: nextSequence,
-        customConnections: [...customConnections, { id: edgeId, from: connection.fromRegionId, to: connection.toRegionId, kind: "manual", locked: true }],
+        customConnections: [
+          ...customConnections,
+          {
+            id: edgeId,
+            from: connection.fromRegionId,
+            to: connection.toRegionId,
+            kind: "manual",
+            locked: true,
+          },
+        ],
         doorAnchors: {
           ...normalized.doorAnchors,
           [corridorEndpointKey(edgeId, "from")]: fromAnchor,
@@ -2756,28 +3762,127 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
   }
 
   return (
-    <div className="cruor-map-mvp cruor-map-workspace" onContextMenu={(event) => event.preventDefault()}>
-      <div className={inspectorCollapsed ? "map-workspace-shell is-inspector-collapsed" : "map-workspace-shell"}>
-        <aside className="map-tool-rail map-tool-rail--left" aria-label="Map actions">
-          <MapToolButton icon="arrows-rotate" label="Refresh from Composer" description="Rebuild the map from the latest Composer regions." disabled={!onRefreshFromComposer} onClick={onRefreshFromComposer} />
-          <MapToolButton icon="shuffle" label="New Seed" description="Generate a new seed and rebuild the current map." onClick={randomizeSeed} />
-          <MapToolButton icon="vector-square" label="Export SVG" onClick={downloadSvg} />
-          <MapToolButton icon="user-secret" label="Export GM SVG" onClick={downloadGmSvg} />
-          <MapToolButton icon="users" label="Export Player SVG" onClick={downloadPlayerSvg} />
-          <MapToolButton icon="print" label="Export Print SVG" onClick={downloadPrintSvg} />
-          <MapToolButton icon="file-export" label="Export State" onClick={exportState} />
-          <MapToolButton icon="file-import" label="Import State" onClick={requestImportState} />
+    <div
+      className="cruor-map-mvp cruor-map-workspace"
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      <div
+        className={
+          inspectorCollapsed
+            ? "map-workspace-shell is-inspector-collapsed"
+            : "map-workspace-shell"
+        }
+      >
+        <aside
+          className="map-tool-rail map-tool-rail--left"
+          aria-label="Map actions"
+        >
+          <MapToolButton
+            icon="arrows-rotate"
+            label="Refresh from Composer"
+            description="Rebuild the map from the latest Composer regions."
+            disabled={!onRefreshFromComposer}
+            onClick={onRefreshFromComposer}
+          />
+          <MapToolButton
+            icon="shuffle"
+            label="New Seed"
+            description="Generate a new seed and rebuild the current map."
+            onClick={randomizeSeed}
+          />
+          <MapToolButton
+            icon="vector-square"
+            label="Export SVG"
+            onClick={downloadSvg}
+          />
+          <MapToolButton
+            icon="user-secret"
+            label="Export GM SVG"
+            onClick={downloadGmSvg}
+          />
+          <MapToolButton
+            icon="users"
+            label="Export Player SVG"
+            onClick={downloadPlayerSvg}
+          />
+          <MapToolButton
+            icon="print"
+            label="Export Print SVG"
+            onClick={downloadPrintSvg}
+          />
+          <MapToolButton
+            icon="file-export"
+            label="Export State"
+            onClick={exportState}
+          />
+          <MapToolButton
+            icon="file-import"
+            label="Import State"
+            onClick={requestImportState}
+          />
           <span className="map-tool-rail__divider" aria-hidden="true" />
-          <MapToolButton icon="rotate-left" label="Undo" disabled={manualHistory.past.length === 0} onClick={undoManualEdit} />
-          <MapToolButton icon="rotate-right" label="Redo" disabled={manualHistory.future.length === 0} onClick={redoManualEdit} />
-          <MapToolButton icon="border-all" label="Toggle Grid" active={showGrid} onClick={() => setShowGrid((value) => !value)} />
-          <MapToolButton icon="pen-ruler" label="Toggle Editor" active={showEditor} onClick={() => setShowEditor((value) => !value)} />
-          <MapToolButton icon="signature" label="Toggle Names" active={showNames} onClick={() => setShowNames((value) => !value)} />
-          <MapToolButton icon="boxes-stacked" label="Toggle Props" active={showProps} onClick={() => setShowProps((value) => !value)} />
-          <MapToolButton icon="eraser" label="Reset Edits" onClick={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")} />
+          <MapToolButton
+            icon="rotate-left"
+            label="Undo"
+            disabled={manualHistory.past.length === 0}
+            onClick={undoManualEdit}
+          />
+          <MapToolButton
+            icon="rotate-right"
+            label="Redo"
+            disabled={manualHistory.future.length === 0}
+            onClick={redoManualEdit}
+          />
+          <MapToolButton
+            icon="border-all"
+            label="Toggle Grid"
+            active={showGrid}
+            onClick={() => setShowGrid((value) => !value)}
+          />
+          <MapToolButton
+            icon="pen-ruler"
+            label="Toggle Editor"
+            active={showEditor}
+            onClick={() => setShowEditor((value) => !value)}
+          />
+          <MapToolButton
+            icon="signature"
+            label="Toggle Names"
+            active={showNames}
+            onClick={() => setShowNames((value) => !value)}
+          />
+          <MapToolButton
+            icon="boxes-stacked"
+            label="Toggle Props"
+            active={showProps}
+            onClick={() => setShowProps((value) => !value)}
+          />
+          <MapToolButton
+            icon="eraser"
+            label="Reset Edits"
+            onClick={() =>
+              updateManualOverridesWithHistory(
+                resetManualOverrides(),
+                "Edits reset.",
+              )
+            }
+          />
           <span className="map-tool-rail__divider" aria-hidden="true" />
-          <MapToolButton icon="clipboard-check" label="Structural Tests" description="Open the structural test suite." kbd="F2" active={testsModalOpen} onClick={() => setTestsModalOpen(true)} />
-          <input ref={stateFileInputRef} type="file" accept="application/json,.json" style={{ display: "none" }} onChange={importStateFromFile} />
+          <MapToolButton
+            icon="clipboard-check"
+            label="Structural Tests"
+            description="Open the structural test suite."
+            kbd="F2"
+            active={testsModalOpen}
+            onClick={() => setTestsModalOpen(true)}
+          />
+          <input
+            ref={stateFileInputRef}
+            type="file"
+            accept="application/json,.json"
+            style={{ display: "none" }}
+            onChange={importStateFromFile}
+          />
         </aside>
 
         <main className="map-canvas-area">
@@ -2785,20 +3890,40 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
             <div>
               <p className="map-panel-eyebrow">Map Workspace</p>
               <div className="map-toolbar__title">
-                {context} {"\u00B7"} {normalizeLevelView(levelView, availableLevels) === LEVEL_VIEW_ALL ? "all levels" : `level ${formatMapLevel(normalizeLevelView(levelView, availableLevels))}`} {"\u00B7"} {String(generatedMap.seed).slice(0, 20)}
+                {context} {"\u00B7"}{" "}
+                {normalizeLevelView(levelView, availableLevels) ===
+                LEVEL_VIEW_ALL
+                  ? "all levels"
+                  : `level ${formatMapLevel(normalizeLevelView(levelView, availableLevels))}`}{" "}
+                {"\u00B7"} {String(generatedMap.seed).slice(0, 20)}
               </div>
             </div>
             <div className="map-canvas-topbar__meta">
-              {importedRegions.length > 0 ? <span>{importedRegions.length} imported regions</span> : <span>{generatedMap.regions.length} regions</span>}
+              {importedRegions.length > 0 ? (
+                <span>{importedRegions.length} imported regions</span>
+              ) : (
+                <span>{generatedMap.regions.length} regions</span>
+              )}
               <span>{generatedMap.corridors.length} connections</span>
               <button
                 type="button"
                 className="map-tool-button map-inspector-toggle"
-                {...getGenericTooltipAttrs(inspectorCollapsed ? "Open Inspector" : "Collapse Inspector")}
-                aria-label={inspectorCollapsed ? "Open Inspector" : "Collapse Inspector"}
+                {...getGenericTooltipAttrs(
+                  inspectorCollapsed ? "Open Inspector" : "Collapse Inspector",
+                )}
+                aria-label={
+                  inspectorCollapsed ? "Open Inspector" : "Collapse Inspector"
+                }
                 onClick={() => setInspectorCollapsed((value) => !value)}
               >
-                <i className={inspectorCollapsed ? "fa-solid fa-angles-left" : "fa-solid fa-angles-right"} aria-hidden="true" />
+                <i
+                  className={
+                    inspectorCollapsed
+                      ? "fa-solid fa-angles-left"
+                      : "fa-solid fa-angles-right"
+                  }
+                  aria-hidden="true"
+                />
               </button>
             </div>
           </div>
@@ -2836,13 +3961,24 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
               onRedo={redoManualEdit}
               onNewSeed={randomizeSeed}
               onToggleGrid={() => setShowGrid((value) => !value)}
-              onGridStyleChange={(value) => setGridStyle(normalizeGridStyle(value))}
+              onGridStyleChange={(value) =>
+                setGridStyle(normalizeGridStyle(value))
+              }
               onToggleEditor={() => setShowEditor((value) => !value)}
               onToggleNames={() => setShowNames((value) => !value)}
               onToggleProps={() => setShowProps((value) => !value)}
-              onLevelViewChange={(value) => setLevelView(normalizeLevelView(value, availableLevels))}
-              onToggleFadeOtherLevels={() => setFadeOtherLevels((value) => !value)}
-              onResetEdits={() => updateManualOverridesWithHistory(resetManualOverrides(), "Edits reset.")}
+              onLevelViewChange={(value) =>
+                setLevelView(normalizeLevelView(value, availableLevels))
+              }
+              onToggleFadeOtherLevels={() =>
+                setFadeOtherLevels((value) => !value)
+              }
+              onResetEdits={() =>
+                updateManualOverridesWithHistory(
+                  resetManualOverrides(),
+                  "Edits reset.",
+                )
+              }
               onExportSvg={downloadSvg}
               onExportGmSvg={downloadGmSvg}
               onExportPlayerSvg={downloadPlayerSvg}
@@ -2854,33 +3990,63 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
           </div>
         </main>
 
-        <aside className="map-inspector-panel" aria-label="Map inspector" aria-hidden={inspectorCollapsed}>
+        <aside
+          className="map-inspector-panel"
+          aria-label="Map inspector"
+          aria-hidden={inspectorCollapsed}
+        >
           <div className="map-inspector-panel__scroll">
             <section className="map-inspector-section">
               <p className="map-panel-eyebrow">Map Setup</p>
               <div className="control-group">
-                <label className="control-label" htmlFor="seed">Seed</label>
-                <input id="seed" className="control-input" value={seed} onChange={(event) => {
-                  setSeed(event.target.value);
-                  setManualOverrides(resetManualOverrides());
-                  clearManualHistory();
-                }} />
+                <label className="control-label" htmlFor="seed">
+                  Seed
+                </label>
+                <input
+                  id="seed"
+                  className="control-input"
+                  value={seed}
+                  onChange={(event) => {
+                    setSeed(event.target.value);
+                    setManualOverrides(resetManualOverrides());
+                    clearManualHistory();
+                  }}
+                />
               </div>
               <div className="control-group">
-                <label className="control-label" htmlFor="room-count">Room / Region Count</label>
-                <input id="room-count" className="control-input" type="number" min="1" max="16" value={roomCount} onChange={(event) => {
-                  setRoomCount(normalizeRoomCount(event.target.value, roomCount));
-                  setManualOverrides(resetManualOverrides());
-                  clearManualHistory();
-                }} />
+                <label className="control-label" htmlFor="room-count">
+                  Room / Region Count
+                </label>
+                <input
+                  id="room-count"
+                  className="control-input"
+                  type="number"
+                  min="1"
+                  max="16"
+                  value={roomCount}
+                  onChange={(event) => {
+                    setRoomCount(
+                      normalizeRoomCount(event.target.value, roomCount),
+                    );
+                    setManualOverrides(resetManualOverrides());
+                    clearManualHistory();
+                  }}
+                />
               </div>
               <div className="control-group">
-                <label className="control-label" htmlFor="context">Context</label>
-                <select id="context" className="control-select" value={context} onChange={(event) => {
-                  setContext(event.target.value);
-                  setManualOverrides(resetManualOverrides());
-                  clearManualHistory();
-                }}>
+                <label className="control-label" htmlFor="context">
+                  Context
+                </label>
+                <select
+                  id="context"
+                  className="control-select"
+                  value={context}
+                  onChange={(event) => {
+                    setContext(event.target.value);
+                    setManualOverrides(resetManualOverrides());
+                    clearManualHistory();
+                  }}
+                >
                   <option>Crypt</option>
                   <option>Chapel</option>
                   <option>Cave</option>
@@ -2890,8 +4056,17 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
                 </select>
               </div>
               <div className="control-group">
-                <label className="control-label" htmlFor="grid-style">Grid Style</label>
-                <select id="grid-style" className="control-select" value={gridStyle} onChange={(event) => setGridStyle(normalizeGridStyle(event.target.value))}>
+                <label className="control-label" htmlFor="grid-style">
+                  Grid Style
+                </label>
+                <select
+                  id="grid-style"
+                  className="control-select"
+                  value={gridStyle}
+                  onChange={(event) =>
+                    setGridStyle(normalizeGridStyle(event.target.value))
+                  }
+                >
                   <option value="solid">Solid</option>
                   <option value="dotted">Dotted</option>
                   <option value="dashed">Dashed</option>
@@ -2899,20 +4074,55 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
                 </select>
               </div>
               <div className="control-group">
-                <label className="control-label" htmlFor="level-view">Level View</label>
-                <select id="level-view" className="control-select" value={String(normalizeLevelView(levelView, availableLevels))} onChange={(event) => setLevelView(normalizeLevelView(event.target.value, availableLevels))}>
+                <label className="control-label" htmlFor="level-view">
+                  Level View
+                </label>
+                <select
+                  id="level-view"
+                  className="control-select"
+                  value={String(normalizeLevelView(levelView, availableLevels))}
+                  onChange={(event) =>
+                    setLevelView(
+                      normalizeLevelView(event.target.value, availableLevels),
+                    )
+                  }
+                >
                   <option value={LEVEL_VIEW_ALL}>All Levels</option>
-                  {availableLevels.map((level) => <option key={`level-view-${level}`} value={String(level)}>Level {formatMapLevel(level)}</option>)}
+                  {availableLevels.map((level) => (
+                    <option key={`level-view-${level}`} value={String(level)}>
+                      Level {formatMapLevel(level)}
+                    </option>
+                  ))}
                 </select>
-                <button type="button" className="mvp-button" onClick={() => setFadeOtherLevels((value) => !value)}>{fadeOtherLevels ? "Fade Other Levels" : "Solo Active Level"}</button>
+                <button
+                  type="button"
+                  className="mvp-button"
+                  onClick={() => setFadeOtherLevels((value) => !value)}
+                >
+                  {fadeOtherLevels ? "Fade Other Levels" : "Solo Active Level"}
+                </button>
               </div>
             </section>
 
             {initialRequest?.source === "darken-location" && (
-              <section className="map-inspector-section imported-map-request" aria-label="Imported Darken a Location regions">
-                <strong>Imported from Darken a Location: {importedRegions.length} region{importedRegions.length === 1 ? "" : "s"}</strong>
+              <section
+                className="map-inspector-section imported-map-request"
+                aria-label="Imported Darken a Location regions"
+              >
+                <strong>
+                  Imported from Darken a Location: {importedRegions.length}{" "}
+                  region{importedRegions.length === 1 ? "" : "s"}
+                </strong>
                 {importedRegions.length > 0 && (
-                  <span>{importedRegions.slice(0, 5).map((region) => region.label || region.id).join(", ")}{importedRegions.length > 5 ? `, +${importedRegions.length - 5} more` : ""}</span>
+                  <span>
+                    {importedRegions
+                      .slice(0, 5)
+                      .map((region) => region.label || region.id)
+                      .join(", ")}
+                    {importedRegions.length > 5
+                      ? `, +${importedRegions.length - 5} more`
+                      : ""}
+                  </span>
                 )}
               </section>
             )}
@@ -2920,12 +4130,40 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
             <section className="map-inspector-section">
               <p className="map-panel-eyebrow">Stats</p>
               <div className="stats">
-                <div className="stat"><div className="stat__value">{generatedMap.regions.length}</div><div className="stat__label">Regions</div></div>
-                <div className="stat"><div className="stat__value">{generatedMap.corridors.length}</div><div className="stat__label">Connections</div></div>
-                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.floorCells.length}</div><div className="stat__label">Floor Cells</div></div>
-                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.doorSegments.length}</div><div className="stat__label">Doors</div></div>
-                <div className="stat"><div className="stat__value">{generatedMap.dungeonMask.mapAccesses?.length || 0}</div><div className="stat__label">Map Accesses</div></div>
-                <div className="stat"><div className="stat__value">{availableLevels.length}</div><div className="stat__label">Levels</div></div>
+                <div className="stat">
+                  <div className="stat__value">
+                    {generatedMap.regions.length}
+                  </div>
+                  <div className="stat__label">Regions</div>
+                </div>
+                <div className="stat">
+                  <div className="stat__value">
+                    {generatedMap.corridors.length}
+                  </div>
+                  <div className="stat__label">Connections</div>
+                </div>
+                <div className="stat">
+                  <div className="stat__value">
+                    {generatedMap.dungeonMask.floorCells.length}
+                  </div>
+                  <div className="stat__label">Floor Cells</div>
+                </div>
+                <div className="stat">
+                  <div className="stat__value">
+                    {generatedMap.dungeonMask.doorSegments.length}
+                  </div>
+                  <div className="stat__label">Doors</div>
+                </div>
+                <div className="stat">
+                  <div className="stat__value">
+                    {generatedMap.dungeonMask.mapAccesses?.length || 0}
+                  </div>
+                  <div className="stat__label">Map Accesses</div>
+                </div>
+                <div className="stat">
+                  <div className="stat__value">{availableLevels.length}</div>
+                  <div className="stat__label">Levels</div>
+                </div>
               </div>
             </section>
 
@@ -2939,7 +4177,11 @@ export default function CruorMapGeneratorMvp({ initialRequest = null, onRefreshF
         </aside>
       </div>
 
-      <MapTestsModal open={testsModalOpen} testSuite={testSuite} onClose={() => setTestsModalOpen(false)} />
+      <MapTestsModal
+        open={testsModalOpen}
+        testSuite={testSuite}
+        onClose={() => setTestsModalOpen(false)}
+      />
     </div>
   );
 }

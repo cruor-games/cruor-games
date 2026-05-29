@@ -5,11 +5,13 @@
 Work in small, reviewable steps.
 
 Before editing:
+
 - identify the relevant files;
 - inspect current implementation;
 - preserve existing public behavior unless instructed otherwise.
 
 After editing:
+
 - summarize changed files;
 - summarize why the change was made;
 - list manual verification steps.
@@ -19,6 +21,7 @@ After editing:
 Do not fix errors by guessing.
 
 When an error appears:
+
 - identify the missing symbol or broken call;
 - search where it should be defined;
 - check whether it should be imported, moved, renamed, or implemented;

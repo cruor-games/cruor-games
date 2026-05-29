@@ -1,8 +1,22 @@
 import React from "react";
 import { DEFAULT_CONFIG, normalizeRoomCount } from "./map-generator.input.js";
-import { LEVEL_VIEW_ALL, getManualJunctionOverride, normalizeDoorType, normalizeGridStyle, normalizeStairTransition } from "./map-generator.state.js";
-import { getContextKey, getRegionSemanticFlags } from "./map-generator.profile.js";
-import { getAvailableMapLevels, getRegionLevel, hasRenderableGeometry, normalizeLevelView } from "./map-generator.layout.js";
+import {
+  LEVEL_VIEW_ALL,
+  getManualJunctionOverride,
+  normalizeDoorType,
+  normalizeGridStyle,
+  normalizeStairTransition,
+} from "./map-generator.state.js";
+import {
+  getContextKey,
+  getRegionSemanticFlags,
+} from "./map-generator.profile.js";
+import {
+  getAvailableMapLevels,
+  getRegionLevel,
+  hasRenderableGeometry,
+  normalizeLevelView,
+} from "./map-generator.layout.js";
 import {
   cellKey,
   parseCellKey,
@@ -63,7 +77,8 @@ function hashStringToSeed(...parts) {
 }
 
 function createSeededRng(seed) {
-  let state = typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
+  let state =
+    typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
   return function rng() {
     state += 0x6d2b79f5;
     let t = state;
@@ -160,18 +175,29 @@ export function roundAxialHex(q, r) {
 export function pixelToAxialHex(point, size, origin) {
   const x = point.x - origin.x;
   const y = point.y - origin.y;
-  return roundAxialHex((Math.sqrt(3) / 3 * x - y / 3) / size, (2 / 3 * y) / size);
+  return roundAxialHex(
+    ((Math.sqrt(3) / 3) * x - y / 3) / size,
+    ((2 / 3) * y) / size,
+  );
 }
 
 export function getHexDistance(a, b) {
-  return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2;
+  return (
+    (Math.abs(a.q - b.q) +
+      Math.abs(a.q + a.r - b.q - b.r) +
+      Math.abs(a.r - b.r)) /
+    2
+  );
 }
 
 export function addHexDisc(hexes, center, radius) {
   const r = Math.max(0, Math.round(radius));
   for (let dq = -r; dq <= r; dq += 1) {
     for (let dr = Math.max(-r, -dq - r); dr <= Math.min(r, -dq + r); dr += 1) {
-      hexes.set(hexKey(center.q + dq, center.r + dr), { q: center.q + dq, r: center.r + dr });
+      hexes.set(hexKey(center.q + dq, center.r + dr), {
+        q: center.q + dq,
+        r: center.r + dr,
+      });
     }
   }
 }
@@ -188,7 +214,10 @@ export function getHexCornerPoints(hex, size, origin) {
 }
 
 export function getHexNeighbors(hex) {
-  return HEX_CAVE_DIRECTIONS.map((direction) => ({ q: hex.q + direction.q, r: hex.r + direction.r }));
+  return HEX_CAVE_DIRECTIONS.map((direction) => ({
+    q: hex.q + direction.q,
+    r: hex.r + direction.r,
+  }));
 }
 
 export function getLargestConnectedHexMap(hexMap) {
@@ -219,30 +248,69 @@ export function getLargestConnectedHexMap(hexMap) {
   return best;
 }
 
-export function addNoisyHexBlob(target, center, radius, config, seedParts = [], options = {}) {
+export function addNoisyHexBlob(
+  target,
+  center,
+  radius,
+  config,
+  seedParts = [],
+  options = {},
+) {
   const reach = Math.max(1, Math.ceil(radius + (options.reachBonus || 1.5)));
-  const thresholdBias = Number.isFinite(options.thresholdBias) ? options.thresholdBias : 0;
+  const thresholdBias = Number.isFinite(options.thresholdBias)
+    ? options.thresholdBias
+    : 0;
   for (let dq = -reach; dq <= reach; dq += 1) {
     for (let dr = -reach; dr <= reach; dr += 1) {
       const cell = { q: center.q + dq, r: center.r + dr };
       const distance = getHexDistance(center, cell);
       if (distance > reach) continue;
-      const noise = ((hashStringToSeed(config.seed, ...seedParts, cell.q, cell.r, "blob-noise") % 1000) / 1000 - 0.5) * (options.noiseScale || 1.25);
-      if (distance <= radius + noise + thresholdBias) target.set(hexKey(cell.q, cell.r), cell);
+      const noise =
+        ((hashStringToSeed(
+          config.seed,
+          ...seedParts,
+          cell.q,
+          cell.r,
+          "blob-noise",
+        ) %
+          1000) /
+          1000 -
+          0.5) *
+        (options.noiseScale || 1.25);
+      if (distance <= radius + noise + thresholdBias)
+        target.set(hexKey(cell.q, cell.r), cell);
     }
   }
 }
 
-export function subtractNoisyHexBite(target, center, radius, config, seedParts = []) {
+export function subtractNoisyHexBite(
+  target,
+  center,
+  radius,
+  config,
+  seedParts = [],
+) {
   Array.from(target.values()).forEach((cell) => {
     const distance = getHexDistance(center, cell);
-    const noise = ((hashStringToSeed(config.seed, ...seedParts, cell.q, cell.r, "bite-noise") % 1000) / 1000 - 0.5) * 0.85;
+    const noise =
+      ((hashStringToSeed(
+        config.seed,
+        ...seedParts,
+        cell.q,
+        cell.r,
+        "bite-noise",
+      ) %
+        1000) /
+        1000 -
+        0.5) *
+      0.85;
     if (distance <= radius + noise) target.delete(hexKey(cell.q, cell.r));
   });
 }
 
 export function createHexCaveRoomCells(hexes, region, centerHex, config, rng) {
-  const singleCaveRegion = normalizeRoomCount(config.roomCount, config.regions?.length || 1) <= 1;
+  const singleCaveRegion =
+    normalizeRoomCount(config.roomCount, config.regions?.length || 1) <= 1;
   const maxRectSide = Math.max(region.cellRect.w, region.cellRect.h);
   const minRectSide = Math.min(region.cellRect.w, region.cellRect.h);
   const baseRadius = singleCaveRegion
@@ -255,67 +323,132 @@ export function createHexCaveRoomCells(hexes, region, centerHex, config, rng) {
     thresholdBias: singleCaveRegion ? 0.2 : 0,
   });
 
-  const lobeCount = singleCaveRegion ? randomInt(rng, 9, 15) : randomInt(rng, 3, 6);
-  const dominantDirection = hashStringToSeed(config.seed, region.id, "dominant-cave-direction") % HEX_CAVE_DIRECTIONS.length;
+  const lobeCount = singleCaveRegion
+    ? randomInt(rng, 9, 15)
+    : randomInt(rng, 3, 6);
+  const dominantDirection =
+    hashStringToSeed(config.seed, region.id, "dominant-cave-direction") %
+    HEX_CAVE_DIRECTIONS.length;
 
   for (let index = 0; index < lobeCount; index += 1) {
     const dirIndex = singleCaveRegion
-      ? (dominantDirection + randomInt(rng, -2, 3) + HEX_CAVE_DIRECTIONS.length) % HEX_CAVE_DIRECTIONS.length
-      : hashStringToSeed(config.seed, region.id, index, "hex-cave-lobe-dir") % HEX_CAVE_DIRECTIONS.length;
-    const sideIndex = (dirIndex + (rng() > 0.5 ? 1 : -1) + HEX_CAVE_DIRECTIONS.length) % HEX_CAVE_DIRECTIONS.length;
+      ? (dominantDirection +
+          randomInt(rng, -2, 3) +
+          HEX_CAVE_DIRECTIONS.length) %
+        HEX_CAVE_DIRECTIONS.length
+      : hashStringToSeed(config.seed, region.id, index, "hex-cave-lobe-dir") %
+        HEX_CAVE_DIRECTIONS.length;
+    const sideIndex =
+      (dirIndex + (rng() > 0.5 ? 1 : -1) + HEX_CAVE_DIRECTIONS.length) %
+      HEX_CAVE_DIRECTIONS.length;
     const direction = HEX_CAVE_DIRECTIONS[dirIndex];
     const sideDirection = HEX_CAVE_DIRECTIONS[sideIndex];
-    const distance = singleCaveRegion ? randomInt(rng, 2, baseRadius + 5) : randomInt(rng, 1, Math.max(2, baseRadius + 1));
-    const sideShift = singleCaveRegion ? randomInt(rng, -2, 2) : randomInt(rng, -1, 1);
+    const distance = singleCaveRegion
+      ? randomInt(rng, 2, baseRadius + 5)
+      : randomInt(rng, 1, Math.max(2, baseRadius + 1));
+    const sideShift = singleCaveRegion
+      ? randomInt(rng, -2, 2)
+      : randomInt(rng, -1, 1);
     const lobe = {
       q: centerHex.q + direction.q * distance + sideDirection.q * sideShift,
       r: centerHex.r + direction.r * distance + sideDirection.r * sideShift,
     };
     const lobeRadius = singleCaveRegion
-      ? randomInt(rng, Math.max(3, Math.round(baseRadius * 0.28)), Math.max(4, Math.round(baseRadius * 0.58)))
+      ? randomInt(
+          rng,
+          Math.max(3, Math.round(baseRadius * 0.28)),
+          Math.max(4, Math.round(baseRadius * 0.58)),
+        )
       : randomInt(rng, 1, Math.max(2, Math.round(baseRadius * 0.55)));
-    addNoisyHexBlob(local, lobe, lobeRadius, config, [region.id, index, "lobe"], {
-      noiseScale: singleCaveRegion ? 1.65 : 1.05,
-      thresholdBias: singleCaveRegion ? 0.1 : 0,
-    });
+    addNoisyHexBlob(
+      local,
+      lobe,
+      lobeRadius,
+      config,
+      [region.id, index, "lobe"],
+      {
+        noiseScale: singleCaveRegion ? 1.65 : 1.05,
+        thresholdBias: singleCaveRegion ? 0.1 : 0,
+      },
+    );
   }
 
   if (singleCaveRegion) {
     const spurCount = randomInt(rng, 3, 6);
     for (let index = 0; index < spurCount; index += 1) {
-      const direction = HEX_CAVE_DIRECTIONS[(dominantDirection + index + randomInt(rng, 0, 2)) % HEX_CAVE_DIRECTIONS.length];
-      const length = randomInt(rng, Math.max(4, Math.round(baseRadius * 0.42)), Math.max(6, Math.round(baseRadius * 0.9)));
+      const direction =
+        HEX_CAVE_DIRECTIONS[
+          (dominantDirection + index + randomInt(rng, 0, 2)) %
+            HEX_CAVE_DIRECTIONS.length
+        ];
+      const length = randomInt(
+        rng,
+        Math.max(4, Math.round(baseRadius * 0.42)),
+        Math.max(6, Math.round(baseRadius * 0.9)),
+      );
       const spurCenter = { q: centerHex.q, r: centerHex.r };
       for (let step = 1; step <= length; step += 1) {
         spurCenter.q += direction.q;
         spurCenter.r += direction.r;
         if (rng() > 0.64) {
-          const drift = HEX_CAVE_DIRECTIONS[(HEX_CAVE_DIRECTIONS.indexOf(direction) + (rng() > 0.5 ? 1 : 5)) % HEX_CAVE_DIRECTIONS.length];
+          const drift =
+            HEX_CAVE_DIRECTIONS[
+              (HEX_CAVE_DIRECTIONS.indexOf(direction) + (rng() > 0.5 ? 1 : 5)) %
+                HEX_CAVE_DIRECTIONS.length
+            ];
           spurCenter.q += drift.q;
           spurCenter.r += drift.r;
         }
-        addNoisyHexBlob(local, spurCenter, step < length * 0.72 ? 2 : 1, config, [region.id, index, step, "spur"], { noiseScale: 0.8 });
+        addNoisyHexBlob(
+          local,
+          spurCenter,
+          step < length * 0.72 ? 2 : 1,
+          config,
+          [region.id, index, step, "spur"],
+          { noiseScale: 0.8 },
+        );
       }
     }
   }
 
-  const biteCount = singleCaveRegion ? randomInt(rng, 7, 12) : randomInt(rng, 1, 3);
+  const biteCount = singleCaveRegion
+    ? randomInt(rng, 7, 12)
+    : randomInt(rng, 1, 3);
   for (let index = 0; index < biteCount; index += 1) {
-    const direction = HEX_CAVE_DIRECTIONS[hashStringToSeed(config.seed, region.id, index, "hex-cave-bite-dir") % HEX_CAVE_DIRECTIONS.length];
-    const distance = singleCaveRegion ? randomInt(rng, Math.max(4, baseRadius - 1), baseRadius + 5) : randomInt(rng, Math.max(2, baseRadius - 1), baseRadius + 2);
+    const direction =
+      HEX_CAVE_DIRECTIONS[
+        hashStringToSeed(config.seed, region.id, index, "hex-cave-bite-dir") %
+          HEX_CAVE_DIRECTIONS.length
+      ];
+    const distance = singleCaveRegion
+      ? randomInt(rng, Math.max(4, baseRadius - 1), baseRadius + 5)
+      : randomInt(rng, Math.max(2, baseRadius - 1), baseRadius + 2);
     const bite = {
       q: centerHex.q + direction.q * distance,
       r: centerHex.r + direction.r * distance,
     };
-    const radius = singleCaveRegion ? randomInt(rng, 2, 5) : randomInt(rng, 1, 2);
-    subtractNoisyHexBite(local, bite, radius, config, [region.id, index, "bite"]);
+    const radius = singleCaveRegion
+      ? randomInt(rng, 2, 5)
+      : randomInt(rng, 1, 2);
+    subtractNoisyHexBite(local, bite, radius, config, [
+      region.id,
+      index,
+      "bite",
+    ]);
   }
 
   const connected = getLargestConnectedHexMap(local);
   connected.forEach((cell, key) => hexes.set(key, cell));
 }
 
-export function createHexCaveTunnelCells(hexes, fromRegion, toRegion, config, rng, edgeId) {
+export function createHexCaveTunnelCells(
+  hexes,
+  fromRegion,
+  toRegion,
+  config,
+  rng,
+  edgeId,
+) {
   if (!fromRegion || !toRegion) return;
   const size = getCaveHexSize(config);
   const origin = getCaveHexOrigin(config);
@@ -326,20 +459,34 @@ export function createHexCaveTunnelCells(hexes, fromRegion, toRegion, config, rn
   const length = Math.hypot(dx, dy) || 1;
   const nx = -dy / length;
   const ny = dx / length;
-  const bend = ((hashStringToSeed(config.seed, edgeId, "hex-cave-tunnel-bend") % 100) / 100 - 0.5) * config.gridSize * 5.2;
+  const bend =
+    ((hashStringToSeed(config.seed, edgeId, "hex-cave-tunnel-bend") % 100) /
+      100 -
+      0.5) *
+    config.gridSize *
+    5.2;
   const sampleCount = clamp(Math.ceil(length / (size * 0.62)), 8, 44);
 
   for (let index = 0; index <= sampleCount; index += 1) {
     const t = index / sampleCount;
     const arch = Math.sin(Math.PI * t);
-    const jitter = ((hashStringToSeed(config.seed, edgeId, index, "hex-cave-tunnel-jitter") % 100) / 100 - 0.5) * size * 0.82;
+    const jitter =
+      ((hashStringToSeed(config.seed, edgeId, index, "hex-cave-tunnel-jitter") %
+        100) /
+        100 -
+        0.5) *
+      size *
+      0.82;
     const point = {
       x: start.x + dx * t + nx * (bend * arch + jitter * arch),
       y: start.y + dy * t + ny * (bend * arch + jitter * arch),
     };
     const hex = pixelToAxialHex(point, size, origin);
-    const local = hashStringToSeed(config.seed, edgeId, index, "hex-cave-tunnel-width") % 100;
-    const radius = index < 2 || index > sampleCount - 2 ? 2 : local > 78 ? 2 : 1;
+    const local =
+      hashStringToSeed(config.seed, edgeId, index, "hex-cave-tunnel-width") %
+      100;
+    const radius =
+      index < 2 || index > sampleCount - 2 ? 2 : local > 78 ? 2 : 1;
     addHexDisc(hexes, hex, radius);
   }
 }
@@ -369,10 +516,13 @@ export function createHexCaveCells(generatedMap) {
   const size = getCaveHexSize(config);
   const origin = getCaveHexOrigin(config);
   const hexes = new Map();
-  const singleCaveRegion = normalizeRoomCount(config.roomCount, regions.length || 1) <= 1;
+  const singleCaveRegion =
+    normalizeRoomCount(config.roomCount, regions.length || 1) <= 1;
 
   regions.forEach((region) => {
-    const rng = createSeededRng(hashStringToSeed(config.seed, region.id, "hex-cave-region"));
+    const rng = createSeededRng(
+      hashStringToSeed(config.seed, region.id, "hex-cave-region"),
+    );
     const centerHex = pixelToAxialHex(region.labelPoint, size, origin);
     createHexCaveRoomCells(hexes, region, centerHex, config, rng);
   });
@@ -381,14 +531,25 @@ export function createHexCaveCells(generatedMap) {
     graph.forEach((edge) => {
       const fromRegion = regions.find((region) => region.id === edge.from);
       const toRegion = regions.find((region) => region.id === edge.to);
-      const rng = createSeededRng(hashStringToSeed(config.seed, edge.id, "hex-cave-edge"));
-      createHexCaveTunnelCells(hexes, fromRegion, toRegion, config, rng, edge.id);
+      const rng = createSeededRng(
+        hashStringToSeed(config.seed, edge.id, "hex-cave-edge"),
+      );
+      createHexCaveTunnelCells(
+        hexes,
+        fromRegion,
+        toRegion,
+        config,
+        rng,
+        edge.id,
+      );
     });
   }
 
   const smoothed = smoothHexCaveCells(hexes, singleCaveRegion ? 1 : 2);
   const connected = getLargestConnectedHexMap(smoothed);
-  return Array.from(connected.size > 0 ? connected.values() : smoothed.values());
+  return Array.from(
+    connected.size > 0 ? connected.values() : smoothed.values(),
+  );
 }
 
 export function roundGeometryPoint(point) {
@@ -405,7 +566,9 @@ export function createHexCaveBoundarySegments(hexCells, config) {
   const segments = [];
 
   hexCells.forEach((hex) => {
-    const corners = getHexCornerPoints(hex, size, origin).map(roundGeometryPoint);
+    const corners = getHexCornerPoints(hex, size, origin).map(
+      roundGeometryPoint,
+    );
     HEX_CAVE_DIRECTIONS.forEach((direction) => {
       if (hexSet.has(hexKey(hex.q + direction.q, hex.r + direction.r))) return;
       const [aIndex, bIndex] = direction.edge;
@@ -418,7 +581,11 @@ export function createHexCaveBoundarySegments(hexCells, config) {
   return segments;
 }
 
-export function createHexCavePathFromSegments(segments, config, layer = "floor") {
+export function createHexCavePathFromSegments(
+  segments,
+  config,
+  layer = "floor",
+) {
   const loops = buildBoundaryLoops(segments)
     .filter((loop) => loop.length > 3)
     .sort((a, b) => Math.abs(polygonArea(b)) - Math.abs(polygonArea(a)));
@@ -427,7 +594,11 @@ export function createHexCavePathFromSegments(segments, config, layer = "floor")
     .slice(0, 4)
     .map((loop, loopIndex) => {
       const smoothed = chaikinClosed(loop, layer === "wall" ? 2 : 3);
-      const jittered = jitterCaveContourPoints(smoothed, `${seed}:${loopIndex}`, config.gridSize * (layer === "floor" ? 0.22 : 0.16));
+      const jittered = jitterCaveContourPoints(
+        smoothed,
+        `${seed}:${loopIndex}`,
+        config.gridSize * (layer === "floor" ? 0.22 : 0.16),
+      );
       const softened = chaikinClosed(jittered, 1);
       return catmullRomClosedPath(softened);
     })
@@ -454,10 +625,24 @@ export function getApproximateSquareCellsForHexCave(hexCells, config) {
 
 export function createHexCaveSurface(generatedMap) {
   const hexCells = createHexCaveCells(generatedMap);
-  const boundarySegments = createHexCaveBoundarySegments(hexCells, generatedMap.config);
-  const visualFloorPath = createHexCavePathFromSegments(boundarySegments, generatedMap.config, "floor");
-  const wallPath = createHexCavePathFromSegments(boundarySegments, generatedMap.config, "wall");
-  const floorCells = getApproximateSquareCellsForHexCave(hexCells, generatedMap.config);
+  const boundarySegments = createHexCaveBoundarySegments(
+    hexCells,
+    generatedMap.config,
+  );
+  const visualFloorPath = createHexCavePathFromSegments(
+    boundarySegments,
+    generatedMap.config,
+    "floor",
+  );
+  const wallPath = createHexCavePathFromSegments(
+    boundarySegments,
+    generatedMap.config,
+    "wall",
+  );
+  const floorCells = getApproximateSquareCellsForHexCave(
+    hexCells,
+    generatedMap.config,
+  );
   return {
     kind: "hex-cave-map",
     geometryKind: "hex-cave-map",
@@ -471,7 +656,11 @@ export function createHexCaveSurface(generatedMap) {
   };
 }
 
-export function createOrganicMapBoundaryPath(segments, config, layer = "floor") {
+export function createOrganicMapBoundaryPath(
+  segments,
+  config,
+  layer = "floor",
+) {
   const loops = buildBoundaryLoops(segments)
     .filter((loop) => loop.length > 3)
     .sort((a, b) => Math.abs(polygonArea(b)) - Math.abs(polygonArea(a)));
@@ -506,7 +695,9 @@ export function countCellsAround(set, cell, diagonal = true) {
 export function createNaturalCaveVisualCells(floorCells, config) {
   const gridW = Math.floor(config.mapWidth / config.gridSize);
   const gridH = Math.floor(config.mapHeight / config.gridSize);
-  let current = new Set((floorCells || []).map((cell) => cellKey(cell.x, cell.y)));
+  let current = new Set(
+    (floorCells || []).map((cell) => cellKey(cell.x, cell.y)),
+  );
 
   for (let pass = 0; pass < 3; pass += 1) {
     const candidates = new Set(current);
@@ -515,7 +706,13 @@ export function createNaturalCaveVisualCells(floorCells, config) {
       for (let dy = -1; dy <= 1; dy += 1) {
         for (let dx = -1; dx <= 1; dx += 1) {
           const next = { x: cell.x + dx, y: cell.y + dy };
-          if (next.x < 1 || next.y < 1 || next.x >= gridW - 1 || next.y >= gridH - 1) continue;
+          if (
+            next.x < 1 ||
+            next.y < 1 ||
+            next.x >= gridW - 1 ||
+            next.y >= gridH - 1
+          )
+            continue;
           candidates.add(cellKey(next.x, next.y));
         }
       }
@@ -526,16 +723,22 @@ export function createNaturalCaveVisualCells(floorCells, config) {
       const cell = parseCellKey(key);
       const neighbors8 = countCellsAround(current, cell, true);
       const neighbors4 = countCellsAround(current, cell, false);
-      const noise = hashStringToSeed(config.seed, key, pass, "natural-cave-visual-cell") % 100;
-      if (!current.has(key) && (neighbors8 >= 5 || neighbors4 >= 3 || (neighbors8 >= 4 && noise < 42))) next.add(key);
-      if (current.has(key) && neighbors4 <= 1 && neighbors8 <= 2 && noise < 62) next.delete(key);
+      const noise =
+        hashStringToSeed(config.seed, key, pass, "natural-cave-visual-cell") %
+        100;
+      if (
+        !current.has(key) &&
+        (neighbors8 >= 5 || neighbors4 >= 3 || (neighbors8 >= 4 && noise < 42))
+      )
+        next.add(key);
+      if (current.has(key) && neighbors4 <= 1 && neighbors8 <= 2 && noise < 62)
+        next.delete(key);
     });
     current = next;
   }
 
   return Array.from(current).map(parseCellKey);
 }
-
 
 export function addBoundaryEdge(edges, a, b) {
   edges.push({ a, b, used: false });
@@ -561,7 +764,9 @@ export function traceBoundaryLoops(edges) {
       guard += 1;
       if (current.x === loop[0].x && current.y === loop[0].y) break;
       const candidates = starts.get(pointKey(current)) || [];
-      const nextIndex = candidates.find((candidateIndex) => !edges[candidateIndex].used);
+      const nextIndex = candidates.find(
+        (candidateIndex) => !edges[candidateIndex].used,
+      );
       if (nextIndex == null) break;
       const nextEdge = edges[nextIndex];
       nextEdge.used = true;
@@ -618,7 +823,10 @@ export function chaikinClosed(points, iterations = 2) {
 
 export function jitterCaveContourPoints(points, seed, amount) {
   if (!points || points.length === 0) return [];
-  const center = points.reduce((acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }), { x: 0, y: 0 });
+  const center = points.reduce(
+    (acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }),
+    { x: 0, y: 0 },
+  );
   center.x /= points.length;
   center.y /= points.length;
 
@@ -627,8 +835,10 @@ export function jitterCaveContourPoints(points, seed, amount) {
     const dy = point.y - center.y;
     const length = Math.hypot(dx, dy) || 1;
     const outward = { x: dx / length, y: dy / length };
-    const noiseA = (hashStringToSeed(seed, index, "cave-contour-a") % 1000) / 1000;
-    const noiseB = (hashStringToSeed(seed, index, "cave-contour-b") % 1000) / 1000;
+    const noiseA =
+      (hashStringToSeed(seed, index, "cave-contour-a") % 1000) / 1000;
+    const noiseB =
+      (hashStringToSeed(seed, index, "cave-contour-b") % 1000) / 1000;
     const radial = (noiseA - 0.5) * amount;
     const tangent = (noiseB - 0.5) * amount * 0.45;
     return {
@@ -655,7 +865,9 @@ export function catmullRomClosedPath(points) {
 }
 
 export function buildOrganicCaveContourPath(floorCells, gridSize, seed) {
-  const cells = new Set((floorCells || []).map((cell) => cellKey(cell.x, cell.y)));
+  const cells = new Set(
+    (floorCells || []).map((cell) => cellKey(cell.x, cell.y)),
+  );
   if (cells.size === 0) return "";
 
   const edges = [];
@@ -663,10 +875,14 @@ export function buildOrganicCaveContourPath(floorCells, gridSize, seed) {
     const cell = parseCellKey(key);
     const x = cell.x;
     const y = cell.y;
-    if (!cells.has(cellKey(x, y - 1))) addBoundaryEdge(edges, { x, y }, { x: x + 1, y });
-    if (!cells.has(cellKey(x + 1, y))) addBoundaryEdge(edges, { x: x + 1, y }, { x: x + 1, y: y + 1 });
-    if (!cells.has(cellKey(x, y + 1))) addBoundaryEdge(edges, { x: x + 1, y: y + 1 }, { x, y: y + 1 });
-    if (!cells.has(cellKey(x - 1, y))) addBoundaryEdge(edges, { x, y: y + 1 }, { x, y });
+    if (!cells.has(cellKey(x, y - 1)))
+      addBoundaryEdge(edges, { x, y }, { x: x + 1, y });
+    if (!cells.has(cellKey(x + 1, y)))
+      addBoundaryEdge(edges, { x: x + 1, y }, { x: x + 1, y: y + 1 });
+    if (!cells.has(cellKey(x, y + 1)))
+      addBoundaryEdge(edges, { x: x + 1, y: y + 1 }, { x, y: y + 1 });
+    if (!cells.has(cellKey(x - 1, y)))
+      addBoundaryEdge(edges, { x, y: y + 1 }, { x, y });
   });
 
   const loops = traceBoundaryLoops(edges)
@@ -676,17 +892,30 @@ export function buildOrganicCaveContourPath(floorCells, gridSize, seed) {
 
   if (loops.length === 0) return "";
 
-  return loops.slice(0, 3).map((loop, loopIndex) => {
-    const pixelLoop = loop.map((point) => ({ x: point.x * gridSize, y: point.y * gridSize }));
-    const rounded = chaikinClosed(pixelLoop, loopIndex === 0 ? 3 : 2);
-    const jittered = jitterCaveContourPoints(rounded, `${seed}:loop:${loopIndex}`, gridSize * (loopIndex === 0 ? 0.34 : 0.16));
-    const softened = chaikinClosed(jittered, 1);
-    return catmullRomClosedPath(softened);
-  }).filter(Boolean).join(" ");
+  return loops
+    .slice(0, 3)
+    .map((loop, loopIndex) => {
+      const pixelLoop = loop.map((point) => ({
+        x: point.x * gridSize,
+        y: point.y * gridSize,
+      }));
+      const rounded = chaikinClosed(pixelLoop, loopIndex === 0 ? 3 : 2);
+      const jittered = jitterCaveContourPoints(
+        rounded,
+        `${seed}:loop:${loopIndex}`,
+        gridSize * (loopIndex === 0 ? 0.34 : 0.16),
+      );
+      const softened = chaikinClosed(jittered, 1);
+      return catmullRomClosedPath(softened);
+    })
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function isSingleRegionCaveMap(generatedMap) {
-  const regions = Array.isArray(generatedMap?.regions) ? generatedMap.regions : [];
+  const regions = Array.isArray(generatedMap?.regions)
+    ? generatedMap.regions
+    : [];
   return isPureCaveMap(generatedMap) && regions.length <= 1;
 }
 
@@ -700,7 +929,7 @@ export function createSeededRandom(seed) {
   state >>>= 0;
 
   return function seededRandom() {
-    state += 0x6D2B79F5;
+    state += 0x6d2b79f5;
     let t = state;
     t = Math.imul(t ^ (t >>> 15), t | 1);
     t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
@@ -765,7 +994,12 @@ export function getCellBounds(cells) {
     maxX = Math.max(maxX, x);
     maxY = Math.max(maxY, y);
   });
-  if (!Number.isFinite(minX) || !Number.isFinite(minY) || !Number.isFinite(maxX) || !Number.isFinite(maxY)) {
+  if (
+    !Number.isFinite(minX) ||
+    !Number.isFinite(minY) ||
+    !Number.isFinite(maxX) ||
+    !Number.isFinite(maxY)
+  ) {
     return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
   }
   return { minX, minY, maxX, maxY };
@@ -774,22 +1008,27 @@ export function getCellBounds(cells) {
 export function createSingleRegionWildCaveCells(floorCells, config) {
   if (!Array.isArray(floorCells) || floorCells.length === 0) return [];
   const gridSize = config.gridSize || DEFAULT_CONFIG.gridSize;
-  const baseSeed = hashStringToSeed(config.seed, "single-region-wild-cave-cells");
+  const baseSeed = hashStringToSeed(
+    config.seed,
+    "single-region-wild-cave-cells",
+  );
   const bounds = getCellBounds(floorCells);
   const width = Math.max(1, bounds.maxX - bounds.minX + 1);
   const height = Math.max(1, bounds.maxY - bounds.minY + 1);
   const centerX = (bounds.minX + bounds.maxX) / 2;
   const centerY = (bounds.minY + bounds.maxY) / 2;
-  const longAxisBias = createSeededRandom(baseSeed, "axis-bias")() < 0.5 ? "x" : "y";
+  const longAxisBias =
+    createSeededRandom(baseSeed, "axis-bias")() < 0.5 ? "x" : "y";
   const stretch = 1.25 + createSeededRandom(baseSeed, "stretch")() * 0.85;
-  const indentationStrength = 0.28 + createSeededRandom(baseSeed, "indentation")() * 0.22;
+  const indentationStrength =
+    0.28 + createSeededRandom(baseSeed, "indentation")() * 0.22;
   const spikeStrength = 0.2 + createSeededRandom(baseSeed, "spikes")() * 0.22;
   const keep = new Set();
   const baseSet = new Set(floorCells.map((cell) => cellKey(cell.x, cell.y)));
 
   floorCells.forEach((cell) => {
-    const nx = width <= 1 ? 0 : ((cell.x - centerX) / Math.max(1, width / 2));
-    const ny = height <= 1 ? 0 : ((cell.y - centerY) / Math.max(1, height / 2));
+    const nx = width <= 1 ? 0 : (cell.x - centerX) / Math.max(1, width / 2);
+    const ny = height <= 1 ? 0 : (cell.y - centerY) / Math.max(1, height / 2);
     const sx = longAxisBias === "x" ? nx / stretch : nx * stretch;
     const sy = longAxisBias === "y" ? ny / stretch : ny * stretch;
     const angle = Math.atan2(sy, sx);
@@ -798,25 +1037,48 @@ export function createSingleRegionWildCaveCells(floorCells, config) {
       Math.sin(angle * 3 + baseSeed * 0.00011) * indentationStrength +
       Math.sin(angle * 5.7 + baseSeed * 0.00017) * 0.18 +
       Math.sin(angle * 9.3 + baseSeed * 0.00023) * spikeStrength;
-    const localNoise = valueNoise2D(cell.x * 0.43, cell.y * 0.43, baseSeed) * 0.24;
-    const edgeNoise = valueNoise2D(cell.x * 0.91, cell.y * 0.91, baseSeed + 971) * 0.18;
+    const localNoise =
+      valueNoise2D(cell.x * 0.43, cell.y * 0.43, baseSeed) * 0.24;
+    const edgeNoise =
+      valueNoise2D(cell.x * 0.91, cell.y * 0.91, baseSeed + 971) * 0.18;
     const threshold = 1.02 + radialNoise + localNoise + edgeNoise;
-    const randomPocket = createSeededRandom(baseSeed, cell.x, cell.y, "single-cave-pocket")();
+    const randomPocket = createSeededRandom(
+      baseSeed,
+      cell.x,
+      cell.y,
+      "single-cave-pocket",
+    )();
     if (radius <= threshold || (radius <= 1.22 && randomPocket > 0.78)) {
       keep.add(cellKey(cell.x, cell.y));
     }
   });
 
   const boundary = [...keep].map(parseCellKey).filter((cell) => {
-    const neighbors = ORTHOGONAL_DIRECTIONS.map((dir) => cellKey(cell.x + dir.x, cell.y + dir.y));
+    const neighbors = ORTHOGONAL_DIRECTIONS.map((dir) =>
+      cellKey(cell.x + dir.x, cell.y + dir.y),
+    );
     return neighbors.some((key) => !keep.has(key));
   });
 
   boundary.forEach((cell) => {
     const angle = Math.atan2(cell.y - centerY, cell.x - centerX);
-    const spikeRoll = createSeededRandom(baseSeed, cell.x, cell.y, "single-cave-spike")();
+    const spikeRoll = createSeededRandom(
+      baseSeed,
+      cell.x,
+      cell.y,
+      "single-cave-spike",
+    )();
     if (spikeRoll < 0.18) {
-      const length = 1 + Math.floor(createSeededRandom(baseSeed, cell.x, cell.y, "single-cave-spike-length")() * 3);
+      const length =
+        1 +
+        Math.floor(
+          createSeededRandom(
+            baseSeed,
+            cell.x,
+            cell.y,
+            "single-cave-spike-length",
+          )() * 3,
+        );
       const dx = Math.round(Math.cos(angle));
       const dy = Math.round(Math.sin(angle));
       for (let step = 1; step <= length; step += 1) {
@@ -829,7 +1091,10 @@ export function createSingleRegionWildCaveCells(floorCells, config) {
   });
 
   const cells = [...keep].map(parseCellKey);
-  const naturalized = createNaturalCaveVisualCells(cells, { ...config, gridSize });
+  const naturalized = createNaturalCaveVisualCells(cells, {
+    ...config,
+    gridSize,
+  });
   return naturalized.length > 0 ? naturalized : cells;
 }
 
@@ -839,12 +1104,27 @@ export function createCellBasedCaveSurface(generatedMap) {
   const visualFloorCells = isSingleRegionCaveMap(generatedMap)
     ? createSingleRegionWildCaveCells(floorCells, config)
     : createNaturalCaveVisualCells(floorCells, config);
-  const renderCells = visualFloorCells.length > 0 ? visualFloorCells : floorCells;
-  const boundarySegments = computeBoundarySegments(renderCells, config.gridSize);
-  const organicContourPath = buildOrganicCaveContourPath(renderCells, config.gridSize, hashStringToSeed(config.seed, "cell-cave-unified-contour"));
-  const visualFloorPath = organicContourPath || createOrganicMapBoundaryPath(boundarySegments, config, "floor") || buildFloorPath(renderCells, config.gridSize);
-  const wallPath = createOrganicMapBoundaryPath(boundarySegments, config, "wall") || visualFloorPath;
-  const sketchPath = createOrganicMapBoundaryPath(boundarySegments, config, "sketch") || wallPath;
+  const renderCells =
+    visualFloorCells.length > 0 ? visualFloorCells : floorCells;
+  const boundarySegments = computeBoundarySegments(
+    renderCells,
+    config.gridSize,
+  );
+  const organicContourPath = buildOrganicCaveContourPath(
+    renderCells,
+    config.gridSize,
+    hashStringToSeed(config.seed, "cell-cave-unified-contour"),
+  );
+  const visualFloorPath =
+    organicContourPath ||
+    createOrganicMapBoundaryPath(boundarySegments, config, "floor") ||
+    buildFloorPath(renderCells, config.gridSize);
+  const wallPath =
+    createOrganicMapBoundaryPath(boundarySegments, config, "wall") ||
+    visualFloorPath;
+  const sketchPath =
+    createOrganicMapBoundaryPath(boundarySegments, config, "sketch") ||
+    wallPath;
   return {
     kind: "organic-cave-map",
     geometryKind: "organic-cave-map",
@@ -860,16 +1140,33 @@ export function createCellBasedCaveSurface(generatedMap) {
 }
 
 export function isPureCaveMap(generatedMap) {
-  return getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) === "cave";
+  return (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) === "cave"
+  );
 }
 
-export function createRenderableSubsetMap(generatedMap, regionPredicate, corridorPredicate) {
+export function createRenderableSubsetMap(
+  generatedMap,
+  regionPredicate,
+  corridorPredicate,
+) {
   const regions = generatedMap.regions.filter(regionPredicate);
   const regionIds = new Set(regions.map((region) => region.id));
-  const corridors = generatedMap.corridors.filter((corridor) => corridorPredicate(corridor, regionIds));
-  const baseDungeonMask = buildDungeonMask(regions, corridors, generatedMap.config.gridSize);
-  const mapAccesses = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || [])
-    .filter((access) => regionIds.has(access.regionId));
+  const corridors = generatedMap.corridors.filter((corridor) =>
+    corridorPredicate(corridor, regionIds),
+  );
+  const baseDungeonMask = buildDungeonMask(
+    regions,
+    corridors,
+    generatedMap.config.gridSize,
+  );
+  const mapAccesses = (
+    generatedMap.dungeonMask.mapAccesses ||
+    generatedMap.mapAccesses ||
+    []
+  ).filter((access) => regionIds.has(access.regionId));
   const dungeonMask = { ...baseDungeonMask, mapAccesses };
   return {
     ...generatedMap,
@@ -877,19 +1174,43 @@ export function createRenderableSubsetMap(generatedMap, regionPredicate, corrido
     corridors,
     dungeonMask,
     mapAccesses,
-    props: (generatedMap.props || []).filter((prop) => regionIds.has(prop.regionId)),
-    contentBounds: computeContentBounds(dungeonMask.floorCells, generatedMap.config.gridSize, generatedMap.contentBounds || { x: 0, y: 0, width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight }),
+    props: (generatedMap.props || []).filter((prop) =>
+      regionIds.has(prop.regionId),
+    ),
+    contentBounds: computeContentBounds(
+      dungeonMask.floorCells,
+      generatedMap.config.gridSize,
+      generatedMap.contentBounds || {
+        x: 0,
+        y: 0,
+        width: generatedMap.config.mapWidth,
+        height: generatedMap.config.mapHeight,
+      },
+    ),
   };
 }
 
-export function createLevelFilteredMap(generatedMap, levelView, variant = "active") {
-  const level = normalizeLevelView(levelView, getAvailableMapLevels(generatedMap));
+export function createLevelFilteredMap(
+  generatedMap,
+  levelView,
+  variant = "active",
+) {
+  const level = normalizeLevelView(
+    levelView,
+    getAvailableMapLevels(generatedMap),
+  );
   if (level === LEVEL_VIEW_ALL) return generatedMap;
   const active = variant === "active";
   return createRenderableSubsetMap(
     generatedMap,
-    (region) => active ? getRegionLevel(region) === level : getRegionLevel(region) !== level,
-    (corridor) => active ? isCorridorVisibleOnLevel(corridor, level) : !isCorridorVisibleOnLevel(corridor, level)
+    (region) =>
+      active
+        ? getRegionLevel(region) === level
+        : getRegionLevel(region) !== level,
+    (corridor) =>
+      active
+        ? isCorridorVisibleOnLevel(corridor, level)
+        : !isCorridorVisibleOnLevel(corridor, level),
   );
 }
 
@@ -904,24 +1225,42 @@ export function buildFloorPath(floorCells, gridSize) {
   return floorCells.map((cell) => cellRectToPath(cell, gridSize)).join(" ");
 }
 
-export function buildOrganicCellBoundaryPath(region, generatedMap = null, gridSize = DEFAULT_CONFIG.gridSize) {
+export function buildOrganicCellBoundaryPath(
+  region,
+  generatedMap = null,
+  gridSize = DEFAULT_CONFIG.gridSize,
+) {
   const sourceCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   if (sourceCells.length === 0) return "";
   const seed = generatedMap?.config?.seed || DEFAULT_CONFIG.seed;
   const floorCells = isSingleRegionCaveMap(generatedMap)
-    ? createSingleRegionWildCaveCells(sourceCells, { ...(generatedMap?.config || DEFAULT_CONFIG), gridSize, seed: hashStringToSeed(seed, region.id, "single-region-path") })
+    ? createSingleRegionWildCaveCells(sourceCells, {
+        ...(generatedMap?.config || DEFAULT_CONFIG),
+        gridSize,
+        seed: hashStringToSeed(seed, region.id, "single-region-path"),
+      })
     : sourceCells;
   const organicContourPath = buildOrganicCaveContourPath(
     floorCells,
     gridSize,
-    hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-contour")
+    hashStringToSeed(
+      seed,
+      region.id,
+      region.shape || "cave",
+      "organic-region-contour",
+    ),
   );
   if (organicContourPath) return organicContourPath;
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
   const loops = buildBoundaryLoops(boundarySegments);
   const roughConfig = {
     gridSize,
-    seed: hashStringToSeed(seed, region.id, region.shape || "cave", "organic-region-surface"),
+    seed: hashStringToSeed(
+      seed,
+      region.id,
+      region.shape || "cave",
+      "organic-region-surface",
+    ),
   };
   return loops
     .map((loop, loopIndex) => roughenBoundaryLoop(loop, roughConfig, loopIndex))
@@ -931,21 +1270,33 @@ export function buildOrganicCellBoundaryPath(region, generatedMap = null, gridSi
     .join(" ");
 }
 
-export function buildOrganicCorridorBoundaryPath(corridor, generatedMap = null, gridSize = DEFAULT_CONFIG.gridSize, layer = "surface") {
-  const floorCells = Array.isArray(corridor.floorCells) ? corridor.floorCells : [];
+export function buildOrganicCorridorBoundaryPath(
+  corridor,
+  generatedMap = null,
+  gridSize = DEFAULT_CONFIG.gridSize,
+  layer = "surface",
+) {
+  const floorCells = Array.isArray(corridor.floorCells)
+    ? corridor.floorCells
+    : [];
   if (!isOrganicCorridor(corridor) || floorCells.length === 0) return "";
   const seed = generatedMap?.config?.seed || DEFAULT_CONFIG.seed;
   const organicContourPath = buildOrganicCaveContourPath(
     floorCells,
     gridSize,
-    hashStringToSeed(seed, corridor.id, layer, "organic-corridor-contour")
+    hashStringToSeed(seed, corridor.id, layer, "organic-corridor-contour"),
   );
   if (organicContourPath) return organicContourPath;
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
   const loops = buildBoundaryLoops(boundarySegments);
   const roughConfig = {
     gridSize,
-    seed: hashStringToSeed(seed, corridor.id, layer, "organic-corridor-surface"),
+    seed: hashStringToSeed(
+      seed,
+      corridor.id,
+      layer,
+      "organic-corridor-surface",
+    ),
   };
   return loops
     .map((loop, loopIndex) => roughenBoundaryLoop(loop, roughConfig, loopIndex))
@@ -955,30 +1306,60 @@ export function buildOrganicCorridorBoundaryPath(corridor, generatedMap = null, 
     .join(" ");
 }
 
-export function createCorridorSurface(corridor, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
-  const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
-  const floorCells = Array.isArray(corridor.floorCells) ? corridor.floorCells : [];
-  const organicPath = buildOrganicCorridorBoundaryPath(corridor, generatedMap, gridSize, "surface");
+export function createCorridorSurface(
+  corridor,
+  generatedMap = null,
+  gridSizeFallback = DEFAULT_CONFIG.gridSize,
+) {
+  const gridSize =
+    generatedMap?.config?.gridSize ||
+    gridSizeFallback ||
+    DEFAULT_CONFIG.gridSize;
+  const floorCells = Array.isArray(corridor.floorCells)
+    ? corridor.floorCells
+    : [];
+  const organicPath = buildOrganicCorridorBoundaryPath(
+    corridor,
+    generatedMap,
+    gridSize,
+    "surface",
+  );
   const visualFloorPath = organicPath || buildFloorPath(floorCells, gridSize);
   const organicSurface = Boolean(organicPath);
   return {
     corridorId: corridor.id,
     surfaceKind: isOrganicCorridor(corridor) ? "cave" : "dungeon",
     kind: organicSurface ? "organic-corridor-mask" : "corridor-cell-mask",
-    geometryKind: organicSurface ? "organic-corridor-mask" : "corridor-cell-mask",
+    geometryKind: organicSurface
+      ? "organic-corridor-mask"
+      : "corridor-cell-mask",
     gridSize,
     floorCells,
     pathCells: getCorridorTopologyCells(corridor),
     visualFloorPath,
     clipPath: visualFloorPath,
-    wallPath: organicSurface ? buildOrganicCorridorBoundaryPath(corridor, generatedMap, gridSize, "wall") : "",
+    wallPath: organicSurface
+      ? buildOrganicCorridorBoundaryPath(
+          corridor,
+          generatedMap,
+          gridSize,
+          "wall",
+        )
+      : "",
     boundarySegments: computeBoundarySegments(floorCells, gridSize),
   };
 }
 
-export function buildCorridorsVisualFloorPath(corridors, generatedMap, gridSize) {
+export function buildCorridorsVisualFloorPath(
+  corridors,
+  generatedMap,
+  gridSize,
+) {
   return corridors
-    .map((corridor) => createCorridorSurface(corridor, generatedMap, gridSize).visualFloorPath)
+    .map(
+      (corridor) =>
+        createCorridorSurface(corridor, generatedMap, gridSize).visualFloorPath,
+    )
     .filter(Boolean)
     .join(" ");
 }
@@ -988,7 +1369,11 @@ export function isOrganicRegionSurface(region, generatedMap = null) {
     ? getContextKey(generatedMap.config.context || generatedMap.config.biome)
     : getContextKey(region?.placementProfile || "");
   if (contextKey === "cave") {
-    return region?.shape === "cave" || region?.surfaceKind === "cave" || region?.placementProfile === "cave";
+    return (
+      region?.shape === "cave" ||
+      region?.surfaceKind === "cave" ||
+      region?.placementProfile === "cave"
+    );
   }
   if (contextKey === "mine") {
     return region?.surfaceKind === "cave" || region?.surfaceKind === "hybrid";
@@ -1004,7 +1389,8 @@ export function buildCircleRoomPath(region, gridSize) {
 
 export function getCirclePortalCellFromAnchor(region, anchor) {
   if (!anchor) return null;
-  if (anchor.portalRoomCell) return { x: anchor.portalRoomCell.x, y: anchor.portalRoomCell.y };
+  if (anchor.portalRoomCell)
+    return { x: anchor.portalRoomCell.x, y: anchor.portalRoomCell.y };
   return getSnappedCirclePortalCellFromAnchor(anchor) || anchor.cell;
 }
 
@@ -1019,7 +1405,9 @@ export function getCirclePortalSupportCell(region, portal) {
       : null;
 
   if (!supportCell) return null;
-  const distance = Math.abs(supportCell.x - portalCell.x) + Math.abs(supportCell.y - portalCell.y);
+  const distance =
+    Math.abs(supportCell.x - portalCell.x) +
+    Math.abs(supportCell.y - portalCell.y);
   if (distance !== 1) return null;
 
   return {
@@ -1034,7 +1422,9 @@ export function getCirclePortalSupportCell(region, portal) {
 export function isCellCenterOutsideCircle(cell, circle) {
   const cx = cell.x + 0.5;
   const cy = cell.y + 0.5;
-  return Math.hypot(cx - circle.cxCells, cy - circle.cyCells) > circle.rCells - 0.04;
+  return (
+    Math.hypot(cx - circle.cxCells, cy - circle.cyCells) > circle.rCells - 0.04
+  );
 }
 
 export function getCirclePortalCells(generatedMap, region) {
@@ -1059,17 +1449,23 @@ export function getCirclePortalCells(generatedMap, region) {
     [
       corridor.from === region.id ? corridor.fromAnchor : null,
       corridor.to === region.id ? corridor.toAnchor : null,
-    ].filter(Boolean).forEach((anchor) => {
-      const portalCell = getCirclePortalCellFromAnchor(region, anchor);
-      const portal = {
-        x: portalCell.x,
-        y: portalCell.y,
-        side: anchor.side,
-        anchor,
-      };
-      addCell(portal, portal);
-      addCell(getCirclePortalSupportCell(region, portal), { anchor, side: anchor.side, support: true });
-    });
+    ]
+      .filter(Boolean)
+      .forEach((anchor) => {
+        const portalCell = getCirclePortalCellFromAnchor(region, anchor);
+        const portal = {
+          x: portalCell.x,
+          y: portalCell.y,
+          side: anchor.side,
+          anchor,
+        };
+        addCell(portal, portal);
+        addCell(getCirclePortalSupportCell(region, portal), {
+          anchor,
+          side: anchor.side,
+          support: true,
+        });
+      });
   });
   return cells;
 }
@@ -1090,7 +1486,10 @@ export function getCircleCompositeSquareCells(generatedMap, region) {
     });
   };
 
-  (Array.isArray(region.circleExtensionCells) ? region.circleExtensionCells : []).forEach((cell) => {
+  (Array.isArray(region.circleExtensionCells)
+    ? region.circleExtensionCells
+    : []
+  ).forEach((cell) => {
     addCompositeCell(cell, "extension");
   });
 
@@ -1098,29 +1497,44 @@ export function getCircleCompositeSquareCells(generatedMap, region) {
     [
       corridor.from === region.id ? corridor.fromAnchor : null,
       corridor.to === region.id ? corridor.toAnchor : null,
-    ].filter((anchor) => anchor?.expandedCircleDoor && anchor.portalRoomCell).forEach((anchor) => {
-      const portal = {
-        x: anchor.portalRoomCell.x,
-        y: anchor.portalRoomCell.y,
-        side: anchor.side,
-        anchor,
-      };
-      addCompositeCell(portal, "expanded-door", anchor);
-      addCompositeCell(getCirclePortalSupportCell(region, portal), "support", anchor);
-    });
+    ]
+      .filter((anchor) => anchor?.expandedCircleDoor && anchor.portalRoomCell)
+      .forEach((anchor) => {
+        const portal = {
+          x: anchor.portalRoomCell.x,
+          y: anchor.portalRoomCell.y,
+          side: anchor.side,
+          anchor,
+        };
+        addCompositeCell(portal, "expanded-door", anchor);
+        addCompositeCell(
+          getCirclePortalSupportCell(region, portal),
+          "support",
+          anchor,
+        );
+      });
   });
 
   return Array.from(cellsByKey.values());
 }
 
-export function createCellMaskRegionSurface(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
+export function createCellMaskRegionSurface(
+  region,
+  generatedMap = null,
+  gridSizeFallback = DEFAULT_CONFIG.gridSize,
+) {
   const storedRegionSurface = generatedMap?.finalGeometry?.regions?.[region.id];
   if (storedRegionSurface) return storedRegionSurface;
 
-  const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
+  const gridSize =
+    generatedMap?.config?.gridSize ||
+    gridSizeFallback ||
+    DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const boundarySegments = computeBoundarySegments(floorCells, gridSize);
-  const organicPath = isOrganicRegionSurface(region, generatedMap) ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize) : "";
+  const organicPath = isOrganicRegionSurface(region, generatedMap)
+    ? buildOrganicCellBoundaryPath(region, generatedMap, gridSize)
+    : "";
   const visualFloorPath = organicPath || buildFloorPath(floorCells, gridSize);
   const organicSurface = Boolean(organicPath);
   return {
@@ -1142,18 +1556,31 @@ export function createCellMaskRegionSurface(region, generatedMap = null, gridSiz
   };
 }
 
-export function createCircleCompositeRegionSurface(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
+export function createCircleCompositeRegionSurface(
+  region,
+  generatedMap = null,
+  gridSizeFallback = DEFAULT_CONFIG.gridSize,
+) {
   const storedRegionSurface = generatedMap?.finalGeometry?.regions?.[region.id];
   if (storedRegionSurface) return storedRegionSurface;
 
-  const gridSize = generatedMap?.config?.gridSize || gridSizeFallback || DEFAULT_CONFIG.gridSize;
+  const gridSize =
+    generatedMap?.config?.gridSize ||
+    gridSizeFallback ||
+    DEFAULT_CONFIG.gridSize;
   const floorCells = Array.isArray(region.floorCells) ? region.floorCells : [];
   const circlePath = buildCircleRoomPath(region, gridSize);
   const extensionCells = getCircleCompositeSquareCells(generatedMap, region);
-  const extensionPath = extensionCells.map((cell) => cellRectToPath(cell, gridSize)).join(" ");
+  const extensionPath = extensionCells
+    .map((cell) => cellRectToPath(cell, gridSize))
+    .join(" ");
   const visualFloorPath = [circlePath, extensionPath].filter(Boolean).join(" ");
-  const hoverPath = generatedMap ? createCircleCompositeArcPath(region, generatedMap) : circlePath;
-  const hoverSegments = generatedMap ? getCirclePortalSquareWallSegments(region, generatedMap) : [];
+  const hoverPath = generatedMap
+    ? createCircleCompositeArcPath(region, generatedMap)
+    : circlePath;
+  const hoverSegments = generatedMap
+    ? getCirclePortalSquareWallSegments(region, generatedMap)
+    : [];
   return {
     regionId: region.id,
     surfaceKind: getRegionSurfaceKind(region, generatedMap),
@@ -1173,32 +1600,58 @@ export function createCircleCompositeRegionSurface(region, generatedMap = null, 
   };
 }
 
-export function getRegionSurface(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
-  if (region.shape === "circle") return createCircleCompositeRegionSurface(region, generatedMap, gridSizeFallback);
+export function getRegionSurface(
+  region,
+  generatedMap = null,
+  gridSizeFallback = DEFAULT_CONFIG.gridSize,
+) {
+  if (region.shape === "circle")
+    return createCircleCompositeRegionSurface(
+      region,
+      generatedMap,
+      gridSizeFallback,
+    );
   return createCellMaskRegionSurface(region, generatedMap, gridSizeFallback);
 }
 
-export function getRegionCompositeShape(region, generatedMap = null, gridSizeFallback = DEFAULT_CONFIG.gridSize) {
+export function getRegionCompositeShape(
+  region,
+  generatedMap = null,
+  gridSizeFallback = DEFAULT_CONFIG.gridSize,
+) {
   return getRegionSurface(region, generatedMap, gridSizeFallback);
 }
 
-export function buildCircleRoomVisualPath(region, gridSize, generatedMap = null) {
+export function buildCircleRoomVisualPath(
+  region,
+  gridSize,
+  generatedMap = null,
+) {
   return getRegionSurface(region, generatedMap, gridSize).visualFloorPath;
 }
 
-export function buildRegionVisualFloorPath(region, gridSize, generatedMap = null) {
+export function buildRegionVisualFloorPath(
+  region,
+  gridSize,
+  generatedMap = null,
+) {
   return getRegionSurface(region, generatedMap, gridSize).visualFloorPath;
 }
 
 export function isUsableSvgPath(path) {
-  return typeof path === "string" && path.trim().length > 0 && !/(NaN|undefined|null)/i.test(path);
+  return (
+    typeof path === "string" &&
+    path.trim().length > 0 &&
+    !/(NaN|undefined|null)/i.test(path)
+  );
 }
 
 export function createCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface) {
   const { config, dungeonMask } = generatedMap;
   return {
     kind: "map-surface",
-    geometryKind: caveSurface.geometryKind || caveSurface.kind || "hex-cave-map",
+    geometryKind:
+      caveSurface.geometryKind || caveSurface.kind || "hex-cave-map",
     surfaceKind: "cave",
     gridSize: config.gridSize,
     caveSurface,
@@ -1215,13 +1668,28 @@ export function createCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface) {
   };
 }
 
-export function createFinalCaveRegionSurface(region, generatedMap, caveSurface) {
-  const baseSurface = region.shape === "circle"
-    ? createCircleCompositeRegionSurface(region, generatedMap, generatedMap.config.gridSize)
-    : createCellMaskRegionSurface(region, generatedMap, generatedMap.config.gridSize);
-  if (!isPureCaveMap(generatedMap) || generatedMap.regions.length !== 1) return baseSurface;
+export function createFinalCaveRegionSurface(
+  region,
+  generatedMap,
+  caveSurface,
+) {
+  const baseSurface =
+    region.shape === "circle"
+      ? createCircleCompositeRegionSurface(
+          region,
+          generatedMap,
+          generatedMap.config.gridSize,
+        )
+      : createCellMaskRegionSurface(
+          region,
+          generatedMap,
+          generatedMap.config.gridSize,
+        );
+  if (!isPureCaveMap(generatedMap) || generatedMap.regions.length !== 1)
+    return baseSurface;
 
-  const boundarySegments = caveSurface.boundarySegments || baseSurface.boundarySegments || [];
+  const boundarySegments =
+    caveSurface.boundarySegments || baseSurface.boundarySegments || [];
   return {
     ...baseSurface,
     finalGeometry: true,
@@ -1229,12 +1697,21 @@ export function createFinalCaveRegionSurface(region, generatedMap, caveSurface) 
     geometryKind: caveSurface.geometryKind || baseSurface.geometryKind,
     surfaceKind: "cave",
     floorCells: caveSurface.floorCells || baseSurface.floorCells,
-    visualFloorCells: caveSurface.visualFloorCells || caveSurface.floorCells || baseSurface.floorCells,
+    visualFloorCells:
+      caveSurface.visualFloorCells ||
+      caveSurface.floorCells ||
+      baseSurface.floorCells,
     visualFloorPath: caveSurface.visualFloorPath || baseSurface.visualFloorPath,
-    clipPath: caveSurface.clipPath || caveSurface.visualFloorPath || baseSurface.clipPath,
+    clipPath:
+      caveSurface.clipPath ||
+      caveSurface.visualFloorPath ||
+      baseSurface.clipPath,
     hoverPath: caveSurface.visualFloorPath || baseSurface.hoverPath,
     hoverSegments: boundarySegments,
-    wallArcPath: caveSurface.wallPath || caveSurface.visualFloorPath || baseSurface.wallArcPath,
+    wallArcPath:
+      caveSurface.wallPath ||
+      caveSurface.visualFloorPath ||
+      baseSurface.wallArcPath,
     wallPath: caveSurface.wallPath || baseSurface.wallPath,
     sketchPath: caveSurface.sketchPath || baseSurface.sketchPath,
     wallSegments: boundarySegments,
@@ -1250,15 +1727,26 @@ export function finalizeCaveGeometry(generatedMap) {
   const caveSurface = isUsableSvgPath(hexCaveSurface.visualFloorPath)
     ? hexCaveSurface
     : createCellBasedCaveSurface(generatedMap);
-  const mapSurface = createCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface);
-  const regions = Object.fromEntries(generatedMap.regions.map((region) => [
-    region.id,
-    createFinalCaveRegionSurface(region, generatedMap, caveSurface),
-  ]));
-  const corridors = Object.fromEntries((generatedMap.corridors || []).map((corridor) => [
-    corridor.id,
-    createCorridorSurface(corridor, generatedMap, generatedMap.config.gridSize),
-  ]));
+  const mapSurface = createCaveMapSurfaceFromCaveSurface(
+    generatedMap,
+    caveSurface,
+  );
+  const regions = Object.fromEntries(
+    generatedMap.regions.map((region) => [
+      region.id,
+      createFinalCaveRegionSurface(region, generatedMap, caveSurface),
+    ]),
+  );
+  const corridors = Object.fromEntries(
+    (generatedMap.corridors || []).map((corridor) => [
+      corridor.id,
+      createCorridorSurface(
+        corridor,
+        generatedMap,
+        generatedMap.config.gridSize,
+      ),
+    ]),
+  );
 
   return {
     kind: "final-cave-geometry",
@@ -1275,10 +1763,19 @@ export function getMapSurface(generatedMap) {
   const gridSize = config.gridSize;
 
   if (isPureCaveMap(generatedMap)) {
-    const finalGeometry = generatedMap.finalGeometry?.mapSurface ? generatedMap.finalGeometry : finalizeGeometryCaveGeometry(generatedMap);
-    const caveSurface = finalGeometry?.caveSurface || finalGeometry?.mapSurface?.caveSurface || createHexCaveSurface(generatedMap);
-    const regionSurfaces = regions.map((region) => getRegionSurface(region, generatedMap, gridSize));
-    const corridorSurfaces = corridors.map((corridor) => createCorridorSurface(corridor, generatedMap, gridSize));
+    const finalGeometry = generatedMap.finalGeometry?.mapSurface
+      ? generatedMap.finalGeometry
+      : finalizeGeometryCaveGeometry(generatedMap);
+    const caveSurface =
+      finalGeometry?.caveSurface ||
+      finalGeometry?.mapSurface?.caveSurface ||
+      createHexCaveSurface(generatedMap);
+    const regionSurfaces = regions.map((region) =>
+      getRegionSurface(region, generatedMap, gridSize),
+    );
+    const corridorSurfaces = corridors.map((corridor) =>
+      createCorridorSurface(corridor, generatedMap, gridSize),
+    );
     return {
       ...createGeometryCaveMapSurfaceFromCaveSurface(generatedMap, caveSurface),
       caveSurface,
@@ -1287,26 +1784,41 @@ export function getMapSurface(generatedMap) {
     };
   }
 
-  const regionSurfaces = regions.map((region) => getRegionSurface(region, generatedMap, gridSize));
-  const corridorSurfaces = corridors.map((corridor) => createCorridorSurface(corridor, generatedMap, gridSize));
-  const vectorRegionIds = new Set(regionSurfaces
-    .filter((surface) => surface.geometryKind !== "cell-mask")
-    .map((surface) => surface.regionId));
-  const vectorCorridorIds = new Set(corridorSurfaces
-    .filter((surface) => surface.geometryKind !== "corridor-cell-mask")
-    .map((surface) => surface.corridorId));
+  const regionSurfaces = regions.map((region) =>
+    getRegionSurface(region, generatedMap, gridSize),
+  );
+  const corridorSurfaces = corridors.map((corridor) =>
+    createCorridorSurface(corridor, generatedMap, gridSize),
+  );
+  const vectorRegionIds = new Set(
+    regionSurfaces
+      .filter((surface) => surface.geometryKind !== "cell-mask")
+      .map((surface) => surface.regionId),
+  );
+  const vectorCorridorIds = new Set(
+    corridorSurfaces
+      .filter((surface) => surface.geometryKind !== "corridor-cell-mask")
+      .map((surface) => surface.corridorId),
+  );
   const vectorFloorKeys = new Set();
   regions.forEach((region) => {
     if (!vectorRegionIds.has(region.id)) return;
-    region.floorCells.forEach((cell) => vectorFloorKeys.add(cellKey(cell.x, cell.y)));
+    region.floorCells.forEach((cell) =>
+      vectorFloorKeys.add(cellKey(cell.x, cell.y)),
+    );
   });
   corridors.forEach((corridor) => {
     if (!vectorCorridorIds.has(corridor.id)) return;
-    corridor.floorCells.forEach((cell) => vectorFloorKeys.add(cellKey(cell.x, cell.y)));
+    corridor.floorCells.forEach((cell) =>
+      vectorFloorKeys.add(cellKey(cell.x, cell.y)),
+    );
   });
-  const baseFloorCells = vectorFloorKeys.size === 0
-    ? dungeonMask.floorCells
-    : dungeonMask.floorCells.filter((cell) => !vectorFloorKeys.has(cellKey(cell.x, cell.y)));
+  const baseFloorCells =
+    vectorFloorKeys.size === 0
+      ? dungeonMask.floorCells
+      : dungeonMask.floorCells.filter(
+          (cell) => !vectorFloorKeys.has(cellKey(cell.x, cell.y)),
+        );
   const vectorRegionFloorPath = regionSurfaces
     .filter((surface) => vectorRegionIds.has(surface.regionId))
     .map((surface) => surface.visualFloorPath)
@@ -1317,10 +1829,20 @@ export function getMapSurface(generatedMap) {
     .map((surface) => surface.visualFloorPath)
     .filter(Boolean)
     .join(" ");
-  const visualFloorPath = [buildFloorPath(baseFloorCells, gridSize), vectorRegionFloorPath, vectorCorridorFloorPath].filter(Boolean).join(" ");
+  const visualFloorPath = [
+    buildFloorPath(baseFloorCells, gridSize),
+    vectorRegionFloorPath,
+    vectorCorridorFloorPath,
+  ]
+    .filter(Boolean)
+    .join(" ");
   return {
     kind: "map-surface",
-    surfaceKind: regionSurfaces.some((surface) => surface.surfaceKind === "cave") || corridorSurfaces.some((surface) => surface.surfaceKind === "cave") ? "mixed" : "dungeon",
+    surfaceKind:
+      regionSurfaces.some((surface) => surface.surfaceKind === "cave") ||
+      corridorSurfaces.some((surface) => surface.surfaceKind === "cave")
+        ? "mixed"
+        : "dungeon",
     gridSize,
     regionSurfaces,
     corridorSurfaces,
@@ -1363,15 +1885,35 @@ export function createGridElements(config, gridStyle, keyPrefix) {
   const g = config.gridSize;
 
   if (style === "solid") {
-    for (let x = 0; x <= config.mapWidth; x += g) elements.push(<line key={`${keyPrefix}-x-${x}`} x1={x} y1={0} x2={x} y2={config.mapHeight} />);
-    for (let y = 0; y <= config.mapHeight; y += g) elements.push(<line key={`${keyPrefix}-y-${y}`} x1={0} y1={y} x2={config.mapWidth} y2={y} />);
+    for (let x = 0; x <= config.mapWidth; x += g)
+      elements.push(
+        <line
+          key={`${keyPrefix}-x-${x}`}
+          x1={x}
+          y1={0}
+          x2={x}
+          y2={config.mapHeight}
+        />,
+      );
+    for (let y = 0; y <= config.mapHeight; y += g)
+      elements.push(
+        <line
+          key={`${keyPrefix}-y-${y}`}
+          x1={0}
+          y1={y}
+          x2={config.mapWidth}
+          y2={y}
+        />,
+      );
     return elements;
   }
 
   if (style === "dotted") {
     for (let x = 0; x <= config.mapWidth; x += g) {
       for (let y = 0; y <= config.mapHeight; y += g) {
-        elements.push(<circle key={`${keyPrefix}-dot-${x}-${y}`} cx={x} cy={y} r={0.85} />);
+        elements.push(
+          <circle key={`${keyPrefix}-dot-${x}-${y}`} cx={x} cy={y} r={0.85} />,
+        );
       }
     }
     return elements;
@@ -1382,7 +1924,9 @@ export function createGridElements(config, gridStyle, keyPrefix) {
     const key = `${Math.round(x1)},${Math.round(y1)}:${Math.round(x2)},${Math.round(y2)}`;
     if (seen.has(key)) return;
     seen.add(key);
-    elements.push(<line key={`${keyPrefix}-dash-${key}`} x1={x1} y1={y1} x2={x2} y2={y2} />);
+    elements.push(
+      <line key={`${keyPrefix}-dash-${key}`} x1={x1} y1={y1} x2={x2} y2={y2} />,
+    );
   };
 
   for (let x = 0; x < config.mapWidth; x += g) {
@@ -1403,7 +1947,11 @@ export function createGridElements(config, gridStyle, keyPrefix) {
 export function renderGrid(config, gridStyle = "solid") {
   const style = normalizeGridStyle(gridStyle);
   if (style === "none") return null;
-  return <g className={`map-grid grid-style-${style}`}>{createGridElements(config, style, "mg")}</g>;
+  return (
+    <g className={`map-grid grid-style-${style}`}>
+      {createGridElements(config, style, "mg")}
+    </g>
+  );
 }
 
 export function createOrganicPath(region, gridSize) {
@@ -1412,7 +1960,9 @@ export function createOrganicPath(region, gridSize) {
   const py = y * gridSize;
   const pw = w * gridSize;
   const ph = h * gridSize;
-  const rng = createSeededRng(hashStringToSeed(region.id, region.name, "organic-path"));
+  const rng = createSeededRng(
+    hashStringToSeed(region.id, region.name, "organic-path"),
+  );
   const inset = Math.min(gridSize * 0.65, Math.min(pw, ph) * 0.12);
   const jitter = (amount) => (rng() - 0.5) * amount;
   const left = px + inset;
@@ -1426,20 +1976,38 @@ export function createOrganicPath(region, gridSize) {
     return buildCircleRoomPath(region, gridSize);
   }
 
-  if (region.shape === "oval" || region.shape === "shaft" || region.shape === "ritual") {
+  if (
+    region.shape === "oval" ||
+    region.shape === "shaft" ||
+    region.shape === "ritual"
+  ) {
     const rx = (right - left) / 2;
     const ry = (bottom - top) / 2;
     return `M${cx} ${cy - ry}C${cx + rx * 0.56} ${cy - ry},${cx + rx} ${cy - ry * 0.56},${cx + rx} ${cy}C${cx + rx} ${cy + ry * 0.56},${cx + rx * 0.56} ${cy + ry},${cx} ${cy + ry}C${cx - rx * 0.56} ${cy + ry},${cx - rx} ${cy + ry * 0.56},${cx - rx} ${cy}C${cx - rx} ${cy - ry * 0.56},${cx - rx * 0.56} ${cy - ry},${cx} ${cy - ry}Z`;
   }
 
-  if (region.shape === "irregular" || region.shape === "cave" || region.shape === "broken" || region.shape === "ruined-rect") {
+  if (
+    region.shape === "irregular" ||
+    region.shape === "cave" ||
+    region.shape === "broken" ||
+    region.shape === "ruined-rect"
+  ) {
     const p1 = { x: left + pw * 0.08 + jitter(8), y: top + jitter(8) };
     const p2 = { x: cx + jitter(14), y: top + ph * 0.04 + jitter(10) };
-    const p3 = { x: right - pw * 0.08 + jitter(8), y: top + ph * 0.12 + jitter(8) };
+    const p3 = {
+      x: right - pw * 0.08 + jitter(8),
+      y: top + ph * 0.12 + jitter(8),
+    };
     const p4 = { x: right + jitter(6), y: cy + jitter(14) };
-    const p5 = { x: right - pw * 0.12 + jitter(8), y: bottom - ph * 0.1 + jitter(8) };
+    const p5 = {
+      x: right - pw * 0.12 + jitter(8),
+      y: bottom - ph * 0.1 + jitter(8),
+    };
     const p6 = { x: cx + jitter(14), y: bottom + jitter(6) };
-    const p7 = { x: left + pw * 0.12 + jitter(8), y: bottom - ph * 0.06 + jitter(8) };
+    const p7 = {
+      x: left + pw * 0.12 + jitter(8),
+      y: bottom - ph * 0.06 + jitter(8),
+    };
     const p8 = { x: left + jitter(6), y: cy + jitter(14) };
     return `M${p1.x} ${p1.y}C${p1.x + pw * 0.18} ${p1.y - 4},${p2.x - pw * 0.14} ${p2.y - 8},${p2.x} ${p2.y}C${p2.x + pw * 0.18} ${p2.y + 4},${p3.x - pw * 0.16} ${p3.y - 4},${p3.x} ${p3.y}C${p4.x} ${p4.y - ph * 0.18},${p4.x + 6} ${p4.y - ph * 0.05},${p4.x} ${p4.y}C${p4.x - 2} ${p4.y + ph * 0.16},${p5.x + pw * 0.16} ${p5.y - 2},${p5.x} ${p5.y}C${p5.x - pw * 0.18} ${p5.y + 4},${p6.x + pw * 0.14} ${p6.y + 4},${p6.x} ${p6.y}C${p6.x - pw * 0.18} ${p6.y - 2},${p7.x + pw * 0.16} ${p7.y + 4},${p7.x} ${p7.y}C${p8.x} ${p8.y + ph * 0.18},${p8.x - 6} ${p8.y + ph * 0.05},${p8.x} ${p8.y}C${p8.x + 2} ${p8.y - ph * 0.16},${p1.x - pw * 0.16} ${p1.y + 2},${p1.x} ${p1.y}Z`;
   }
@@ -1458,27 +2026,65 @@ export function renderShapeDetails(region, gridSize) {
   const pw = w * gridSize;
   const ph = h * gridSize;
   const details = [];
-  if (region.shape === "archive" || region.shapeOptions?.roomType === "archive") {
+  if (
+    region.shape === "archive" ||
+    region.shapeOptions?.roomType === "archive"
+  ) {
     for (let i = 1; i < Math.max(2, Math.floor(w / 2)); i += 1) {
-      details.push(<line key={`archive-${region.id}-${i}`} className="shape-detail" x1={px + i * gridSize * 2} y1={py + gridSize * 0.55} x2={px + i * gridSize * 2} y2={py + ph - gridSize * 0.55} />);
+      details.push(
+        <line
+          key={`archive-${region.id}-${i}`}
+          className="shape-detail"
+          x1={px + i * gridSize * 2}
+          y1={py + gridSize * 0.55}
+          x2={px + i * gridSize * 2}
+          y2={py + ph - gridSize * 0.55}
+        />,
+      );
     }
   }
   if (region.shape === "alcove" || region.shapeOptions?.roomType === "alcove") {
     for (let i = 1; i < w - 1; i += 3) {
-      details.push(<path key={`alcove-n-${region.id}-${i}`} className="shape-detail" d={`M${px + i * gridSize + gridSize * 0.25} ${py + gridSize * 0.35}h${gridSize * 0.5}`} />);
-      details.push(<path key={`alcove-s-${region.id}-${i}`} className="shape-detail" d={`M${px + i * gridSize + gridSize * 0.25} ${py + ph - gridSize * 0.35}h${gridSize * 0.5}`} />);
+      details.push(
+        <path
+          key={`alcove-n-${region.id}-${i}`}
+          className="shape-detail"
+          d={`M${px + i * gridSize + gridSize * 0.25} ${py + gridSize * 0.35}h${gridSize * 0.5}`}
+        />,
+      );
+      details.push(
+        <path
+          key={`alcove-s-${region.id}-${i}`}
+          className="shape-detail"
+          d={`M${px + i * gridSize + gridSize * 0.25} ${py + ph - gridSize * 0.35}h${gridSize * 0.5}`}
+        />,
+      );
     }
   }
   if (region.shape === "shaft") {
-    details.push(<circle key={`shaft-ring-${region.id}`} className="shape-detail" cx={px + pw / 2} cy={py + ph / 2} r={Math.max(gridSize * 0.65, Math.min(pw, ph) * 0.22)} />);
+    details.push(
+      <circle
+        key={`shaft-ring-${region.id}`}
+        className="shape-detail"
+        cx={px + pw / 2}
+        cy={py + ph / 2}
+        r={Math.max(gridSize * 0.65, Math.min(pw, ph) * 0.22)}
+      />,
+    );
   }
-  return details.length > 0 ? <g clipPath={`url(#clip-${region.id})`}>{details}</g> : null;
+  return details.length > 0 ? (
+    <g clipPath={`url(#clip-${region.id})`}>{details}</g>
+  ) : null;
 }
 
 export function renderRegionClipPaths(generatedMap) {
   if (isPureCaveMap(generatedMap)) return null;
   return generatedMap.regions.map((region) => {
-    const shape = getRegionCompositeShape(region, generatedMap, generatedMap.config.gridSize);
+    const shape = getRegionCompositeShape(
+      region,
+      generatedMap,
+      generatedMap.config.gridSize,
+    );
     return (
       <clipPath key={`clip-${region.id}`} id={`clip-${region.id}`}>
         <path d={shape.clipPath} fillRule="nonzero" />
@@ -1501,7 +2107,9 @@ export function getMapAccessCenter(access) {
 
 export function getMapAccessBasis(access) {
   const normal = normalizeDirectionVector(access?.normal || { x: 1, y: 0 });
-  const tangent = normalizeDirectionVector(access?.tangent || { x: -normal.y, y: normal.x });
+  const tangent = normalizeDirectionVector(
+    access?.tangent || { x: -normal.y, y: normal.x },
+  );
   return { normal, tangent };
 }
 
@@ -1515,10 +2123,21 @@ export function createMapAccessOrganicFloorPath(access, config) {
   const outerHalf = g * 0.44;
   const innerDepth = g * 0.22;
   const outerDepth = g * 1.18;
-  const jitter = (index, amount) => ((hashStringToSeed(config.seed, seed, index, "access-organic-floor") % 1000) / 1000 - 0.5) * amount;
+  const jitter = (index, amount) =>
+    ((hashStringToSeed(config.seed, seed, index, "access-organic-floor") %
+      1000) /
+      1000 -
+      0.5) *
+    amount;
   const p = (along, outward, tangentJitter = 0, normalJitter = 0) => ({
-    x: center.x + tangent.x * (along + tangentJitter) + normal.x * (outward + normalJitter),
-    y: center.y + tangent.y * (along + tangentJitter) + normal.y * (outward + normalJitter),
+    x:
+      center.x +
+      tangent.x * (along + tangentJitter) +
+      normal.x * (outward + normalJitter),
+    y:
+      center.y +
+      tangent.y * (along + tangentJitter) +
+      normal.y * (outward + normalJitter),
   });
   const points = [
     p(-mouthHalf, -innerDepth, jitter(1, g * 0.08), jitter(2, g * 0.06)),
@@ -1528,23 +2147,37 @@ export function createMapAccessOrganicFloorPath(access, config) {
     p(outerHalf, outerDepth * 0.42, jitter(9, g * 0.12), jitter(10, g * 0.08)),
     p(mouthHalf, -innerDepth, jitter(11, g * 0.08), jitter(12, g * 0.06)),
   ];
-  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points.slice(1).map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ")} Z`;
+  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points
+    .slice(1)
+    .map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`)
+    .join(" ")} Z`;
 }
 
 export function getMapAccessFloorExtensionPath(generatedMap) {
   if (isPureCaveMap(generatedMap)) return "";
-  const accesses = generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || [];
+  const accesses =
+    generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || [];
   return accesses
-    .map((access) => createMapAccessOrganicFloorPath(access, generatedMap.config) || access?.floorExtension?.path || "")
+    .map(
+      (access) =>
+        createMapAccessOrganicFloorPath(access, generatedMap.config) ||
+        access?.floorExtension?.path ||
+        "",
+    )
     .filter(Boolean)
     .join(" ");
 }
 
 export function renderDungeonFloorClipPath(generatedMap) {
   const mapSurface = getMapSurface(generatedMap);
-  const baseClipPath = mapSurface.clipPath || mapSurface.visualFloorPath || buildVisualFloorPath(generatedMap);
+  const baseClipPath =
+    mapSurface.clipPath ||
+    mapSurface.visualFloorPath ||
+    buildVisualFloorPath(generatedMap);
   const accessExtensionPath = getMapAccessFloorExtensionPath(generatedMap);
-  const clipPath = [baseClipPath, accessExtensionPath].filter(Boolean).join(" ");
+  const clipPath = [baseClipPath, accessExtensionPath]
+    .filter(Boolean)
+    .join(" ");
   return (
     <clipPath id="clip-dungeon-floor">
       <path d={clipPath} fillRule="nonzero" />
@@ -1556,34 +2189,94 @@ export function renderFloorGrid(generatedMap, gridStyle = "solid") {
   const { config } = generatedMap;
   const style = normalizeGridStyle(gridStyle);
   if (style === "none") return null;
-  return <g className={`floor-grid grid-style-${style}`} clipPath="url(#clip-dungeon-floor)">{createGridElements(config, style, "fg")}</g>;
+  return (
+    <g
+      className={`floor-grid grid-style-${style}`}
+      clipPath="url(#clip-dungeon-floor)"
+    >
+      {createGridElements(config, style, "fg")}
+    </g>
+  );
 }
 
 export function renderVisualAccents(generatedMap) {
   const { config, dungeonMask, regions, corridors } = generatedMap;
   const contextKey = getContextKey(config.context || config.biome);
   const shouldRenderOrganicFloorAccent = (region) => {
-    if (contextKey === "mine" && (region.surfaceKind === "cave" || region.surfaceKind === "hybrid")) return false;
-    return ["irregular", "cave", "oval", "shaft", "ritual", "broken", "ruined-rect", "apse"].includes(region.shape);
+    if (
+      contextKey === "mine" &&
+      (region.surfaceKind === "cave" || region.surfaceKind === "hybrid")
+    )
+      return false;
+    return [
+      "irregular",
+      "cave",
+      "oval",
+      "shaft",
+      "ritual",
+      "broken",
+      "ruined-rect",
+      "apse",
+    ].includes(region.shape);
   };
   return (
     <>
-      <path className="room-floor-accent" d={regions.map((region) => buildRegionVisualFloorPath(region, config.gridSize, generatedMap)).join(" ")} fillRule="nonzero" />
-      <path className="corridor-floor-accent" d={buildCorridorsVisualFloorPath(corridors, generatedMap, config.gridSize)} fillRule="nonzero" />
+      <path
+        className="room-floor-accent"
+        d={regions
+          .map((region) =>
+            buildRegionVisualFloorPath(region, config.gridSize, generatedMap),
+          )
+          .join(" ")}
+        fillRule="nonzero"
+      />
+      <path
+        className="corridor-floor-accent"
+        d={buildCorridorsVisualFloorPath(
+          corridors,
+          generatedMap,
+          config.gridSize,
+        )}
+        fillRule="nonzero"
+      />
       <g className="room-shape-accents">
         {regions.filter(shouldRenderOrganicFloorAccent).map((region) => (
           <g key={`organic-${region.id}`} clipPath={`url(#clip-${region.id})`}>
-            <path className="organic-floor-accent" d={createOrganicPath(region, config.gridSize)} />
-            {region.shape === "ritual" && <path className="ritual-floor-ring" d={createOrganicPath(region, config.gridSize)} transform={`scale(.72) translate(${region.labelPoint.x * 0.38} ${region.labelPoint.y * 0.38})`} />}
+            <path
+              className="organic-floor-accent"
+              d={createOrganicPath(region, config.gridSize)}
+            />
+            {region.shape === "ritual" && (
+              <path
+                className="ritual-floor-ring"
+                d={createOrganicPath(region, config.gridSize)}
+                transform={`scale(.72) translate(${region.labelPoint.x * 0.38} ${region.labelPoint.y * 0.38})`}
+              />
+            )}
           </g>
         ))}
-        {regions.map((region) => <React.Fragment key={`shape-details-${region.id}`}>{renderShapeDetails(region, config.gridSize)}</React.Fragment>)}
+        {regions.map((region) => (
+          <React.Fragment key={`shape-details-${region.id}`}>
+            {renderShapeDetails(region, config.gridSize)}
+          </React.Fragment>
+        ))}
       </g>
       <g className="corridor-texture">
         {corridors.map((corridor) => {
           if (corridor.centerline.length < 2) return null;
-          const d = corridor.centerline.map((point, index) => `${index === 0 ? "M" : "L"}${point.x} ${point.y}`).join("");
-          return <path key={`corridor-center-${corridor.id}`} className="corridor-centerline" d={d} />;
+          const d = corridor.centerline
+            .map(
+              (point, index) =>
+                `${index === 0 ? "M" : "L"}${point.x} ${point.y}`,
+            )
+            .join("");
+          return (
+            <path
+              key={`corridor-center-${corridor.id}`}
+              className="corridor-centerline"
+              d={d}
+            />
+          );
         })}
       </g>
     </>
@@ -1592,9 +2285,16 @@ export function renderVisualAccents(generatedMap) {
 
 export function createFloorTexture(generatedMap) {
   const { config, dungeonMask } = generatedMap;
-  const rng = createSeededRng(hashStringToSeed(config.seed, config.context, "floor-texture"));
-  const cells = dungeonMask.floorCells.filter((cell) => hashStringToSeed(config.seed, cell.x, cell.y, "speckle") % 100 < 18);
-  const grains = dungeonMask.floorCells.filter((cell) => hashStringToSeed(config.seed, cell.x, cell.y, "grain") % 100 < 10);
+  const rng = createSeededRng(
+    hashStringToSeed(config.seed, config.context, "floor-texture"),
+  );
+  const cells = dungeonMask.floorCells.filter(
+    (cell) =>
+      hashStringToSeed(config.seed, cell.x, cell.y, "speckle") % 100 < 18,
+  );
+  const grains = dungeonMask.floorCells.filter(
+    (cell) => hashStringToSeed(config.seed, cell.x, cell.y, "grain") % 100 < 10,
+  );
   return (
     <g clipPath="url(#clip-dungeon-floor)">
       <g className="floor-speckle">
@@ -1612,14 +2312,1606 @@ export function createFloorTexture(generatedMap) {
           const x = (cell.x + 0.24 + rng() * 0.42) * config.gridSize;
           const y = (cell.y + 0.24 + rng() * 0.42) * config.gridSize;
           const len = 3 + rng() * 7;
-          return <path key={`grain-${cell.x}-${cell.y}-${index}`} d={`M${x} ${y}l${len} ${rng() > 0.5 ? 1.5 : -1.5}`} />;
+          return (
+            <path
+              key={`grain-${cell.x}-${cell.y}-${index}`}
+              d={`M${x} ${y}l${len} ${rng() > 0.5 ? 1.5 : -1.5}`}
+            />
+          );
         })}
       </g>
     </g>
   );
 }
 
-const HATCH_PATTERN_LIBRARY = [{"cellLines":[[[24,10],[0,25]],[[28,22],[1,39]],[[34,30],[-3,50]]],"centre":[15,32]},{"cellLines":[[[25,10],[88,8]],[[30,21],[88,16]],[[34,30],[91,22]]],"centre":[58,17]},{"cellLines":[[[86,0],[91,24]],[[97,-6],[103,19]],[[106,-14],[117,11]]],"centre":[101,6]},{"cellLines":[[[77,33],[121,8]],[[124,18],[80,41]],[[86,51],[125,29]]],"centre":[106,30]},{"cellLines":[[[125,19],[141,32]],[[123,7],[158,34]],[[131,0],[174,30]]],"centre":[142,21]},{"cellLines":[[[126,30],[194,35]],[[114,39],[195,46]],[[124,49],[196,53]]],"centre":[155,44]},{"cellLines":[[[110,40],[138,63]],[[132,69],[98,47]],[[89,53],[120,78]]],"centre":[113,58]},{"cellLines":[[[148,12],[175,-13]],[[158,19],[186,-5]],[[167,26],[198,0]]],"centre":[173,5]},{"cellLines":[[[177,20],[176,36]],[[188,11],[187,36]],[[196,6],[195,36]]],"centre":[187,24]},{"cellLines":[[[196,4],[229,27]],[[197,16],[229,35]],[[197,26],[231,45]]],"centre":[214,27]},{"cellLines":[[[206,11],[236,-13]],[[216,19],[243,-4]],[[226,24],[246,2]]],"centre":[230,8]},{"cellLines":[[[229,27],[232,46]],[[240,14],[243,39]],[[249,-1],[254,35]],[[260,-9],[266,28]]],"centre":[246,20]},{"cellLines":[[[233,44],[270,26]],[[232,55],[270,41]],[[235,64],[264,52]]],"centre":[251,50]},{"cellLines":[[[265,9],[286,-13]],[[267,19],[297,-13]],[[276,27],[301,-2]]],"centre":[282,6]},{"cellLines":[[[296,7],[303,46]],[[290,15],[293,49]],[[284,22],[288,52]]],"centre":[292,32]},{"cellLines":[[[275,31],[253,77]],[[285,41],[264,88]],[[288,52],[272,97]]],"centre":[274,61]},{"cellLines":[[[290,52],[316,58]],[[286,61],[315,69]],[[284,71],[312,78]]],"centre":[298,65]},{"cellLines":[[[278,84],[295,75]],[[275,96],[300,79]],[[280,106],[301,93]]],"centre":[289,91]},{"cellLines":[[[251,77],[284,108]],[[277,120],[243,89]],[[240,98],[271,134]]],"centre":[261,106]},{"cellLines":[[[223,65],[259,69]],[[213,78],[252,78]],[[198,92],[244,89]],[[197,102],[241,99]]],"centre":[227,84]},{"cellLines":[[[195,35],[198,60]],[[204,33],[209,62]],[[218,39],[222,69]],[[231,46],[234,67]]],"centre":[213,49]},{"cellLines":[[[182,75],[197,60]],[[208,63],[187,85]],[[191,96],[221,69]]],"centre":[200,76]},{"cellLines":[[[149,95],[188,53]],[[135,91],[174,53]],[[117,91],[164,53]],[[109,89],[151,52]]],"centre":[150,72]},{"cellLines":[[[162,85],[170,100]],[[169,77],[184,105]],[[177,67],[201,109]]],"centre":[178,89]},{"cellLines":[[[72,27],[88,54]],[[59,28],[72,53]],[[45,31],[59,54]]],"centre":[65,39]},{"cellLines":[[[47,36],[29,88]],[[5,94],[19,42]],[[20,90],[34,32]]],"centre":[28,61]},{"cellLines":[[[42,55],[87,55]],[[39,67],[78,66]],[[50,75],[72,76]]],"centre":[61,65]},{"cellLines":[[[45,68],[79,112]],[[37,75],[66,112]],[[31,87],[51,112]]],"centre":[51,92]},{"cellLines":[[[62,89],[88,55]],[[71,103],[97,60]],[[80,113],[107,68]]],"centre":[84,81]},{"cellLines":[[[216,102],[201,141]],[[211,140],[227,101]],[[240,102],[225,139]]],"centre":[219,121]},{"cellLines":[[[236,114],[249,108]],[[253,114],[232,126]],[[228,139],[263,123]]],"centre":[244,120]},{"cellLines":[[[283,106],[266,144]],[[282,141],[295,98]]],"centre":[281,122]},{"cellLines":[[[241,176],[232,141]],[[241,136],[251,173]],[[249,132],[263,169]],[[259,127],[272,166]]],"centre":[250,152]},{"cellLines":[[[268,144],[302,140]],[[302,153],[270,154]],[[273,165],[301,165]]],"centre":[282,154]},{"cellLines":[[[295,101],[329,88]],[[293,113],[321,103]],[[288,126],[315,115]]],"centre":[302,111]},{"cellLines":[[[8,130],[27,91]],[[36,96],[19,134]],[[44,104],[28,137]],[[50,111],[38,140]]],"centre":[34,117]},{"cellLines":[[[51,112],[94,114]],[[49,122],[96,124]],[[44,129],[100,135]]],"centre":[72,125]},{"cellLines":[[[90,101],[104,151]],[[95,91],[112,148]],[[100,82],[119,139]]],"centre":[103,121]},{"cellLines":[[[102,90],[151,95]],[[108,106],[153,109]],[[111,120],[155,121]]],"centre":[131,108]},{"cellLines":[[[150,96],[160,139]],[[158,91],[166,125]]],"centre":[159,111]},{"cellLines":[[[161,98],[212,112]],[[163,110],[210,123]],[[166,124],[204,136]]],"centre":[185,117]},{"cellLines":[[[-1,124],[43,146]],[[-12,133],[42,158]],[[1,150],[33,163]]],"centre":[21,149]},{"cellLines":[[[43,147],[60,143]],[[41,160],[65,150]],[[31,176],[69,157]]],"centre":[49,160]},{"cellLines":[[[51,132],[85,178]],[[64,132],[96,175]],[[74,134],[92,157]]],"centre":[76,150]},{"cellLines":[[[86,135],[100,186]],[[95,137],[107,184]],[[106,155],[118,182]]],"centre":[101,163]},{"cellLines":[[[107,156],[132,121]],[[113,168],[138,137]],[[130,166],[142,153]]],"centre":[124,152]},{"cellLines":[[[133,123],[146,165]],[[144,123],[154,152]]],"centre":[143,140]},{"cellLines":[[[146,168],[166,126]],[[177,129],[158,171]],[[189,133],[172,177]]],"centre":[168,149]},{"cellLines":[[[187,143],[231,139]],[[183,152],[234,147]],[[181,161],[236,158]]],"centre":[206,149]},{"cellLines":[[[16,157],[8,201]],[[17,204],[23,160]],[[32,164],[26,207]]],"centre":[19,184]},{"cellLines":[[[29,181],[68,193]],[[72,181],[42,173]],[[57,165],[79,171]]],"centre":[59,176]},{"cellLines":[[[72,182],[98,176]],[[68,194],[100,185]],[[82,200],[121,192]]],"centre":[90,189]},{"cellLines":[[[28,206],[56,191]],[[47,188],[29,198]]],"centre":[41,197]},{"cellLines":[[[1,153],[13,175]],[[-3,167],[10,189]],[[-12,167],[8,202]]],"centre":[3,175]},{"cellLines":[[[112,169],[147,167]],[[116,180],[158,173]],[[119,187],[173,178]]],"centre":[137,177]},{"cellLines":[[[181,162],[217,188]],[[211,199],[175,172]],[[169,178],[202,208]]],"centre":[194,185]},{"cellLines":[[[203,178],[209,161]],[[226,159],[214,186]],[[236,159],[223,192]]],"centre":[219,175]},{"cellLines":[[[241,176],[227,184]],[[224,196],[251,174]],[[275,167],[245,189]]],"centre":[241,182]},{"cellLines":[[[272,172],[295,181]],[[263,178],[301,191]],[[257,183],[302,200]]],"centre":[283,186]},{"cellLines":[[[240,185],[258,205]],[[231,193],[255,219]],[[220,201],[252,232]]],"centre":[242,206]},{"cellLines":[[[258,204],[253,234]],[[268,205],[263,238]],[[275,207],[273,245]]],"centre":[265,223]},{"cellLines":[[[257,201],[283,211]],[[247,191],[284,203]]],"centre":[268,200]},{"cellLines":[[[283,194],[283,224]],[[293,197],[290,229]],[[300,201],[300,235]]],"centre":[291,214]},{"cellLines":[[[275,221],[302,237]],[[274,232],[302,250]],[[273,248],[302,260]]],"centre":[288,241]},{"cellLines":[[[3,200],[36,207]],[[42,220],[1,206]],[[1,217],[47,230]]],"centre":[25,212]},{"cellLines":[[[1,228],[13,221]],[[27,226],[1,237]],[[2,248],[42,229]]],"centre":[13,236]},{"cellLines":[[[35,205],[52,242]],[[44,200],[61,241]],[[54,197],[73,237]]],"centre":[52,220]},{"cellLines":[[[58,209],[69,193]],[[67,224],[83,202]],[[73,236],[100,199]]],"centre":[77,212]},{"cellLines":[[[109,197],[136,222]],[[101,202],[130,229]],[[95,208],[124,235]]],"centre":[115,217]},{"cellLines":[[[118,206],[129,188]],[[144,185],[126,212]],[[135,220],[155,183]]],"centre":[135,200]},{"cellLines":[[[154,189],[180,189]],[[148,199],[190,197]],[[144,207],[199,207]]],"centre":[169,197]},{"cellLines":[[[2,250],[1,281]],[[12,246],[11,278]],[[21,242],[21,275]],[[30,237],[30,270]]],"centre":[15,259]},{"cellLines":[[[31,250],[48,232]],[[53,242],[31,263]],[[39,267],[62,243]]],"centre":[44,254]},{"cellLines":[[[88,219],[104,219]],[[81,228],[111,227]],[[73,238],[120,238]]],"centre":[96,229]},{"cellLines":[[[141,233],[154,209]],[[165,209],[145,244]],[[177,208],[148,252]]],"centre":[154,228]},{"cellLines":[[[169,225],[199,207]],[[183,230],[220,210]]],"centre":[192,218]},{"cellLines":[[[213,215],[197,242]],[[208,253],[227,209]],[[233,215],[220,252]]],"centre":[217,230]},{"cellLines":[[[230,227],[265,240]],[[228,235],[266,249]],[[225,245],[257,256]]],"centre":[246,243]},{"cellLines":[[[239,267],[273,246]],[[243,273],[278,257]],[[247,283],[279,268]]],"centre":[260,265]},{"cellLines":[[[277,251],[286,289]],[[291,258],[297,289]]],"centre":[287,272]},{"cellLines":[[[284,282],[263,299]],[[283,275],[249,298]]],"centre":[269,289]},{"cellLines":[[[232,249],[251,298]],[[221,253],[236,288]],[[208,253],[229,295]]],"centre":[228,271]},{"cellLines":[[[180,274],[207,253]],[[195,280],[211,262]],[[218,272],[206,284]]],"centre":[203,272]},{"cellLines":[[[191,227],[204,258]],[[195,264],[183,231]],[[187,269],[171,226]]],"centre":[189,248]},{"cellLines":[[[176,242],[152,283]],[[172,229],[151,266]]],"centre":[161,256]},{"cellLines":[[[163,268],[226,291]],[[157,276],[214,301]]],"centre":[191,283]},{"cellLines":[[[114,240],[127,270]],[[123,236],[139,270]],[[130,230],[147,268]]],"centre":[131,256]},{"cellLines":[[[108,268],[151,270]],[[116,284],[152,284]],[[122,298],[160,299]]],"centre":[135,284]},{"cellLines":[[[62,241],[106,261]],[[66,253],[100,271]],[[65,265],[93,284]]],"centre":[84,263]},{"cellLines":[[[84,254],[91,240]],[[106,239],[94,258]],[[116,242],[105,264]]],"centre":[102,246]},{"cellLines":[[[71,309],[115,282]],[[110,269],[58,307]]],"centre":[89,293]},{"cellLines":[[[-4,285],[42,266]],[[0,293],[41,274]],[[1,302],[45,283]]],"centre":[20,286]},{"cellLines":[[[41,269],[48,294]],[[49,257],[61,304]],[[64,245],[72,299]]],"centre":[56,280]},{"cellLines":[[[1,302],[7,319]],[[15,299],[20,311]],[[29,293],[40,311]],[[40,287],[54,311]]],"centre":[23,300]}];
+const HATCH_PATTERN_LIBRARY = [
+  {
+    cellLines: [
+      [
+        [24, 10],
+        [0, 25],
+      ],
+      [
+        [28, 22],
+        [1, 39],
+      ],
+      [
+        [34, 30],
+        [-3, 50],
+      ],
+    ],
+    centre: [15, 32],
+  },
+  {
+    cellLines: [
+      [
+        [25, 10],
+        [88, 8],
+      ],
+      [
+        [30, 21],
+        [88, 16],
+      ],
+      [
+        [34, 30],
+        [91, 22],
+      ],
+    ],
+    centre: [58, 17],
+  },
+  {
+    cellLines: [
+      [
+        [86, 0],
+        [91, 24],
+      ],
+      [
+        [97, -6],
+        [103, 19],
+      ],
+      [
+        [106, -14],
+        [117, 11],
+      ],
+    ],
+    centre: [101, 6],
+  },
+  {
+    cellLines: [
+      [
+        [77, 33],
+        [121, 8],
+      ],
+      [
+        [124, 18],
+        [80, 41],
+      ],
+      [
+        [86, 51],
+        [125, 29],
+      ],
+    ],
+    centre: [106, 30],
+  },
+  {
+    cellLines: [
+      [
+        [125, 19],
+        [141, 32],
+      ],
+      [
+        [123, 7],
+        [158, 34],
+      ],
+      [
+        [131, 0],
+        [174, 30],
+      ],
+    ],
+    centre: [142, 21],
+  },
+  {
+    cellLines: [
+      [
+        [126, 30],
+        [194, 35],
+      ],
+      [
+        [114, 39],
+        [195, 46],
+      ],
+      [
+        [124, 49],
+        [196, 53],
+      ],
+    ],
+    centre: [155, 44],
+  },
+  {
+    cellLines: [
+      [
+        [110, 40],
+        [138, 63],
+      ],
+      [
+        [132, 69],
+        [98, 47],
+      ],
+      [
+        [89, 53],
+        [120, 78],
+      ],
+    ],
+    centre: [113, 58],
+  },
+  {
+    cellLines: [
+      [
+        [148, 12],
+        [175, -13],
+      ],
+      [
+        [158, 19],
+        [186, -5],
+      ],
+      [
+        [167, 26],
+        [198, 0],
+      ],
+    ],
+    centre: [173, 5],
+  },
+  {
+    cellLines: [
+      [
+        [177, 20],
+        [176, 36],
+      ],
+      [
+        [188, 11],
+        [187, 36],
+      ],
+      [
+        [196, 6],
+        [195, 36],
+      ],
+    ],
+    centre: [187, 24],
+  },
+  {
+    cellLines: [
+      [
+        [196, 4],
+        [229, 27],
+      ],
+      [
+        [197, 16],
+        [229, 35],
+      ],
+      [
+        [197, 26],
+        [231, 45],
+      ],
+    ],
+    centre: [214, 27],
+  },
+  {
+    cellLines: [
+      [
+        [206, 11],
+        [236, -13],
+      ],
+      [
+        [216, 19],
+        [243, -4],
+      ],
+      [
+        [226, 24],
+        [246, 2],
+      ],
+    ],
+    centre: [230, 8],
+  },
+  {
+    cellLines: [
+      [
+        [229, 27],
+        [232, 46],
+      ],
+      [
+        [240, 14],
+        [243, 39],
+      ],
+      [
+        [249, -1],
+        [254, 35],
+      ],
+      [
+        [260, -9],
+        [266, 28],
+      ],
+    ],
+    centre: [246, 20],
+  },
+  {
+    cellLines: [
+      [
+        [233, 44],
+        [270, 26],
+      ],
+      [
+        [232, 55],
+        [270, 41],
+      ],
+      [
+        [235, 64],
+        [264, 52],
+      ],
+    ],
+    centre: [251, 50],
+  },
+  {
+    cellLines: [
+      [
+        [265, 9],
+        [286, -13],
+      ],
+      [
+        [267, 19],
+        [297, -13],
+      ],
+      [
+        [276, 27],
+        [301, -2],
+      ],
+    ],
+    centre: [282, 6],
+  },
+  {
+    cellLines: [
+      [
+        [296, 7],
+        [303, 46],
+      ],
+      [
+        [290, 15],
+        [293, 49],
+      ],
+      [
+        [284, 22],
+        [288, 52],
+      ],
+    ],
+    centre: [292, 32],
+  },
+  {
+    cellLines: [
+      [
+        [275, 31],
+        [253, 77],
+      ],
+      [
+        [285, 41],
+        [264, 88],
+      ],
+      [
+        [288, 52],
+        [272, 97],
+      ],
+    ],
+    centre: [274, 61],
+  },
+  {
+    cellLines: [
+      [
+        [290, 52],
+        [316, 58],
+      ],
+      [
+        [286, 61],
+        [315, 69],
+      ],
+      [
+        [284, 71],
+        [312, 78],
+      ],
+    ],
+    centre: [298, 65],
+  },
+  {
+    cellLines: [
+      [
+        [278, 84],
+        [295, 75],
+      ],
+      [
+        [275, 96],
+        [300, 79],
+      ],
+      [
+        [280, 106],
+        [301, 93],
+      ],
+    ],
+    centre: [289, 91],
+  },
+  {
+    cellLines: [
+      [
+        [251, 77],
+        [284, 108],
+      ],
+      [
+        [277, 120],
+        [243, 89],
+      ],
+      [
+        [240, 98],
+        [271, 134],
+      ],
+    ],
+    centre: [261, 106],
+  },
+  {
+    cellLines: [
+      [
+        [223, 65],
+        [259, 69],
+      ],
+      [
+        [213, 78],
+        [252, 78],
+      ],
+      [
+        [198, 92],
+        [244, 89],
+      ],
+      [
+        [197, 102],
+        [241, 99],
+      ],
+    ],
+    centre: [227, 84],
+  },
+  {
+    cellLines: [
+      [
+        [195, 35],
+        [198, 60],
+      ],
+      [
+        [204, 33],
+        [209, 62],
+      ],
+      [
+        [218, 39],
+        [222, 69],
+      ],
+      [
+        [231, 46],
+        [234, 67],
+      ],
+    ],
+    centre: [213, 49],
+  },
+  {
+    cellLines: [
+      [
+        [182, 75],
+        [197, 60],
+      ],
+      [
+        [208, 63],
+        [187, 85],
+      ],
+      [
+        [191, 96],
+        [221, 69],
+      ],
+    ],
+    centre: [200, 76],
+  },
+  {
+    cellLines: [
+      [
+        [149, 95],
+        [188, 53],
+      ],
+      [
+        [135, 91],
+        [174, 53],
+      ],
+      [
+        [117, 91],
+        [164, 53],
+      ],
+      [
+        [109, 89],
+        [151, 52],
+      ],
+    ],
+    centre: [150, 72],
+  },
+  {
+    cellLines: [
+      [
+        [162, 85],
+        [170, 100],
+      ],
+      [
+        [169, 77],
+        [184, 105],
+      ],
+      [
+        [177, 67],
+        [201, 109],
+      ],
+    ],
+    centre: [178, 89],
+  },
+  {
+    cellLines: [
+      [
+        [72, 27],
+        [88, 54],
+      ],
+      [
+        [59, 28],
+        [72, 53],
+      ],
+      [
+        [45, 31],
+        [59, 54],
+      ],
+    ],
+    centre: [65, 39],
+  },
+  {
+    cellLines: [
+      [
+        [47, 36],
+        [29, 88],
+      ],
+      [
+        [5, 94],
+        [19, 42],
+      ],
+      [
+        [20, 90],
+        [34, 32],
+      ],
+    ],
+    centre: [28, 61],
+  },
+  {
+    cellLines: [
+      [
+        [42, 55],
+        [87, 55],
+      ],
+      [
+        [39, 67],
+        [78, 66],
+      ],
+      [
+        [50, 75],
+        [72, 76],
+      ],
+    ],
+    centre: [61, 65],
+  },
+  {
+    cellLines: [
+      [
+        [45, 68],
+        [79, 112],
+      ],
+      [
+        [37, 75],
+        [66, 112],
+      ],
+      [
+        [31, 87],
+        [51, 112],
+      ],
+    ],
+    centre: [51, 92],
+  },
+  {
+    cellLines: [
+      [
+        [62, 89],
+        [88, 55],
+      ],
+      [
+        [71, 103],
+        [97, 60],
+      ],
+      [
+        [80, 113],
+        [107, 68],
+      ],
+    ],
+    centre: [84, 81],
+  },
+  {
+    cellLines: [
+      [
+        [216, 102],
+        [201, 141],
+      ],
+      [
+        [211, 140],
+        [227, 101],
+      ],
+      [
+        [240, 102],
+        [225, 139],
+      ],
+    ],
+    centre: [219, 121],
+  },
+  {
+    cellLines: [
+      [
+        [236, 114],
+        [249, 108],
+      ],
+      [
+        [253, 114],
+        [232, 126],
+      ],
+      [
+        [228, 139],
+        [263, 123],
+      ],
+    ],
+    centre: [244, 120],
+  },
+  {
+    cellLines: [
+      [
+        [283, 106],
+        [266, 144],
+      ],
+      [
+        [282, 141],
+        [295, 98],
+      ],
+    ],
+    centre: [281, 122],
+  },
+  {
+    cellLines: [
+      [
+        [241, 176],
+        [232, 141],
+      ],
+      [
+        [241, 136],
+        [251, 173],
+      ],
+      [
+        [249, 132],
+        [263, 169],
+      ],
+      [
+        [259, 127],
+        [272, 166],
+      ],
+    ],
+    centre: [250, 152],
+  },
+  {
+    cellLines: [
+      [
+        [268, 144],
+        [302, 140],
+      ],
+      [
+        [302, 153],
+        [270, 154],
+      ],
+      [
+        [273, 165],
+        [301, 165],
+      ],
+    ],
+    centre: [282, 154],
+  },
+  {
+    cellLines: [
+      [
+        [295, 101],
+        [329, 88],
+      ],
+      [
+        [293, 113],
+        [321, 103],
+      ],
+      [
+        [288, 126],
+        [315, 115],
+      ],
+    ],
+    centre: [302, 111],
+  },
+  {
+    cellLines: [
+      [
+        [8, 130],
+        [27, 91],
+      ],
+      [
+        [36, 96],
+        [19, 134],
+      ],
+      [
+        [44, 104],
+        [28, 137],
+      ],
+      [
+        [50, 111],
+        [38, 140],
+      ],
+    ],
+    centre: [34, 117],
+  },
+  {
+    cellLines: [
+      [
+        [51, 112],
+        [94, 114],
+      ],
+      [
+        [49, 122],
+        [96, 124],
+      ],
+      [
+        [44, 129],
+        [100, 135],
+      ],
+    ],
+    centre: [72, 125],
+  },
+  {
+    cellLines: [
+      [
+        [90, 101],
+        [104, 151],
+      ],
+      [
+        [95, 91],
+        [112, 148],
+      ],
+      [
+        [100, 82],
+        [119, 139],
+      ],
+    ],
+    centre: [103, 121],
+  },
+  {
+    cellLines: [
+      [
+        [102, 90],
+        [151, 95],
+      ],
+      [
+        [108, 106],
+        [153, 109],
+      ],
+      [
+        [111, 120],
+        [155, 121],
+      ],
+    ],
+    centre: [131, 108],
+  },
+  {
+    cellLines: [
+      [
+        [150, 96],
+        [160, 139],
+      ],
+      [
+        [158, 91],
+        [166, 125],
+      ],
+    ],
+    centre: [159, 111],
+  },
+  {
+    cellLines: [
+      [
+        [161, 98],
+        [212, 112],
+      ],
+      [
+        [163, 110],
+        [210, 123],
+      ],
+      [
+        [166, 124],
+        [204, 136],
+      ],
+    ],
+    centre: [185, 117],
+  },
+  {
+    cellLines: [
+      [
+        [-1, 124],
+        [43, 146],
+      ],
+      [
+        [-12, 133],
+        [42, 158],
+      ],
+      [
+        [1, 150],
+        [33, 163],
+      ],
+    ],
+    centre: [21, 149],
+  },
+  {
+    cellLines: [
+      [
+        [43, 147],
+        [60, 143],
+      ],
+      [
+        [41, 160],
+        [65, 150],
+      ],
+      [
+        [31, 176],
+        [69, 157],
+      ],
+    ],
+    centre: [49, 160],
+  },
+  {
+    cellLines: [
+      [
+        [51, 132],
+        [85, 178],
+      ],
+      [
+        [64, 132],
+        [96, 175],
+      ],
+      [
+        [74, 134],
+        [92, 157],
+      ],
+    ],
+    centre: [76, 150],
+  },
+  {
+    cellLines: [
+      [
+        [86, 135],
+        [100, 186],
+      ],
+      [
+        [95, 137],
+        [107, 184],
+      ],
+      [
+        [106, 155],
+        [118, 182],
+      ],
+    ],
+    centre: [101, 163],
+  },
+  {
+    cellLines: [
+      [
+        [107, 156],
+        [132, 121],
+      ],
+      [
+        [113, 168],
+        [138, 137],
+      ],
+      [
+        [130, 166],
+        [142, 153],
+      ],
+    ],
+    centre: [124, 152],
+  },
+  {
+    cellLines: [
+      [
+        [133, 123],
+        [146, 165],
+      ],
+      [
+        [144, 123],
+        [154, 152],
+      ],
+    ],
+    centre: [143, 140],
+  },
+  {
+    cellLines: [
+      [
+        [146, 168],
+        [166, 126],
+      ],
+      [
+        [177, 129],
+        [158, 171],
+      ],
+      [
+        [189, 133],
+        [172, 177],
+      ],
+    ],
+    centre: [168, 149],
+  },
+  {
+    cellLines: [
+      [
+        [187, 143],
+        [231, 139],
+      ],
+      [
+        [183, 152],
+        [234, 147],
+      ],
+      [
+        [181, 161],
+        [236, 158],
+      ],
+    ],
+    centre: [206, 149],
+  },
+  {
+    cellLines: [
+      [
+        [16, 157],
+        [8, 201],
+      ],
+      [
+        [17, 204],
+        [23, 160],
+      ],
+      [
+        [32, 164],
+        [26, 207],
+      ],
+    ],
+    centre: [19, 184],
+  },
+  {
+    cellLines: [
+      [
+        [29, 181],
+        [68, 193],
+      ],
+      [
+        [72, 181],
+        [42, 173],
+      ],
+      [
+        [57, 165],
+        [79, 171],
+      ],
+    ],
+    centre: [59, 176],
+  },
+  {
+    cellLines: [
+      [
+        [72, 182],
+        [98, 176],
+      ],
+      [
+        [68, 194],
+        [100, 185],
+      ],
+      [
+        [82, 200],
+        [121, 192],
+      ],
+    ],
+    centre: [90, 189],
+  },
+  {
+    cellLines: [
+      [
+        [28, 206],
+        [56, 191],
+      ],
+      [
+        [47, 188],
+        [29, 198],
+      ],
+    ],
+    centre: [41, 197],
+  },
+  {
+    cellLines: [
+      [
+        [1, 153],
+        [13, 175],
+      ],
+      [
+        [-3, 167],
+        [10, 189],
+      ],
+      [
+        [-12, 167],
+        [8, 202],
+      ],
+    ],
+    centre: [3, 175],
+  },
+  {
+    cellLines: [
+      [
+        [112, 169],
+        [147, 167],
+      ],
+      [
+        [116, 180],
+        [158, 173],
+      ],
+      [
+        [119, 187],
+        [173, 178],
+      ],
+    ],
+    centre: [137, 177],
+  },
+  {
+    cellLines: [
+      [
+        [181, 162],
+        [217, 188],
+      ],
+      [
+        [211, 199],
+        [175, 172],
+      ],
+      [
+        [169, 178],
+        [202, 208],
+      ],
+    ],
+    centre: [194, 185],
+  },
+  {
+    cellLines: [
+      [
+        [203, 178],
+        [209, 161],
+      ],
+      [
+        [226, 159],
+        [214, 186],
+      ],
+      [
+        [236, 159],
+        [223, 192],
+      ],
+    ],
+    centre: [219, 175],
+  },
+  {
+    cellLines: [
+      [
+        [241, 176],
+        [227, 184],
+      ],
+      [
+        [224, 196],
+        [251, 174],
+      ],
+      [
+        [275, 167],
+        [245, 189],
+      ],
+    ],
+    centre: [241, 182],
+  },
+  {
+    cellLines: [
+      [
+        [272, 172],
+        [295, 181],
+      ],
+      [
+        [263, 178],
+        [301, 191],
+      ],
+      [
+        [257, 183],
+        [302, 200],
+      ],
+    ],
+    centre: [283, 186],
+  },
+  {
+    cellLines: [
+      [
+        [240, 185],
+        [258, 205],
+      ],
+      [
+        [231, 193],
+        [255, 219],
+      ],
+      [
+        [220, 201],
+        [252, 232],
+      ],
+    ],
+    centre: [242, 206],
+  },
+  {
+    cellLines: [
+      [
+        [258, 204],
+        [253, 234],
+      ],
+      [
+        [268, 205],
+        [263, 238],
+      ],
+      [
+        [275, 207],
+        [273, 245],
+      ],
+    ],
+    centre: [265, 223],
+  },
+  {
+    cellLines: [
+      [
+        [257, 201],
+        [283, 211],
+      ],
+      [
+        [247, 191],
+        [284, 203],
+      ],
+    ],
+    centre: [268, 200],
+  },
+  {
+    cellLines: [
+      [
+        [283, 194],
+        [283, 224],
+      ],
+      [
+        [293, 197],
+        [290, 229],
+      ],
+      [
+        [300, 201],
+        [300, 235],
+      ],
+    ],
+    centre: [291, 214],
+  },
+  {
+    cellLines: [
+      [
+        [275, 221],
+        [302, 237],
+      ],
+      [
+        [274, 232],
+        [302, 250],
+      ],
+      [
+        [273, 248],
+        [302, 260],
+      ],
+    ],
+    centre: [288, 241],
+  },
+  {
+    cellLines: [
+      [
+        [3, 200],
+        [36, 207],
+      ],
+      [
+        [42, 220],
+        [1, 206],
+      ],
+      [
+        [1, 217],
+        [47, 230],
+      ],
+    ],
+    centre: [25, 212],
+  },
+  {
+    cellLines: [
+      [
+        [1, 228],
+        [13, 221],
+      ],
+      [
+        [27, 226],
+        [1, 237],
+      ],
+      [
+        [2, 248],
+        [42, 229],
+      ],
+    ],
+    centre: [13, 236],
+  },
+  {
+    cellLines: [
+      [
+        [35, 205],
+        [52, 242],
+      ],
+      [
+        [44, 200],
+        [61, 241],
+      ],
+      [
+        [54, 197],
+        [73, 237],
+      ],
+    ],
+    centre: [52, 220],
+  },
+  {
+    cellLines: [
+      [
+        [58, 209],
+        [69, 193],
+      ],
+      [
+        [67, 224],
+        [83, 202],
+      ],
+      [
+        [73, 236],
+        [100, 199],
+      ],
+    ],
+    centre: [77, 212],
+  },
+  {
+    cellLines: [
+      [
+        [109, 197],
+        [136, 222],
+      ],
+      [
+        [101, 202],
+        [130, 229],
+      ],
+      [
+        [95, 208],
+        [124, 235],
+      ],
+    ],
+    centre: [115, 217],
+  },
+  {
+    cellLines: [
+      [
+        [118, 206],
+        [129, 188],
+      ],
+      [
+        [144, 185],
+        [126, 212],
+      ],
+      [
+        [135, 220],
+        [155, 183],
+      ],
+    ],
+    centre: [135, 200],
+  },
+  {
+    cellLines: [
+      [
+        [154, 189],
+        [180, 189],
+      ],
+      [
+        [148, 199],
+        [190, 197],
+      ],
+      [
+        [144, 207],
+        [199, 207],
+      ],
+    ],
+    centre: [169, 197],
+  },
+  {
+    cellLines: [
+      [
+        [2, 250],
+        [1, 281],
+      ],
+      [
+        [12, 246],
+        [11, 278],
+      ],
+      [
+        [21, 242],
+        [21, 275],
+      ],
+      [
+        [30, 237],
+        [30, 270],
+      ],
+    ],
+    centre: [15, 259],
+  },
+  {
+    cellLines: [
+      [
+        [31, 250],
+        [48, 232],
+      ],
+      [
+        [53, 242],
+        [31, 263],
+      ],
+      [
+        [39, 267],
+        [62, 243],
+      ],
+    ],
+    centre: [44, 254],
+  },
+  {
+    cellLines: [
+      [
+        [88, 219],
+        [104, 219],
+      ],
+      [
+        [81, 228],
+        [111, 227],
+      ],
+      [
+        [73, 238],
+        [120, 238],
+      ],
+    ],
+    centre: [96, 229],
+  },
+  {
+    cellLines: [
+      [
+        [141, 233],
+        [154, 209],
+      ],
+      [
+        [165, 209],
+        [145, 244],
+      ],
+      [
+        [177, 208],
+        [148, 252],
+      ],
+    ],
+    centre: [154, 228],
+  },
+  {
+    cellLines: [
+      [
+        [169, 225],
+        [199, 207],
+      ],
+      [
+        [183, 230],
+        [220, 210],
+      ],
+    ],
+    centre: [192, 218],
+  },
+  {
+    cellLines: [
+      [
+        [213, 215],
+        [197, 242],
+      ],
+      [
+        [208, 253],
+        [227, 209],
+      ],
+      [
+        [233, 215],
+        [220, 252],
+      ],
+    ],
+    centre: [217, 230],
+  },
+  {
+    cellLines: [
+      [
+        [230, 227],
+        [265, 240],
+      ],
+      [
+        [228, 235],
+        [266, 249],
+      ],
+      [
+        [225, 245],
+        [257, 256],
+      ],
+    ],
+    centre: [246, 243],
+  },
+  {
+    cellLines: [
+      [
+        [239, 267],
+        [273, 246],
+      ],
+      [
+        [243, 273],
+        [278, 257],
+      ],
+      [
+        [247, 283],
+        [279, 268],
+      ],
+    ],
+    centre: [260, 265],
+  },
+  {
+    cellLines: [
+      [
+        [277, 251],
+        [286, 289],
+      ],
+      [
+        [291, 258],
+        [297, 289],
+      ],
+    ],
+    centre: [287, 272],
+  },
+  {
+    cellLines: [
+      [
+        [284, 282],
+        [263, 299],
+      ],
+      [
+        [283, 275],
+        [249, 298],
+      ],
+    ],
+    centre: [269, 289],
+  },
+  {
+    cellLines: [
+      [
+        [232, 249],
+        [251, 298],
+      ],
+      [
+        [221, 253],
+        [236, 288],
+      ],
+      [
+        [208, 253],
+        [229, 295],
+      ],
+    ],
+    centre: [228, 271],
+  },
+  {
+    cellLines: [
+      [
+        [180, 274],
+        [207, 253],
+      ],
+      [
+        [195, 280],
+        [211, 262],
+      ],
+      [
+        [218, 272],
+        [206, 284],
+      ],
+    ],
+    centre: [203, 272],
+  },
+  {
+    cellLines: [
+      [
+        [191, 227],
+        [204, 258],
+      ],
+      [
+        [195, 264],
+        [183, 231],
+      ],
+      [
+        [187, 269],
+        [171, 226],
+      ],
+    ],
+    centre: [189, 248],
+  },
+  {
+    cellLines: [
+      [
+        [176, 242],
+        [152, 283],
+      ],
+      [
+        [172, 229],
+        [151, 266],
+      ],
+    ],
+    centre: [161, 256],
+  },
+  {
+    cellLines: [
+      [
+        [163, 268],
+        [226, 291],
+      ],
+      [
+        [157, 276],
+        [214, 301],
+      ],
+    ],
+    centre: [191, 283],
+  },
+  {
+    cellLines: [
+      [
+        [114, 240],
+        [127, 270],
+      ],
+      [
+        [123, 236],
+        [139, 270],
+      ],
+      [
+        [130, 230],
+        [147, 268],
+      ],
+    ],
+    centre: [131, 256],
+  },
+  {
+    cellLines: [
+      [
+        [108, 268],
+        [151, 270],
+      ],
+      [
+        [116, 284],
+        [152, 284],
+      ],
+      [
+        [122, 298],
+        [160, 299],
+      ],
+    ],
+    centre: [135, 284],
+  },
+  {
+    cellLines: [
+      [
+        [62, 241],
+        [106, 261],
+      ],
+      [
+        [66, 253],
+        [100, 271],
+      ],
+      [
+        [65, 265],
+        [93, 284],
+      ],
+    ],
+    centre: [84, 263],
+  },
+  {
+    cellLines: [
+      [
+        [84, 254],
+        [91, 240],
+      ],
+      [
+        [106, 239],
+        [94, 258],
+      ],
+      [
+        [116, 242],
+        [105, 264],
+      ],
+    ],
+    centre: [102, 246],
+  },
+  {
+    cellLines: [
+      [
+        [71, 309],
+        [115, 282],
+      ],
+      [
+        [110, 269],
+        [58, 307],
+      ],
+    ],
+    centre: [89, 293],
+  },
+  {
+    cellLines: [
+      [
+        [-4, 285],
+        [42, 266],
+      ],
+      [
+        [0, 293],
+        [41, 274],
+      ],
+      [
+        [1, 302],
+        [45, 283],
+      ],
+    ],
+    centre: [20, 286],
+  },
+  {
+    cellLines: [
+      [
+        [41, 269],
+        [48, 294],
+      ],
+      [
+        [49, 257],
+        [61, 304],
+      ],
+      [
+        [64, 245],
+        [72, 299],
+      ],
+    ],
+    centre: [56, 280],
+  },
+  {
+    cellLines: [
+      [
+        [1, 302],
+        [7, 319],
+      ],
+      [
+        [15, 299],
+        [20, 311],
+      ],
+      [
+        [29, 293],
+        [40, 311],
+      ],
+      [
+        [40, 287],
+        [54, 311],
+      ],
+    ],
+    centre: [23, 300],
+  },
+];
 
 export function distancePointToSegment(point, segment) {
   const vx = segment.x2 - segment.x1;
@@ -1641,11 +3933,22 @@ export function distancePointToSegment(point, segment) {
 }
 
 export function isPointCloseToExternalWall(point, wallSegments, wallDistance) {
-  return wallSegments.some((segment) => distancePointToSegment(point, segment) <= wallDistance);
+  return wallSegments.some(
+    (segment) => distancePointToSegment(point, segment) <= wallDistance,
+  );
 }
 
-export function getExternalHatchingBounds(generatedMap, tileSize, wallDistance) {
-  const bounds = generatedMap.contentBounds || { x: 0, y: 0, width: generatedMap.config.mapWidth, height: generatedMap.config.mapHeight };
+export function getExternalHatchingBounds(
+  generatedMap,
+  tileSize,
+  wallDistance,
+) {
+  const bounds = generatedMap.contentBounds || {
+    x: 0,
+    y: 0,
+    width: generatedMap.config.mapWidth,
+    height: generatedMap.config.mapHeight,
+  };
   const pad = tileSize + wallDistance;
   return {
     minTileX: Math.floor((bounds.x - pad) / tileSize),
@@ -1669,15 +3972,21 @@ export function createHatchLineFromPattern(origin, scale, rawLine) {
 export function createExternalHatchingLines(generatedMap) {
   const { config, dungeonMask } = generatedMap;
   const wallSegments = trimWallSegmentsAgainstMineCaveOpenings(
-    (dungeonMask.externalWallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, config.gridSize)),
-    generatedMap
+    (dungeonMask.externalWallSegments || []).flatMap((wall) =>
+      splitWallIntoGridSegments(wall, config.gridSize),
+    ),
+    generatedMap,
   );
   if (wallSegments.length === 0) return [];
 
   const tileSize = config.gridSize * 7.5;
   const wallDistance = config.gridSize * 1.45;
   const scale = tileSize / 300;
-  const bounds = getExternalHatchingBounds(generatedMap, tileSize, wallDistance);
+  const bounds = getExternalHatchingBounds(
+    generatedMap,
+    tileSize,
+    wallDistance,
+  );
   const lines = [];
 
   for (let tileX = bounds.minTileX; tileX <= bounds.maxTileX; tileX += 1) {
@@ -1688,7 +3997,8 @@ export function createExternalHatchingLines(generatedMap) {
           x: origin.x + pattern.centre[0] * scale,
           y: origin.y + pattern.centre[1] * scale,
         };
-        if (!isPointCloseToExternalWall(centre, wallSegments, wallDistance)) return;
+        if (!isPointCloseToExternalWall(centre, wallSegments, wallDistance))
+          return;
         pattern.cellLines.forEach((rawLine) => {
           lines.push(createHatchLineFromPattern(origin, scale, rawLine));
         });
@@ -1702,12 +4012,23 @@ export function createExternalHatchingLines(generatedMap) {
 export function renderExternalHatching(generatedMap) {
   const lines = createExternalHatchingLines(generatedMap);
   if (lines.length === 0) return null;
-  const d = lines.map((line) => `M${line.x1.toFixed(2)} ${line.y1.toFixed(2)}L${line.x2.toFixed(2)} ${line.y2.toFixed(2)}`).join(" ");
-  return <g className="external-hatching"><path d={d} /></g>;
+  const d = lines
+    .map(
+      (line) =>
+        `M${line.x1.toFixed(2)} ${line.y1.toFixed(2)}L${line.x2.toFixed(2)} ${line.y2.toFixed(2)}`,
+    )
+    .join(" ");
+  return (
+    <g className="external-hatching">
+      <path d={d} />
+    </g>
+  );
 }
 
 export function isMapPointInsideFloor(point, floorSet, gridSize) {
-  return floorSet.has(cellKey(Math.floor(point.x / gridSize), Math.floor(point.y / gridSize)));
+  return floorSet.has(
+    cellKey(Math.floor(point.x / gridSize), Math.floor(point.y / gridSize)),
+  );
 }
 
 export function inferExternalWallNormal(segment, floorSet, gridSize) {
@@ -1719,15 +4040,31 @@ export function inferExternalWallNormal(segment, floorSet, gridSize) {
   const offset = gridSize * 0.5;
 
   if (horizontal) {
-    const above = isMapPointInsideFloor({ x: mid.x, y: mid.y - offset }, floorSet, gridSize);
-    const below = isMapPointInsideFloor({ x: mid.x, y: mid.y + offset }, floorSet, gridSize);
+    const above = isMapPointInsideFloor(
+      { x: mid.x, y: mid.y - offset },
+      floorSet,
+      gridSize,
+    );
+    const below = isMapPointInsideFloor(
+      { x: mid.x, y: mid.y + offset },
+      floorSet,
+      gridSize,
+    );
     if (above && !below) return { x: 0, y: 1 };
     if (below && !above) return { x: 0, y: -1 };
     return null;
   }
 
-  const left = isMapPointInsideFloor({ x: mid.x - offset, y: mid.y }, floorSet, gridSize);
-  const right = isMapPointInsideFloor({ x: mid.x + offset, y: mid.y }, floorSet, gridSize);
+  const left = isMapPointInsideFloor(
+    { x: mid.x - offset, y: mid.y },
+    floorSet,
+    gridSize,
+  );
+  const right = isMapPointInsideFloor(
+    { x: mid.x + offset, y: mid.y },
+    floorSet,
+    gridSize,
+  );
   if (left && !right) return { x: 1, y: 0 };
   if (right && !left) return { x: -1, y: 0 };
   return null;
@@ -1784,33 +4121,66 @@ export function buildBoundaryLoops(segments) {
       if (current.x === start.x && current.y === start.y) break;
       const currentKey = boundaryPointKey(current);
       const candidates = (adjacency.get(currentKey) || [])
-        .filter((candidate) => !(candidate.x === previous.x && candidate.y === previous.y))
+        .filter(
+          (candidate) =>
+            !(candidate.x === previous.x && candidate.y === previous.y),
+        )
         .filter((candidate) => unused.has(boundaryEdgeKey(current, candidate)));
       if (candidates.length === 0) break;
       const next = candidates.sort((a, b) => {
         const da = Math.abs(a.x - current.x) + Math.abs(a.y - current.y);
         const db = Math.abs(b.x - current.x) + Math.abs(b.y - current.y);
-        return da - db || boundaryPointKey(a).localeCompare(boundaryPointKey(b));
+        return (
+          da - db || boundaryPointKey(a).localeCompare(boundaryPointKey(b))
+        );
       })[0];
       unused.delete(boundaryEdgeKey(current, next));
       previous = current;
       current = next;
     }
 
-    const closed = loop.length > 3 && loop[0].x === loop[loop.length - 1].x && loop[0].y === loop[loop.length - 1].y;
+    const closed =
+      loop.length > 3 &&
+      loop[0].x === loop[loop.length - 1].x &&
+      loop[0].y === loop[loop.length - 1].y;
     if (closed) loops.push(loop.slice(0, -1));
   }
 
   return loops;
 }
 
-export function createRoughBoundaryPoint(point, tangent, normal, config, loopIndex, segmentIndex, stepIndex) {
-  const rng = createSeededRng(hashStringToSeed(config.seed, loopIndex, segmentIndex, stepIndex, point.x, point.y, "halo-geometry"));
+export function createRoughBoundaryPoint(
+  point,
+  tangent,
+  normal,
+  config,
+  loopIndex,
+  segmentIndex,
+  stepIndex,
+) {
+  const rng = createSeededRng(
+    hashStringToSeed(
+      config.seed,
+      loopIndex,
+      segmentIndex,
+      stepIndex,
+      point.x,
+      point.y,
+      "halo-geometry",
+    ),
+  );
   const maxNormalOffset = config.gridSize * 0.32;
   const broad = (rng() - 0.5) * config.gridSize * 0.34;
-  const chip = rng() > 0.86 ? (rng() > 0.5 ? 1 : -1) * config.gridSize * (0.06 + rng() * 0.1) : 0;
+  const chip =
+    rng() > 0.86
+      ? (rng() > 0.5 ? 1 : -1) * config.gridSize * (0.06 + rng() * 0.1)
+      : 0;
   const normalOffset = clamp(broad + chip, -maxNormalOffset, maxNormalOffset);
-  const tangentOffset = clamp((rng() - 0.5) * config.gridSize * 0.1, -config.gridSize * 0.05, config.gridSize * 0.05);
+  const tangentOffset = clamp(
+    (rng() - 0.5) * config.gridSize * 0.1,
+    -config.gridSize * 0.05,
+    config.gridSize * 0.05,
+  );
   return {
     x: point.x + normal.x * normalOffset + tangent.x * tangentOffset,
     y: point.y + normal.y * normalOffset + tangent.y * tangentOffset,
@@ -1854,7 +4224,7 @@ export function limitRoughBoundaryDeltas(points, config) {
 
 export function roughenBoundaryLoop(loop, config, loopIndex) {
   const points = [];
-  const stepLength = config.gridSize * 0.40;
+  const stepLength = config.gridSize * 0.4;
   for (let segmentIndex = 0; segmentIndex < loop.length; segmentIndex += 1) {
     const a = loop[segmentIndex];
     const b = loop[(segmentIndex + 1) % loop.length];
@@ -1869,9 +4239,29 @@ export function roughenBoundaryLoop(loop, config, loopIndex) {
       if (segmentIndex > 0 || stepIndex > 0) {
         const t = stepIndex / steps;
         const base = { x: a.x + dx * t, y: a.y + dy * t };
-        points.push(createRoughBoundaryPoint(base, tangent, normal, config, loopIndex, segmentIndex, stepIndex));
+        points.push(
+          createRoughBoundaryPoint(
+            base,
+            tangent,
+            normal,
+            config,
+            loopIndex,
+            segmentIndex,
+            stepIndex,
+          ),
+        );
       } else {
-        points.push(createRoughBoundaryPoint(a, tangent, normal, config, loopIndex, segmentIndex, stepIndex));
+        points.push(
+          createRoughBoundaryPoint(
+            a,
+            tangent,
+            normal,
+            config,
+            loopIndex,
+            segmentIndex,
+            stepIndex,
+          ),
+        );
       }
     }
   }
@@ -1879,14 +4269,28 @@ export function roughenBoundaryLoop(loop, config, loopIndex) {
 }
 
 export function createExternalHaloBufferPath(generatedMap) {
-  const loops = buildBoundaryLoops(trimWallSegmentsAgainstMineCaveOpenings(
-    (generatedMap.dungeonMask.externalWallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize)),
-    generatedMap
-  ));
+  const loops = buildBoundaryLoops(
+    trimWallSegmentsAgainstMineCaveOpenings(
+      (generatedMap.dungeonMask.externalWallSegments || []).flatMap((wall) =>
+        splitWallIntoGridSegments(wall, generatedMap.config.gridSize),
+      ),
+      generatedMap,
+    ),
+  );
   return loops
-    .map((loop, loopIndex) => roughenBoundaryLoop(loop, generatedMap.config, loopIndex))
+    .map((loop, loopIndex) =>
+      roughenBoundaryLoop(loop, generatedMap.config, loopIndex),
+    )
     .filter((points) => points.length > 2)
-    .map((points) => points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join("") + "Z")
+    .map(
+      (points) =>
+        points
+          .map(
+            (point, index) =>
+              `${index === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+          )
+          .join("") + "Z",
+    )
     .join(" ");
 }
 
@@ -1904,15 +4308,48 @@ export function renderExternalHatchingUnderlay(generatedMap) {
 export function createRoughWallPath(wall, config, index, layer = "main") {
   const length = Math.hypot(wall.x2 - wall.x1, wall.y2 - wall.y1);
   if (length <= 0) return "";
-  const rng = createSeededRng(hashStringToSeed(config.seed, index, wall.x1, wall.y1, wall.x2, wall.y2, layer, "wall-rough-path"));
+  const rng = createSeededRng(
+    hashStringToSeed(
+      config.seed,
+      index,
+      wall.x1,
+      wall.y1,
+      wall.x2,
+      wall.y2,
+      layer,
+      "wall-rough-path",
+    ),
+  );
   const dx = (wall.x2 - wall.x1) / length;
   const dy = (wall.y2 - wall.y1) / length;
   const nx = -dy;
   const ny = dx;
-  const stepLength = config.gridSize * (layer === "main" ? 0.54 : layer === "door" ? 0.32 : layer === "door-sketch" ? 0.36 : 0.66);
+  const stepLength =
+    config.gridSize *
+    (layer === "main"
+      ? 0.54
+      : layer === "door"
+        ? 0.32
+        : layer === "door-sketch"
+          ? 0.36
+          : 0.66);
   const steps = Math.max(1, Math.ceil(length / stepLength));
-  const jitterAmount = layer === "main" ? 1.02 : layer === "door" ? 1.28 : layer === "door-sketch" ? 1.55 : 1.52;
-  const tangentJitterAmount = layer === "main" ? 0.28 : layer === "door" ? 0.32 : layer === "door-sketch" ? 0.42 : 0.48;
+  const jitterAmount =
+    layer === "main"
+      ? 1.02
+      : layer === "door"
+        ? 1.28
+        : layer === "door-sketch"
+          ? 1.55
+          : 1.52;
+  const tangentJitterAmount =
+    layer === "main"
+      ? 0.28
+      : layer === "door"
+        ? 0.32
+        : layer === "door-sketch"
+          ? 0.42
+          : 0.48;
   const points = [];
 
   for (let step = 0; step <= steps; step += 1) {
@@ -1921,12 +4358,25 @@ export function createRoughWallPath(wall, config, index, layer = "main") {
     const normalJitter = (rng() - 0.5) * jitterAmount * endpointFactor;
     const tangentJitter = (rng() - 0.5) * tangentJitterAmount * endpointFactor;
     points.push({
-      x: wall.x1 + (wall.x2 - wall.x1) * t + nx * normalJitter + dx * tangentJitter,
-      y: wall.y1 + (wall.y2 - wall.y1) * t + ny * normalJitter + dy * tangentJitter,
+      x:
+        wall.x1 +
+        (wall.x2 - wall.x1) * t +
+        nx * normalJitter +
+        dx * tangentJitter,
+      y:
+        wall.y1 +
+        (wall.y2 - wall.y1) * t +
+        ny * normalJitter +
+        dy * tangentJitter,
     });
   }
 
-  return points.map((point, pointIndex) => `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join("");
+  return points
+    .map(
+      (point, pointIndex) =>
+        `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+    )
+    .join("");
 }
 
 export function normalizeAngle(angle) {
@@ -1942,13 +4392,24 @@ export function angleDistance(a, b) {
 export function isCirclePointInsideRectAtAngle(circle, rect, angle, inset = 0) {
   const x = circle.cx + Math.cos(angle) * circle.r;
   const y = circle.cy + Math.sin(angle) * circle.r;
-  return x >= rect.x + inset && x <= rect.x + rect.w - inset && y >= rect.y + inset && y <= rect.y + rect.h - inset;
+  return (
+    x >= rect.x + inset &&
+    x <= rect.x + rect.w - inset &&
+    y >= rect.y + inset &&
+    y <= rect.y + rect.h - inset
+  );
 }
 
 export function getCircleRectIntersectionAngles(circle, rect) {
   const angles = [];
   const addPoint = (x, y) => {
-    if (x < rect.x - 0.01 || x > rect.x + rect.w + 0.01 || y < rect.y - 0.01 || y > rect.y + rect.h + 0.01) return;
+    if (
+      x < rect.x - 0.01 ||
+      x > rect.x + rect.w + 0.01 ||
+      y < rect.y - 0.01 ||
+      y > rect.y + rect.h + 0.01
+    )
+      return;
     angles.push(normalizeAngle(Math.atan2(y - circle.cy, x - circle.cx)));
   };
 
@@ -1970,15 +4431,24 @@ export function getCircleRectIntersectionAngles(circle, rect) {
     addPoint(circle.cx + dx, y);
   });
 
-  return Array.from(new Set(angles.map((angle) => Math.round(angle * 100000) / 100000)));
+  return Array.from(
+    new Set(angles.map((angle) => Math.round(angle * 100000) / 100000)),
+  );
 }
 
 export function getCircleRectInsideIntervals(circle, rect, gridSize) {
   const full = Math.PI * 2;
   const intersections = getCircleRectIntersectionAngles(circle, rect);
   if (intersections.length === 0) {
-    const centerAngle = normalizeAngle(Math.atan2(rect.y + rect.h / 2 - circle.cy, rect.x + rect.w / 2 - circle.cx));
-    return isCirclePointInsideRectAtAngle(circle, rect, centerAngle) ? [{ start: 0, end: full }] : [];
+    const centerAngle = normalizeAngle(
+      Math.atan2(
+        rect.y + rect.h / 2 - circle.cy,
+        rect.x + rect.w / 2 - circle.cx,
+      ),
+    );
+    return isCirclePointInsideRectAtAngle(circle, rect, centerAngle)
+      ? [{ start: 0, end: full }]
+      : [];
   }
 
   const cuts = [0, full, ...intersections].sort((a, b) => a - b);
@@ -1989,7 +4459,8 @@ export function getCircleRectInsideIntervals(circle, rect, gridSize) {
     const end = cuts[index + 1];
     if (end - start <= 0.0001) continue;
     const mid = (start + end) / 2;
-    if (isCirclePointInsideRectAtAngle(circle, rect, mid, inset)) intervals.push({ start, end });
+    if (isCirclePointInsideRectAtAngle(circle, rect, mid, inset))
+      intervals.push({ start, end });
   }
 
   const wrapMid = normalizeAngle((cuts[cuts.length - 1] + full + cuts[0]) / 2);
@@ -2002,7 +4473,7 @@ export function getCircleRectInsideIntervals(circle, rect, gridSize) {
 }
 
 export function shrinkCircleDoorGapForWallOverlap(interval, circle, gridSize) {
-  const overlap = Math.max(0.01, gridSize * 0.025 / Math.max(1, circle.r));
+  const overlap = Math.max(0.01, (gridSize * 0.025) / Math.max(1, circle.r));
   const length = interval.end - interval.start;
   if (length <= overlap * 2.6) return interval;
   return {
@@ -2012,20 +4483,32 @@ export function shrinkCircleDoorGapForWallOverlap(interval, circle, gridSize) {
 }
 
 export function getCircleDoorGaps(region, generatedMap) {
-  const circle = getCircleGeometryFromRegion(region, generatedMap.config.gridSize);
+  const circle = getCircleGeometryFromRegion(
+    region,
+    generatedMap.config.gridSize,
+  );
   const g = generatedMap.config.gridSize;
-  const squareGaps = getCircleCompositeSquareCells(generatedMap, region).flatMap((cell) => {
+  const squareGaps = getCircleCompositeSquareCells(
+    generatedMap,
+    region,
+  ).flatMap((cell) => {
     const rect = { x: cell.x * g, y: cell.y * g, w: g, h: g };
     return getCircleRectInsideIntervals(circle, rect, g)
       .map((interval) => shrinkCircleDoorGapForWallOverlap(interval, circle, g))
       .filter((interval) => interval.end - interval.start > 0.025);
   });
-  const accessGaps = (generatedMap.dungeonMask?.mapAccesses || generatedMap.mapAccesses || [])
+  const accessGaps = (
+    generatedMap.dungeonMask?.mapAccesses ||
+    generatedMap.mapAccesses ||
+    []
+  )
     .filter((access) => access.regionId === region.id)
     .flatMap((access) => {
       const rect = { x: access.cell.x * g, y: access.cell.y * g, w: g, h: g };
       return getCircleRectInsideIntervals(circle, rect, g)
-        .map((interval) => shrinkCircleDoorGapForWallOverlap(interval, circle, g))
+        .map((interval) =>
+          shrinkCircleDoorGapForWallOverlap(interval, circle, g),
+        )
         .filter((interval) => interval.end - interval.start > 0.025);
     });
   return [...squareGaps, ...accessGaps];
@@ -2033,9 +4516,14 @@ export function getCircleDoorGaps(region, generatedMap) {
 
 export function mergeAngleIntervals(intervals) {
   if (intervals.length === 0) return [];
-  const expanded = intervals.flatMap((interval) => interval.start <= interval.end
-    ? [interval]
-    : [{ start: 0, end: interval.end }, { start: interval.start, end: Math.PI * 2 }]);
+  const expanded = intervals.flatMap((interval) =>
+    interval.start <= interval.end
+      ? [interval]
+      : [
+          { start: 0, end: interval.end },
+          { start: interval.start, end: Math.PI * 2 },
+        ],
+  );
   expanded.sort((a, b) => a.start - b.start);
   const merged = [];
   expanded.forEach((interval) => {
@@ -2070,44 +4558,73 @@ export function createCircleArcPathFromInterval(circle, interval) {
 }
 
 export function createCircleCompositeArcPath(region, generatedMap) {
-  const circle = getCircleGeometryFromRegion(region, generatedMap.config.gridSize);
+  const circle = getCircleGeometryFromRegion(
+    region,
+    generatedMap.config.gridSize,
+  );
   const gaps = getCircleDoorGaps(region, generatedMap);
   const intervals = getVisibleCircleIntervals(gaps);
-  return intervals.map((interval) => createCircleArcPathFromInterval(circle, interval)).join(" ");
+  return intervals
+    .map((interval) => createCircleArcPathFromInterval(circle, interval))
+    .join(" ");
 }
 
-export function createRoughCircleWallPath(region, generatedMap, layer = "main") {
-  const circle = getCircleGeometryFromRegion(region, generatedMap.config.gridSize);
+export function createRoughCircleWallPath(
+  region,
+  generatedMap,
+  layer = "main",
+) {
+  const circle = getCircleGeometryFromRegion(
+    region,
+    generatedMap.config.gridSize,
+  );
   const gaps = getCircleDoorGaps(region, generatedMap);
   const intervals = getVisibleCircleIntervals(gaps);
-  const rng = createSeededRng(hashStringToSeed(generatedMap.config.seed, region.id, layer, "circle-wall"));
-  const stepAngle = Math.max(0.035, generatedMap.config.gridSize * 0.42 / Math.max(1, circle.r));
+  const rng = createSeededRng(
+    hashStringToSeed(generatedMap.config.seed, region.id, layer, "circle-wall"),
+  );
+  const stepAngle = Math.max(
+    0.035,
+    (generatedMap.config.gridSize * 0.42) / Math.max(1, circle.r),
+  );
   const jitter = layer === "main" ? 0.8 : 1.15;
-  return intervals.map((interval, intervalIndex) => {
-    const steps = Math.max(3, Math.ceil((interval.end - interval.start) / stepAngle));
-    const points = [];
-    for (let step = 0; step <= steps; step += 1) {
-      const t = step / steps;
-      const angle = interval.start + (interval.end - interval.start) * t;
-      const endpointFactor = step === 0 || step === steps ? 0.28 : 1;
-      const radiusJitter = (rng() - 0.5) * jitter * endpointFactor;
-      const tangentJitter = (rng() - 0.5) * 0.35 * endpointFactor;
-      const nx = Math.cos(angle);
-      const ny = Math.sin(angle);
-      const tx = -ny;
-      const ty = nx;
-      const r = circle.r + radiusJitter;
-      points.push({
-        x: circle.cx + nx * r + tx * tangentJitter,
-        y: circle.cy + ny * r + ty * tangentJitter,
-      });
-    }
-    return points.map((point, pointIndex) => `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join("");
-  }).join(" ");
+  return intervals
+    .map((interval, intervalIndex) => {
+      const steps = Math.max(
+        3,
+        Math.ceil((interval.end - interval.start) / stepAngle),
+      );
+      const points = [];
+      for (let step = 0; step <= steps; step += 1) {
+        const t = step / steps;
+        const angle = interval.start + (interval.end - interval.start) * t;
+        const endpointFactor = step === 0 || step === steps ? 0.28 : 1;
+        const radiusJitter = (rng() - 0.5) * jitter * endpointFactor;
+        const tangentJitter = (rng() - 0.5) * 0.35 * endpointFactor;
+        const nx = Math.cos(angle);
+        const ny = Math.sin(angle);
+        const tx = -ny;
+        const ty = nx;
+        const r = circle.r + radiusJitter;
+        points.push({
+          x: circle.cx + nx * r + tx * tangentJitter,
+          y: circle.cy + ny * r + ty * tangentJitter,
+        });
+      }
+      return points
+        .map(
+          (point, pointIndex) =>
+            `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+        )
+        .join("");
+    })
+    .join(" ");
 }
 
 export function renderCircleRoomWalls(generatedMap) {
-  const circles = generatedMap.regions.filter((region) => region.shape === "circle");
+  const circles = generatedMap.regions.filter(
+    (region) => region.shape === "circle",
+  );
   if (circles.length === 0) return null;
   return (
     <>
@@ -2115,19 +4632,41 @@ export function renderCircleRoomWalls(generatedMap) {
         {circles.map((region) => (
           <React.Fragment key={`circle-composite-wall-${region.id}`}>
             <path d={createRoughCircleWallPath(region, generatedMap, "main")} />
-            {getCirclePortalSquareWallSegments(region, generatedMap).map((segment, index) => (
-              <path key={`circle-portal-wall-${region.id}-${index}`} d={createRoughWallPath(segment, generatedMap.config, `circle-portal-${region.id}-${index}`, "main")} />
-            ))}
+            {getCirclePortalSquareWallSegments(region, generatedMap).map(
+              (segment, index) => (
+                <path
+                  key={`circle-portal-wall-${region.id}-${index}`}
+                  d={createRoughWallPath(
+                    segment,
+                    generatedMap.config,
+                    `circle-portal-${region.id}-${index}`,
+                    "main",
+                  )}
+                />
+              ),
+            )}
           </React.Fragment>
         ))}
       </g>
       <g className="wall-sketch circular-room-wall-sketch">
         {circles.map((region) => (
           <React.Fragment key={`circle-composite-wall-sketch-${region.id}`}>
-            <path d={createRoughCircleWallPath(region, generatedMap, "sketch")} />
-            {getCirclePortalSquareWallSegments(region, generatedMap).map((segment, index) => (
-              <path key={`circle-portal-wall-sketch-${region.id}-${index}`} d={createRoughWallPath(segment, generatedMap.config, `circle-portal-sketch-${region.id}-${index}`, "sketch")} />
-            ))}
+            <path
+              d={createRoughCircleWallPath(region, generatedMap, "sketch")}
+            />
+            {getCirclePortalSquareWallSegments(region, generatedMap).map(
+              (segment, index) => (
+                <path
+                  key={`circle-portal-wall-sketch-${region.id}-${index}`}
+                  d={createRoughWallPath(
+                    segment,
+                    generatedMap.config,
+                    `circle-portal-sketch-${region.id}-${index}`,
+                    "sketch",
+                  )}
+                />
+              ),
+            )}
           </React.Fragment>
         ))}
       </g>
@@ -2135,18 +4674,36 @@ export function renderCircleRoomWalls(generatedMap) {
   );
 }
 
-export function createRoughOrganicCorridorWallPath(corridor, generatedMap, layer = "main") {
-  return buildOrganicCorridorBoundaryPath(corridor, generatedMap, generatedMap.config.gridSize, layer);
+export function createRoughOrganicCorridorWallPath(
+  corridor,
+  generatedMap,
+  layer = "main",
+) {
+  return buildOrganicCorridorBoundaryPath(
+    corridor,
+    generatedMap,
+    generatedMap.config.gridSize,
+    layer,
+  );
 }
 
 export function getHybridLocalCaveRegionSurfaces(generatedMap) {
   if (isPureCaveMap(generatedMap)) return [];
-  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
-  const storedSurfaces = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
-    ? generatedMap.finalGeometry.regions || {}
-    : {};
+  if (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) !== "mine"
+  )
+    return [];
+  const storedSurfaces =
+    generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+      ? generatedMap.finalGeometry.regions || {}
+      : {};
   return generatedMap.regions
-    .filter((region) => region.surfaceKind === "cave" || region.surfaceKind === "hybrid")
+    .filter(
+      (region) =>
+        region.surfaceKind === "cave" || region.surfaceKind === "hybrid",
+    )
     .map((region) => storedSurfaces[region.id])
     .filter((surface) => surface?.geometryQuality === "organic")
     .filter((surface) => surface?.geometryKind === "organic-cell-mask")
@@ -2154,72 +4711,93 @@ export function getHybridLocalCaveRegionSurfaces(generatedMap) {
 }
 
 export function getHybridLocalCaveWallPath(surface) {
-  return surface.wallPath || surface.wallArcPath || surface.visualFloorPath || "";
+  return (
+    surface.wallPath || surface.wallArcPath || surface.visualFloorPath || ""
+  );
 }
 
 export function getMineCaveEndpointSeams(generatedMap) {
   if (isPureCaveMap(generatedMap)) return [];
-  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
+  if (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) !== "mine"
+  )
+    return [];
   return Object.values(generatedMap?.finalGeometry?.regions || {})
     .flatMap((surface) => surface?.passMouths || [])
-    .map((mouth) => mouth.seam || {
-      corridorId: mouth.corridorId,
-      endpoint: mouth.endpoint,
-      regionId: mouth.regionId,
-      surfaceKind: "cave",
-      corridorTerminalCenter: mouth.corridorTerminalCenter,
-      corridorTerminalLeft: mouth.corridorTerminalLeft || mouth.outerLeft,
-      corridorTerminalRight: mouth.corridorTerminalRight || mouth.outerRight,
-      mouthCenter: mouth.center,
-      mouthLeft: mouth.mouthLeft,
-      mouthRight: mouth.mouthRight,
-      outerCenter: mouth.corridorTerminalCenter,
-      outerLeft: mouth.outerLeft,
-      outerRight: mouth.outerRight,
-      tangent: mouth.tangent,
-      normal: mouth.normal,
-      width: mouth.width,
-      depth: mouth.depth,
-    })
-    .filter((seam) => seam?.corridorTerminalLeft && seam?.corridorTerminalRight);
+    .map(
+      (mouth) =>
+        mouth.seam || {
+          corridorId: mouth.corridorId,
+          endpoint: mouth.endpoint,
+          regionId: mouth.regionId,
+          surfaceKind: "cave",
+          corridorTerminalCenter: mouth.corridorTerminalCenter,
+          corridorTerminalLeft: mouth.corridorTerminalLeft || mouth.outerLeft,
+          corridorTerminalRight:
+            mouth.corridorTerminalRight || mouth.outerRight,
+          mouthCenter: mouth.center,
+          mouthLeft: mouth.mouthLeft,
+          mouthRight: mouth.mouthRight,
+          outerCenter: mouth.corridorTerminalCenter,
+          outerLeft: mouth.outerLeft,
+          outerRight: mouth.outerRight,
+          tangent: mouth.tangent,
+          normal: mouth.normal,
+          width: mouth.width,
+          depth: mouth.depth,
+        },
+    )
+    .filter(
+      (seam) => seam?.corridorTerminalLeft && seam?.corridorTerminalRight,
+    );
 }
 
 export function getMineCaveEndpointCapSegments(generatedMap) {
-  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) => [
-    {
-      x1: seam.corridorTerminalLeft.x,
-      y1: seam.corridorTerminalLeft.y,
-      x2: seam.corridorTerminalRight.x,
-      y2: seam.corridorTerminalRight.y,
-    },
-    seam.mouthLeft && seam.mouthRight ? {
-      x1: seam.mouthLeft.x,
-      y1: seam.mouthLeft.y,
-      x2: seam.mouthRight.x,
-      y2: seam.mouthRight.y,
-    } : null,
-  ].filter(Boolean));
+  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) =>
+    [
+      {
+        x1: seam.corridorTerminalLeft.x,
+        y1: seam.corridorTerminalLeft.y,
+        x2: seam.corridorTerminalRight.x,
+        y2: seam.corridorTerminalRight.y,
+      },
+      seam.mouthLeft && seam.mouthRight
+        ? {
+            x1: seam.mouthLeft.x,
+            y1: seam.mouthLeft.y,
+            x2: seam.mouthRight.x,
+            y2: seam.mouthRight.y,
+          }
+        : null,
+    ].filter(Boolean),
+  );
 }
 
 export function getMineCaveEndpointOpeningSegments(generatedMap) {
-  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) => [
-    {
-      kind: "corridor-terminal",
-      seam,
-      x1: seam.corridorTerminalLeft.x,
-      y1: seam.corridorTerminalLeft.y,
-      x2: seam.corridorTerminalRight.x,
-      y2: seam.corridorTerminalRight.y,
-    },
-    seam.mouthLeft && seam.mouthRight ? {
-      kind: "cave-mouth",
-      seam,
-      x1: seam.mouthLeft.x,
-      y1: seam.mouthLeft.y,
-      x2: seam.mouthRight.x,
-      y2: seam.mouthRight.y,
-    } : null,
-  ].filter(Boolean));
+  return getMineCaveEndpointSeams(generatedMap).flatMap((seam) =>
+    [
+      {
+        kind: "corridor-terminal",
+        seam,
+        x1: seam.corridorTerminalLeft.x,
+        y1: seam.corridorTerminalLeft.y,
+        x2: seam.corridorTerminalRight.x,
+        y2: seam.corridorTerminalRight.y,
+      },
+      seam.mouthLeft && seam.mouthRight
+        ? {
+            kind: "cave-mouth",
+            seam,
+            x1: seam.mouthLeft.x,
+            y1: seam.mouthLeft.y,
+            x2: seam.mouthRight.x,
+            y2: seam.mouthRight.y,
+          }
+        : null,
+    ].filter(Boolean),
+  );
 }
 
 export function wallSegmentsCollinearAndOverlap(a, b, tolerance = 0.75) {
@@ -2247,15 +4825,26 @@ export function wallSegmentsCollinearAndOverlap(a, b, tolerance = 0.75) {
   return segmentMatches(a, b);
 }
 
-export function trimWallSegmentAgainstMineCaveOpening(segment, opening, tolerance = 0.75) {
-  if (!wallSegmentsCollinearAndOverlap(segment, opening, tolerance)) return [segment];
-  const horizontal = Math.abs(segment.y1 - segment.y2) <= tolerance && Math.abs(opening.y1 - opening.y2) <= tolerance;
-  const vertical = Math.abs(segment.x1 - segment.x2) <= tolerance && Math.abs(opening.x1 - opening.x2) <= tolerance;
-  if (!horizontal && !vertical) return segmentMatches(segment, opening) ? [] : [segment];
+export function trimWallSegmentAgainstMineCaveOpening(
+  segment,
+  opening,
+  tolerance = 0.75,
+) {
+  if (!wallSegmentsCollinearAndOverlap(segment, opening, tolerance))
+    return [segment];
+  const horizontal =
+    Math.abs(segment.y1 - segment.y2) <= tolerance &&
+    Math.abs(opening.y1 - opening.y2) <= tolerance;
+  const vertical =
+    Math.abs(segment.x1 - segment.x2) <= tolerance &&
+    Math.abs(opening.x1 - opening.x2) <= tolerance;
+  if (!horizontal && !vertical)
+    return segmentMatches(segment, opening) ? [] : [segment];
 
   const axis = horizontal ? "x" : "y";
   const crossAxis = horizontal ? "y" : "x";
-  if (Math.abs(segment[`${crossAxis}1`] - opening[`${crossAxis}1`]) > tolerance) return [segment];
+  if (Math.abs(segment[`${crossAxis}1`] - opening[`${crossAxis}1`]) > tolerance)
+    return [segment];
 
   const reversed = segment[`${axis}2`] < segment[`${axis}1`];
   const segmentStart = Math.min(segment[`${axis}1`], segment[`${axis}2`]);
@@ -2285,22 +4874,40 @@ export function trimWallSegmentAgainstMineCaveOpening(segment, opening, toleranc
   ].filter(Boolean);
 }
 
-export function trimWallSegmentAgainstMineCaveOpenings(segment, openings, tolerance = 0.75) {
+export function trimWallSegmentAgainstMineCaveOpenings(
+  segment,
+  openings,
+  tolerance = 0.75,
+) {
   let parts = [segment];
   openings.forEach((opening) => {
-    parts = parts.flatMap((part) => trimWallSegmentAgainstMineCaveOpening(part, opening, tolerance));
+    parts = parts.flatMap((part) =>
+      trimWallSegmentAgainstMineCaveOpening(part, opening, tolerance),
+    );
   });
   return parts;
 }
 
-export function trimWallSegmentsAgainstMineCaveOpenings(segments, generatedMap, tolerance = 0.75) {
+export function trimWallSegmentsAgainstMineCaveOpenings(
+  segments,
+  generatedMap,
+  tolerance = 0.75,
+) {
   const openings = getMineCaveEndpointOpeningSegments(generatedMap);
   if (openings.length === 0) return segments;
-  return segments.flatMap((segment) => trimWallSegmentAgainstMineCaveOpenings(segment, openings, tolerance));
+  return segments.flatMap((segment) =>
+    trimWallSegmentAgainstMineCaveOpenings(segment, openings, tolerance),
+  );
 }
 
-export function shouldSuppressMineCaveEndpointCapSegment(segment, generatedMap) {
-  return trimWallSegmentsAgainstMineCaveOpenings([segment], generatedMap).length === 0;
+export function shouldSuppressMineCaveEndpointCapSegment(
+  segment,
+  generatedMap,
+) {
+  return (
+    trimWallSegmentsAgainstMineCaveOpenings([segment], generatedMap).length ===
+    0
+  );
 }
 
 export function renderHybridLocalCaveRegionWalls(generatedMap) {
@@ -2309,10 +4916,20 @@ export function renderHybridLocalCaveRegionWalls(generatedMap) {
   return (
     <>
       <g className="wall-main hybrid-cave-region-walls">
-        {surfaces.map((surface) => <path key={`hybrid-cave-wall-${surface.regionId}`} d={getHybridLocalCaveWallPath(surface)} />)}
+        {surfaces.map((surface) => (
+          <path
+            key={`hybrid-cave-wall-${surface.regionId}`}
+            d={getHybridLocalCaveWallPath(surface)}
+          />
+        ))}
       </g>
       <g className="wall-sketch hybrid-cave-region-wall-sketch">
-        {surfaces.map((surface) => <path key={`hybrid-cave-wall-sketch-${surface.regionId}`} d={surface.sketchPath || getHybridLocalCaveWallPath(surface)} />)}
+        {surfaces.map((surface) => (
+          <path
+            key={`hybrid-cave-wall-sketch-${surface.regionId}`}
+            d={surface.sketchPath || getHybridLocalCaveWallPath(surface)}
+          />
+        ))}
       </g>
     </>
   );
@@ -2323,7 +4940,14 @@ export function getHybridCaveBreachMouths(generatedMap) {
 }
 
 export function breachMouthFloorPath(mouth) {
-  const points = [mouth.leftAttach, mouth.leftOuter, mouth.terminalLeft, mouth.terminalRight, mouth.rightOuter, mouth.rightAttach].filter(Boolean);
+  const points = [
+    mouth.leftAttach,
+    mouth.leftOuter,
+    mouth.terminalLeft,
+    mouth.terminalRight,
+    mouth.rightOuter,
+    mouth.rightAttach,
+  ].filter(Boolean);
   if (points.length < 4) return "";
   return `M ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} Z`;
 }
@@ -2335,7 +4959,13 @@ export function renderHybridCaveBreachFloors(generatedMap) {
     <g className="hybrid-cave-breach-floors">
       {mouths.map((mouth, index) => {
         const d = breachMouthFloorPath(mouth);
-        return d ? <path key={`hybrid-cave-breach-floor-${mouth.corridorId}-${mouth.regionId}-${index}`} className="floor-fill" d={d} /> : null;
+        return d ? (
+          <path
+            key={`hybrid-cave-breach-floor-${mouth.corridorId}-${mouth.regionId}-${index}`}
+            className="floor-fill"
+            d={d}
+          />
+        ) : null;
       })}
     </g>
   );
@@ -2348,14 +4978,66 @@ export function renderHybridCaveBreachWalls(generatedMap) {
     <>
       <g className="wall-main hybrid-cave-breach-walls">
         {mouths.flatMap((mouth, index) => [
-          <path key={`hybrid-cave-breach-left-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: mouth.leftAttach.x, y1: mouth.leftAttach.y, x2: (mouth.terminalLeft || mouth.leftOuter).x, y2: (mouth.terminalLeft || mouth.leftOuter).y }, generatedMap.config, `hybrid-breach-left-${mouth.corridorId}-${index}`, "main")} />,
-          <path key={`hybrid-cave-breach-right-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: (mouth.terminalRight || mouth.rightOuter).x, y1: (mouth.terminalRight || mouth.rightOuter).y, x2: mouth.rightAttach.x, y2: mouth.rightAttach.y }, generatedMap.config, `hybrid-breach-right-${mouth.corridorId}-${index}`, "main")} />,
+          <path
+            key={`hybrid-cave-breach-left-${mouth.corridorId}-${mouth.regionId}-${index}`}
+            d={createRoughWallPath(
+              {
+                x1: mouth.leftAttach.x,
+                y1: mouth.leftAttach.y,
+                x2: (mouth.terminalLeft || mouth.leftOuter).x,
+                y2: (mouth.terminalLeft || mouth.leftOuter).y,
+              },
+              generatedMap.config,
+              `hybrid-breach-left-${mouth.corridorId}-${index}`,
+              "main",
+            )}
+          />,
+          <path
+            key={`hybrid-cave-breach-right-${mouth.corridorId}-${mouth.regionId}-${index}`}
+            d={createRoughWallPath(
+              {
+                x1: (mouth.terminalRight || mouth.rightOuter).x,
+                y1: (mouth.terminalRight || mouth.rightOuter).y,
+                x2: mouth.rightAttach.x,
+                y2: mouth.rightAttach.y,
+              },
+              generatedMap.config,
+              `hybrid-breach-right-${mouth.corridorId}-${index}`,
+              "main",
+            )}
+          />,
         ])}
       </g>
       <g className="wall-sketch hybrid-cave-breach-wall-sketch">
         {mouths.flatMap((mouth, index) => [
-          <path key={`hybrid-cave-breach-left-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: mouth.leftAttach.x, y1: mouth.leftAttach.y, x2: (mouth.terminalLeft || mouth.leftOuter).x, y2: (mouth.terminalLeft || mouth.leftOuter).y }, generatedMap.config, `hybrid-breach-left-sketch-${mouth.corridorId}-${index}`, "sketch")} />,
-          <path key={`hybrid-cave-breach-right-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`} d={createRoughWallPath({ x1: (mouth.terminalRight || mouth.rightOuter).x, y1: (mouth.terminalRight || mouth.rightOuter).y, x2: mouth.rightAttach.x, y2: mouth.rightAttach.y }, generatedMap.config, `hybrid-breach-right-sketch-${mouth.corridorId}-${index}`, "sketch")} />,
+          <path
+            key={`hybrid-cave-breach-left-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`}
+            d={createRoughWallPath(
+              {
+                x1: mouth.leftAttach.x,
+                y1: mouth.leftAttach.y,
+                x2: (mouth.terminalLeft || mouth.leftOuter).x,
+                y2: (mouth.terminalLeft || mouth.leftOuter).y,
+              },
+              generatedMap.config,
+              `hybrid-breach-left-sketch-${mouth.corridorId}-${index}`,
+              "sketch",
+            )}
+          />,
+          <path
+            key={`hybrid-cave-breach-right-sketch-${mouth.corridorId}-${mouth.regionId}-${index}`}
+            d={createRoughWallPath(
+              {
+                x1: (mouth.terminalRight || mouth.rightOuter).x,
+                y1: (mouth.terminalRight || mouth.rightOuter).y,
+                x2: mouth.rightAttach.x,
+                y2: mouth.rightAttach.y,
+              },
+              generatedMap.config,
+              `hybrid-breach-right-sketch-${mouth.corridorId}-${index}`,
+              "sketch",
+            )}
+          />,
         ])}
       </g>
     </>
@@ -2368,19 +5050,41 @@ export function renderOrganicCorridorWalls(generatedMap) {
   return (
     <>
       <g className="wall-main organic-corridor-walls">
-        {organicCorridors.map((corridor) => <path key={`organic-corridor-wall-${corridor.id}`} d={createRoughOrganicCorridorWallPath(corridor, generatedMap, "main")} />)}
+        {organicCorridors.map((corridor) => (
+          <path
+            key={`organic-corridor-wall-${corridor.id}`}
+            d={createRoughOrganicCorridorWallPath(
+              corridor,
+              generatedMap,
+              "main",
+            )}
+          />
+        ))}
       </g>
       <g className="wall-sketch organic-corridor-wall-sketch">
-        {organicCorridors.map((corridor) => <path key={`organic-corridor-wall-sketch-${corridor.id}`} d={createRoughOrganicCorridorWallPath(corridor, generatedMap, "sketch")} />)}
+        {organicCorridors.map((corridor) => (
+          <path
+            key={`organic-corridor-wall-sketch-${corridor.id}`}
+            d={createRoughOrganicCorridorWallPath(
+              corridor,
+              generatedMap,
+              "sketch",
+            )}
+          />
+        ))}
       </g>
     </>
   );
 }
 
 export function renderCircularRoomSurfaceOverlay(generatedMap) {
-  const circles = generatedMap.regions.filter((region) => region.shape === "circle");
+  const circles = generatedMap.regions.filter(
+    (region) => region.shape === "circle",
+  );
   if (circles.length === 0) return null;
-  const d = circles.map((region) => buildCircleRoomPath(region, generatedMap.config.gridSize)).join(" ");
+  const d = circles
+    .map((region) => buildCircleRoomPath(region, generatedMap.config.gridSize))
+    .join(" ");
   return (
     <g className="circular-room-surface-cover">
       <path className="floor-fill" d={d} fillRule="nonzero" />
@@ -2391,7 +5095,17 @@ export function renderCircularRoomSurfaceOverlay(generatedMap) {
 
 export function createRoughDoorPanelPath(rect, config, index) {
   if (!rect || rect.width <= 0 || rect.height <= 0) return "";
-  const rng = createSeededRng(hashStringToSeed(config.seed, index, rect.x, rect.y, rect.width, rect.height, "door-panel-rough-path"));
+  const rng = createSeededRng(
+    hashStringToSeed(
+      config.seed,
+      index,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      "door-panel-rough-path",
+    ),
+  );
   const corners = [
     { x: rect.x, y: rect.y },
     { x: rect.x + rect.width, y: rect.y },
@@ -2423,45 +5137,80 @@ export function createRoughDoorPanelPath(rect, config, index) {
     }
   }
 
-  return points.map((point, pointIndex) => `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`).join("") + "Z";
+  return (
+    points
+      .map(
+        (point, pointIndex) =>
+          `${pointIndex === 0 ? "M" : "L"}${point.x.toFixed(2)} ${point.y.toFixed(2)}`,
+      )
+      .join("") + "Z"
+  );
 }
 
 export function renderWallShadows(generatedMap) {
   const { config } = generatedMap;
   const walls = getDrawableWallSegments(generatedMap);
-  const circles = generatedMap.regions.filter((region) => region.shape === "circle");
+  const circles = generatedMap.regions.filter(
+    (region) => region.shape === "circle",
+  );
   const organicCorridors = generatedMap.corridors.filter(isOrganicCorridor);
-  const crossings = getCrossLevelCorridorIntersectionCells(generatedMap.corridors)
+  const crossings = getCrossLevelCorridorIntersectionCells(
+    generatedMap.corridors,
+  )
     .map((crossing) => {
       const topLevel = Math.max(...crossing.levels);
-      const topCorridor = crossing.corridors.find((corridor) => getCorridorPlanarLevel(corridor) === topLevel) || crossing.corridors[0];
+      const topCorridor =
+        crossing.corridors.find(
+          (corridor) => getCorridorPlanarLevel(corridor) === topLevel,
+        ) || crossing.corridors[0];
       return {
         ...crossing,
         topLevel,
         topCorridor,
-        topWalls: getCorridorLocalWallSegmentsForCell(topCorridor, crossing.cell, config.gridSize),
+        topWalls: getCorridorLocalWallSegmentsForCell(
+          topCorridor,
+          crossing.cell,
+          config.gridSize,
+        ),
       };
     })
     .filter((crossing) => crossing.topCorridor && crossing.topWalls.length > 0)
     .sort((a, b) => a.topLevel - b.topLevel);
 
   return (
-    <g className="wall-shadow" clipPath="url(#clip-dungeon-floor)" aria-hidden="true">
+    <g
+      className="wall-shadow"
+      clipPath="url(#clip-dungeon-floor)"
+      aria-hidden="true"
+    >
       {walls.map((wall, index) => (
-        <path key={`wall-shadow-${index}`} d={createRoughWallPath(wall, config, index, "main")} />
+        <path
+          key={`wall-shadow-${index}`}
+          d={createRoughWallPath(wall, config, index, "main")}
+        />
       ))}
       {getHybridLocalCaveRegionSurfaces(generatedMap).map((surface) => (
-        <path key={`hybrid-cave-wall-shadow-${surface.regionId}`} d={getHybridLocalCaveWallPath(surface)} />
+        <path
+          key={`hybrid-cave-wall-shadow-${surface.regionId}`}
+          d={getHybridLocalCaveWallPath(surface)}
+        />
       ))}
       {circles.map((region) => (
         <React.Fragment key={`circle-wall-shadow-${region.id}`}>
           <path d={createRoughCircleWallPath(region, generatedMap, "main")} />
-          {getCirclePortalSquareWallSegments(region, generatedMap).map((segment, index) => (
-            <path
-              key={`circle-portal-wall-shadow-${region.id}-${index}`}
-              d={createRoughWallPath(segment, config, `circle-portal-${region.id}-${index}`, "main")}
-            />
-          ))}
+          {getCirclePortalSquareWallSegments(region, generatedMap).map(
+            (segment, index) => (
+              <path
+                key={`circle-portal-wall-shadow-${region.id}-${index}`}
+                d={createRoughWallPath(
+                  segment,
+                  config,
+                  `circle-portal-${region.id}-${index}`,
+                  "main",
+                )}
+              />
+            ),
+          )}
         </React.Fragment>
       ))}
       {organicCorridors.map((corridor) => (
@@ -2470,12 +5219,19 @@ export function renderWallShadows(generatedMap) {
           d={createRoughOrganicCorridorWallPath(corridor, generatedMap, "main")}
         />
       ))}
-      {crossings.flatMap((crossing, index) => crossing.topWalls.map((wall, wallIndex) => (
-        <path
-          key={`cross-level-wall-shadow-${crossing.key}-${wallIndex}`}
-          d={createRoughWallPath(wall, config, `cross-level-top-${crossing.key}-${index}-${wallIndex}`, "main")}
-        />
-      )))}
+      {crossings.flatMap((crossing, index) =>
+        crossing.topWalls.map((wall, wallIndex) => (
+          <path
+            key={`cross-level-wall-shadow-${crossing.key}-${wallIndex}`}
+            d={createRoughWallPath(
+              wall,
+              config,
+              `cross-level-top-${crossing.key}-${index}-${wallIndex}`,
+              "main",
+            )}
+          />
+        )),
+      )}
     </g>
   );
 }
@@ -2486,7 +5242,10 @@ export function renderRoughWalls(generatedMap) {
   return (
     <g className="wall-main">
       {walls.map((wall, index) => (
-        <path key={`wall-${index}`} d={createRoughWallPath(wall, config, index, "main")} />
+        <path
+          key={`wall-${index}`}
+          d={createRoughWallPath(wall, config, index, "main")}
+        />
       ))}
     </g>
   );
@@ -2498,7 +5257,10 @@ export function renderWallSketch(generatedMap) {
   return (
     <g className="wall-sketch">
       {walls.map((wall, index) => (
-        <path key={`wall-sketch-${index}`} d={createRoughWallPath(wall, config, index, "sketch")} />
+        <path
+          key={`wall-sketch-${index}`}
+          d={createRoughWallPath(wall, config, index, "sketch")}
+        />
       ))}
     </g>
   );
@@ -2510,12 +5272,29 @@ export function renderWallImperfections(generatedMap) {
     <g className="wall-breaks">
       {generatedMap.regions.flatMap((region) => {
         const flags = getRegionSemanticFlags(region);
-        const intensity = (flags.hazard ? 2 : 0) + (flags.ruined ? 2 : 0) + (flags.crypt ? 1 : 0);
+        const intensity =
+          (flags.hazard ? 2 : 0) +
+          (flags.ruined ? 2 : 0) +
+          (flags.crypt ? 1 : 0);
         if (intensity <= 0) return [];
         const boundary = getBoundaryCells(region);
-        const rng = createSeededRng(hashStringToSeed(config.seed, region.id, "wall-breaks"));
+        const rng = createSeededRng(
+          hashStringToSeed(config.seed, region.id, "wall-breaks"),
+        );
         const selected = boundary
-          .filter((anchor) => hashStringToSeed(config.seed, region.id, anchor.side, anchor.cell.x, anchor.cell.y, "break") % 100 < 10 + intensity * 7)
+          .filter(
+            (anchor) =>
+              hashStringToSeed(
+                config.seed,
+                region.id,
+                anchor.side,
+                anchor.cell.x,
+                anchor.cell.y,
+                "break",
+              ) %
+                100 <
+              10 + intensity * 7,
+          )
           .slice(0, intensity + 2);
         return selected.map((anchor, index) => {
           const point = getAnchorHandlePoint(anchor, config.gridSize);
@@ -2523,7 +5302,13 @@ export function renderWallImperfections(generatedMap) {
           const dy = anchor.side === "east" || anchor.side === "west" ? 1 : 0;
           const jitter = 3 + rng() * 4;
           const d = `M${point.x - dx * 5} ${point.y - dy * 5}l${dx * 4 + (rng() - 0.5) * jitter} ${dy * 4 + (rng() - 0.5) * jitter}l${dx * 5 + (rng() - 0.5) * jitter} ${dy * 5 + (rng() - 0.5) * jitter}`;
-          return <path key={`wall-break-${region.id}-${index}`} className={flags.hazard || flags.ruined ? "break" : "crack"} d={d} />;
+          return (
+            <path
+              key={`wall-break-${region.id}-${index}`}
+              className={flags.hazard || flags.ruined ? "break" : "crack"}
+              d={d}
+            />
+          );
         });
       })}
     </g>
@@ -2539,19 +5324,39 @@ export function getDoorGeometry(door, gridSize) {
   const wallLength = gridSize * 0.96;
   return horizontal
     ? {
-      horizontal,
-      cx,
-      cy,
-      rect: { x: cx - length / 2, y: cy - thickness / 2, width: length, height: thickness },
-      line: { x1: cx - wallLength / 2, y1: cy, x2: cx + wallLength / 2, y2: cy },
-    }
+        horizontal,
+        cx,
+        cy,
+        rect: {
+          x: cx - length / 2,
+          y: cy - thickness / 2,
+          width: length,
+          height: thickness,
+        },
+        line: {
+          x1: cx - wallLength / 2,
+          y1: cy,
+          x2: cx + wallLength / 2,
+          y2: cy,
+        },
+      }
     : {
-      horizontal,
-      cx,
-      cy,
-      rect: { x: cx - thickness / 2, y: cy - length / 2, width: thickness, height: length },
-      line: { x1: cx, y1: cy - wallLength / 2, x2: cx, y2: cy + wallLength / 2 },
-    };
+        horizontal,
+        cx,
+        cy,
+        rect: {
+          x: cx - thickness / 2,
+          y: cy - length / 2,
+          width: thickness,
+          height: length,
+        },
+        line: {
+          x1: cx,
+          y1: cy - wallLength / 2,
+          x2: cx,
+          y2: cy + wallLength / 2,
+        },
+      };
 }
 
 export function renderLockedDoorMark(geometry, index) {
@@ -2591,23 +5396,44 @@ export function normalizeDirectionVector(vector) {
 
 export function getDoorCorridorTravelDirection(door, generatedMap) {
   const fallback = normalizeDirectionVector(door?.normal || { x: 1, y: 0 });
-  const corridor = generatedMap?.corridors?.find((item) => item.id === door?.corridorId);
+  const corridor = generatedMap?.corridors?.find(
+    (item) => item.id === door?.corridorId,
+  );
   const cell = door?.outsideCell;
-  if (!corridor || !cell || !Array.isArray(corridor.floorCells) || corridor.floorCells.length < 2) return fallback;
+  if (
+    !corridor ||
+    !cell ||
+    !Array.isArray(corridor.floorCells) ||
+    corridor.floorCells.length < 2
+  )
+    return fallback;
   const topologyCells = getCorridorTopologyCells(corridor);
-  const index = topologyCells.findIndex((candidate) => candidate.x === cell.x && candidate.y === cell.y);
+  const index = topologyCells.findIndex(
+    (candidate) => candidate.x === cell.x && candidate.y === cell.y,
+  );
   if (index < 0) return fallback;
-  const next = index === 0 ? topologyCells[1] : index === topologyCells.length - 1 ? topologyCells[index - 1] : topologyCells[index + 1];
+  const next =
+    index === 0
+      ? topologyCells[1]
+      : index === topologyCells.length - 1
+        ? topologyCells[index - 1]
+        : topologyCells[index + 1];
   if (!next) return fallback;
   return normalizeDirectionVector({ x: next.x - cell.x, y: next.y - cell.y });
 }
 
-export function createStairStepSegments(door, generatedMap, stairTransition, gridSize) {
+export function createStairStepSegments(
+  door,
+  generatedMap,
+  stairTransition,
+  gridSize,
+) {
   const center = getDoorSquareCenter(door, gridSize);
   const travel = getDoorCorridorTravelDirection(door, generatedMap);
-  const descent = normalizeStairTransition(stairTransition, "none") === "up"
-    ? { x: -travel.x, y: -travel.y }
-    : travel;
+  const descent =
+    normalizeStairTransition(stairTransition, "none") === "up"
+      ? { x: -travel.x, y: -travel.y }
+      : travel;
   const tangent = { x: -descent.y, y: descent.x };
   const stepCount = 4;
   const maxLength = gridSize * 0.68;
@@ -2621,10 +5447,10 @@ export function createStairStepSegments(door, generatedMap, stairTransition, gri
     const cx = center.x + descent.x * offset;
     const cy = center.y + descent.y * offset;
     return {
-      x1: cx - tangent.x * length / 2,
-      y1: cy - tangent.y * length / 2,
-      x2: cx + tangent.x * length / 2,
-      y2: cy + tangent.y * length / 2,
+      x1: cx - (tangent.x * length) / 2,
+      y1: cy - (tangent.y * length) / 2,
+      x2: cx + (tangent.x * length) / 2,
+      y2: cy + (tangent.y * length) / 2,
     };
   });
 }
@@ -2632,14 +5458,27 @@ export function createStairStepSegments(door, generatedMap, stairTransition, gri
 export function renderStairMark(door, stairTransition, index, generatedMap) {
   const transition = normalizeStairTransition(stairTransition, "none");
   if (transition === "none") return null;
-  const segments = createStairStepSegments(door, generatedMap, transition, generatedMap.config.gridSize);
+  const segments = createStairStepSegments(
+    door,
+    generatedMap,
+    transition,
+    generatedMap.config.gridSize,
+  );
   return (
-    <g className={`stair-mark stair-mark--${transition}`} key={`stair-mark-${index}`}>
+    <g
+      className={`stair-mark stair-mark--${transition}`}
+      key={`stair-mark-${index}`}
+    >
       <g className="stair-mark__main">
         {segments.map((segment, stepIndex) => (
           <path
             key={`stair-step-main-${index}-${stepIndex}`}
-            d={createRoughWallPath(segment, generatedMap.config, `stair-main-${door.corridorId}-${door.endpoint}-${index}-${stepIndex}`, "door")}
+            d={createRoughWallPath(
+              segment,
+              generatedMap.config,
+              `stair-main-${door.corridorId}-${door.endpoint}-${index}-${stepIndex}`,
+              "door",
+            )}
           />
         ))}
       </g>
@@ -2647,7 +5486,12 @@ export function renderStairMark(door, stairTransition, index, generatedMap) {
         {segments.map((segment, stepIndex) => (
           <path
             key={`stair-step-sketch-${index}-${stepIndex}`}
-            d={createRoughWallPath(segment, generatedMap.config, `stair-sketch-${door.corridorId}-${door.endpoint}-${index}-${stepIndex}`, "door-sketch")}
+            d={createRoughWallPath(
+              segment,
+              generatedMap.config,
+              `stair-sketch-${door.corridorId}-${door.endpoint}-${index}-${stepIndex}`,
+              "door-sketch",
+            )}
           />
         ))}
       </g>
@@ -2660,20 +5504,55 @@ export function renderDoorSymbols(generatedMap) {
   return (
     <g className="door-symbols">
       {dungeonMask.doorSegments.map((door, index) => {
-        const doorType = normalizeDoorType(door.doorType, door.secret ? "secret" : "default");
-        const stairTransition = normalizeStairTransition(door.stairTransition, "none");
+        const doorType = normalizeDoorType(
+          door.doorType,
+          door.secret ? "secret" : "default",
+        );
+        const stairTransition = normalizeStairTransition(
+          door.stairTransition,
+          "none",
+        );
         if (door.breach && stairTransition === "none") return null;
         if (doorType === "open" && stairTransition === "none") return null;
         const geometry = getDoorGeometry(door, config.gridSize);
         const symbolClass = `door-symbol door-symbol--${doorType} ${stairTransition !== "none" ? `door-symbol--stairs-${stairTransition}` : ""}`;
-        const panelClass = ["door-panel", doorType === "secret" ? "secret-door-panel" : "", doorType === "locked" ? "locked-door-panel" : ""].filter(Boolean).join(" ");
+        const panelClass = [
+          "door-panel",
+          doorType === "secret" ? "secret-door-panel" : "",
+          doorType === "locked" ? "locked-door-panel" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
         return (
           <g key={`door-symbol-${index}`} className={symbolClass}>
             {doorType !== "open" && (
               <>
-                <path className="door-wall-line" d={createRoughWallPath(geometry.line, config, `door-${index}`, "door")} />
-                <path className="door-wall-sketch" d={createRoughWallPath(geometry.line, config, `door-sketch-${index}`, "door-sketch")} />
-                <path className={panelClass} d={createRoughDoorPanelPath(geometry.rect, config, `door-panel-${index}`)} />
+                <path
+                  className="door-wall-line"
+                  d={createRoughWallPath(
+                    geometry.line,
+                    config,
+                    `door-${index}`,
+                    "door",
+                  )}
+                />
+                <path
+                  className="door-wall-sketch"
+                  d={createRoughWallPath(
+                    geometry.line,
+                    config,
+                    `door-sketch-${index}`,
+                    "door-sketch",
+                  )}
+                />
+                <path
+                  className={panelClass}
+                  d={createRoughDoorPanelPath(
+                    geometry.rect,
+                    config,
+                    `door-panel-${index}`,
+                  )}
+                />
                 {doorType === "locked" && renderLockedDoorMark(geometry, index)}
               </>
             )}
@@ -2700,32 +5579,67 @@ export function createMapAccessArrowHeadSegments(tip, tail, gridSize) {
     y: tip.y - uy * headLength,
   };
   return [
-    { x1: tip.x, y1: tip.y, x2: base.x + tx * headWidth, y2: base.y + ty * headWidth },
-    { x1: tip.x, y1: tip.y, x2: base.x - tx * headWidth, y2: base.y - ty * headWidth },
+    {
+      x1: tip.x,
+      y1: tip.y,
+      x2: base.x + tx * headWidth,
+      y2: base.y + ty * headWidth,
+    },
+    {
+      x1: tip.x,
+      y1: tip.y,
+      x2: base.x - tx * headWidth,
+      y2: base.y - ty * headWidth,
+    },
   ];
 }
 
 export function renderMapAccessArrowHead(tip, tail, config, keyPrefix) {
-  return createMapAccessArrowHeadSegments(tip, tail, config.gridSize).map((segment, index) => (
-    <React.Fragment key={`${keyPrefix}-${index}`}>
-      <path className="map-access-head-line" d={createRoughWallPath(segment, config, `${keyPrefix}-main-${index}`, "door")} />
-      <path className="map-access-head-sketch" d={createRoughWallPath(segment, config, `${keyPrefix}-sketch-${index}`, "door-sketch")} />
-    </React.Fragment>
-  ));
+  return createMapAccessArrowHeadSegments(tip, tail, config.gridSize).map(
+    (segment, index) => (
+      <React.Fragment key={`${keyPrefix}-${index}`}>
+        <path
+          className="map-access-head-line"
+          d={createRoughWallPath(
+            segment,
+            config,
+            `${keyPrefix}-main-${index}`,
+            "door",
+          )}
+        />
+        <path
+          className="map-access-head-sketch"
+          d={createRoughWallPath(
+            segment,
+            config,
+            `${keyPrefix}-sketch-${index}`,
+            "door-sketch",
+          )}
+        />
+      </React.Fragment>
+    ),
+  );
 }
 
 export function getRenderableMapAccesses(generatedMap) {
-  return generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || [];
+  return (
+    generatedMap?.dungeonMask?.mapAccesses || generatedMap?.mapAccesses || []
+  );
 }
 
 export function renderMapAccessFloorExtensions(generatedMap) {
-  const accesses = getRenderableMapAccesses(generatedMap)
-    .filter((access) => !access?.suppressFloorExtension && (access?.floorExtension?.path || access?.caveAccessBoundary));
+  const accesses = getRenderableMapAccesses(generatedMap).filter(
+    (access) =>
+      !access?.suppressFloorExtension &&
+      (access?.floorExtension?.path || access?.caveAccessBoundary),
+  );
   if (accesses.length === 0) return null;
   return (
     <g className="map-access-floor-extensions">
       {accesses.map((access, index) => {
-        const d = createMapAccessOrganicFloorPath(access, generatedMap.config) || access.floorExtension?.path;
+        const d =
+          createMapAccessOrganicFloorPath(access, generatedMap.config) ||
+          access.floorExtension?.path;
         if (!d) return null;
         return (
           <path
@@ -2748,33 +5662,76 @@ export function createMapAccessWallMouthMaskPath(access, config) {
   const halfWidth = g * 0.95;
   const halfDepth = g * 0.82;
   const points = [
-    { x: center.x - tangent.x * halfWidth - normal.x * halfDepth, y: center.y - tangent.y * halfWidth - normal.y * halfDepth },
-    { x: center.x + tangent.x * halfWidth - normal.x * halfDepth, y: center.y + tangent.y * halfWidth - normal.y * halfDepth },
-    { x: center.x + tangent.x * halfWidth + normal.x * halfDepth, y: center.y + tangent.y * halfWidth + normal.y * halfDepth },
-    { x: center.x - tangent.x * halfWidth + normal.x * halfDepth, y: center.y - tangent.y * halfWidth + normal.y * halfDepth },
+    {
+      x: center.x - tangent.x * halfWidth - normal.x * halfDepth,
+      y: center.y - tangent.y * halfWidth - normal.y * halfDepth,
+    },
+    {
+      x: center.x + tangent.x * halfWidth - normal.x * halfDepth,
+      y: center.y + tangent.y * halfWidth - normal.y * halfDepth,
+    },
+    {
+      x: center.x + tangent.x * halfWidth + normal.x * halfDepth,
+      y: center.y + tangent.y * halfWidth + normal.y * halfDepth,
+    },
+    {
+      x: center.x - tangent.x * halfWidth + normal.x * halfDepth,
+      y: center.y - tangent.y * halfWidth + normal.y * halfDepth,
+    },
   ];
-  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points.slice(1).map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ")} Z`;
+  return `M ${roundTo(points[0].x, 2)} ${roundTo(points[0].y, 2)} ${points
+    .slice(1)
+    .map((point) => `L ${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`)
+    .join(" ")} Z`;
 }
 
 export function renderCaveWallAccessMask(generatedMap) {
-  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "cave") return null;
+  if (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) !== "cave"
+  )
+    return null;
   if (isPureCaveMap(generatedMap)) return null;
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => access?.wallGap);
+  const accesses = getRenderableMapAccesses(generatedMap).filter(
+    (access) => access?.wallGap,
+  );
   if (accesses.length === 0) return null;
   const { config } = generatedMap;
   return (
-    <mask id="cave-wall-access-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={config.mapWidth} height={config.mapHeight}>
-      <rect x={0} y={0} width={config.mapWidth} height={config.mapHeight} fill="white" />
+    <mask
+      id="cave-wall-access-mask"
+      maskUnits="userSpaceOnUse"
+      x={0}
+      y={0}
+      width={config.mapWidth}
+      height={config.mapHeight}
+    >
+      <rect
+        x={0}
+        y={0}
+        width={config.mapWidth}
+        height={config.mapHeight}
+        fill="white"
+      />
       {accesses.map((access, index) => {
         const d = createMapAccessWallMouthMaskPath(access, config);
-        return d ? <path key={`cave-wall-access-mask-gap-${access.id || index}`} d={d} fill="black" /> : null;
+        return d ? (
+          <path
+            key={`cave-wall-access-mask-gap-${access.id || index}`}
+            d={d}
+            fill="black"
+          />
+        ) : null;
       })}
     </mask>
   );
 }
 
 export function renderMapAccessWallGaps(generatedMap) {
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => !access?.suppressAccessWallGap && access?.wallGap);
+  const accesses = getRenderableMapAccesses(generatedMap).filter(
+    (access) => !access?.suppressAccessWallGap && access?.wallGap,
+  );
   if (accesses.length === 0) return null;
   return (
     <g className="map-access-wall-gaps">
@@ -2792,16 +5749,30 @@ export function renderMapAccessWallGaps(generatedMap) {
   );
 }
 
-export function getMapAccessTunnelWallSegments(access, config = DEFAULT_CONFIG) {
+export function getMapAccessTunnelWallSegments(
+  access,
+  config = DEFAULT_CONFIG,
+) {
   if (!access?.floorExtension && !access?.caveAccessBoundary) return [];
   const g = config.gridSize;
   const center = getMapAccessCenter(access);
   const { normal, tangent } = getMapAccessBasis(access);
   const seed = access.id || `${center.x}:${center.y}`;
-  const jitter = (index, amount) => ((hashStringToSeed(config.seed, seed, index, "access-organic-wall") % 1000) / 1000 - 0.5) * amount;
+  const jitter = (index, amount) =>
+    ((hashStringToSeed(config.seed, seed, index, "access-organic-wall") %
+      1000) /
+      1000 -
+      0.5) *
+    amount;
   const point = (along, outward, tangentJitter = 0, normalJitter = 0) => ({
-    x: center.x + tangent.x * (along + tangentJitter) + normal.x * (outward + normalJitter),
-    y: center.y + tangent.y * (along + tangentJitter) + normal.y * (outward + normalJitter),
+    x:
+      center.x +
+      tangent.x * (along + tangentJitter) +
+      normal.x * (outward + normalJitter),
+    y:
+      center.y +
+      tangent.y * (along + tangentJitter) +
+      normal.y * (outward + normalJitter),
   });
   const mouthHalf = g * 0.7;
   const outerHalf = g * 0.44;
@@ -2810,19 +5781,39 @@ export function getMapAccessTunnelWallSegments(access, config = DEFAULT_CONFIG) 
   const left = [
     point(-mouthHalf, innerDepth, jitter(1, g * 0.08), jitter(2, g * 0.05)),
     point(-mouthHalf * 0.78, g * 0.42, jitter(3, g * 0.16), jitter(4, g * 0.1)),
-    point(-outerHalf * 1.05, outerDepth, jitter(5, g * 0.12), jitter(6, g * 0.08)),
+    point(
+      -outerHalf * 1.05,
+      outerDepth,
+      jitter(5, g * 0.12),
+      jitter(6, g * 0.08),
+    ),
   ];
   const right = [
     point(mouthHalf, innerDepth, jitter(7, g * 0.08), jitter(8, g * 0.05)),
     point(mouthHalf * 0.78, g * 0.42, jitter(9, g * 0.16), jitter(10, g * 0.1)),
-    point(outerHalf * 1.05, outerDepth, jitter(11, g * 0.12), jitter(12, g * 0.08)),
+    point(
+      outerHalf * 1.05,
+      outerDepth,
+      jitter(11, g * 0.12),
+      jitter(12, g * 0.08),
+    ),
   ];
-  return [left, right].map((points, index) => ({ points, id: `${seed}:side:${index}` }));
+  return [left, right].map((points, index) => ({
+    points,
+    id: `${seed}:side:${index}`,
+  }));
 }
 
-export function createOrganicAccessWallPath(points, config, seed, layer = "main") {
+export function createOrganicAccessWallPath(
+  points,
+  config,
+  seed,
+  layer = "main",
+) {
   if (!Array.isArray(points) || points.length < 2) return "";
-  const rng = createSeededRng(hashStringToSeed(config.seed, seed, layer, "organic-access-wall-path"));
+  const rng = createSeededRng(
+    hashStringToSeed(config.seed, seed, layer, "organic-access-wall-path"),
+  );
   const output = [];
   points.forEach((point, index) => {
     if (index === 0) {
@@ -2841,25 +5832,43 @@ export function createOrganicAccessWallPath(points, config, seed, layer = "main"
       const endpointFactor = step === steps ? 0.28 : 1;
       const roughness = layer === "sketch" ? 1.35 : 0.86;
       output.push({
-        x: previous.x + dx * t + normal.x * (rng() - 0.5) * roughness * endpointFactor + tangent.x * (rng() - 0.5) * 0.36 * endpointFactor,
-        y: previous.y + dy * t + normal.y * (rng() - 0.5) * roughness * endpointFactor + tangent.y * (rng() - 0.5) * 0.36 * endpointFactor,
+        x:
+          previous.x +
+          dx * t +
+          normal.x * (rng() - 0.5) * roughness * endpointFactor +
+          tangent.x * (rng() - 0.5) * 0.36 * endpointFactor,
+        y:
+          previous.y +
+          dy * t +
+          normal.y * (rng() - 0.5) * roughness * endpointFactor +
+          tangent.y * (rng() - 0.5) * 0.36 * endpointFactor,
       });
     }
   });
-  return output.map((point, index) => `${index === 0 ? "M" : "L"}${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`).join(" ");
+  return output
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"}${roundTo(point.x, 2)} ${roundTo(point.y, 2)}`,
+    )
+    .join(" ");
 }
 
 export function renderMapAccessTunnelWalls(generatedMap) {
   if (isPureCaveMap(generatedMap)) return null;
-  const accesses = getRenderableMapAccesses(generatedMap).filter((access) => !access?.suppressAccessTunnelWalls && access?.floorExtension?.points);
+  const accesses = getRenderableMapAccesses(generatedMap).filter(
+    (access) =>
+      !access?.suppressAccessTunnelWalls && access?.floorExtension?.points,
+  );
   if (accesses.length === 0) return null;
   const segments = accesses.flatMap((access, accessIndex) =>
-    getMapAccessTunnelWallSegments(access, generatedMap.config).map((wall, segmentIndex) => ({
-      access,
-      accessIndex,
-      wall,
-      segmentIndex,
-    }))
+    getMapAccessTunnelWallSegments(access, generatedMap.config).map(
+      (wall, segmentIndex) => ({
+        access,
+        accessIndex,
+        wall,
+        segmentIndex,
+      }),
+    ),
   );
   if (segments.length === 0) return null;
   return (
@@ -2868,7 +5877,12 @@ export function renderMapAccessTunnelWalls(generatedMap) {
         {segments.map((item) => (
           <path
             key={`map-access-tunnel-wall-${item.access.id || item.accessIndex}-${item.segmentIndex}`}
-            d={createOrganicAccessWallPath(item.wall.points, generatedMap.config, item.wall.id, "main")}
+            d={createOrganicAccessWallPath(
+              item.wall.points,
+              generatedMap.config,
+              item.wall.id,
+              "main",
+            )}
           />
         ))}
       </g>
@@ -2876,7 +5890,12 @@ export function renderMapAccessTunnelWalls(generatedMap) {
         {segments.map((item) => (
           <path
             key={`map-access-tunnel-wall-sketch-${item.access.id || item.accessIndex}-${item.segmentIndex}`}
-            d={createOrganicAccessWallPath(item.wall.points, generatedMap.config, item.wall.id, "sketch")}
+            d={createOrganicAccessWallPath(
+              item.wall.points,
+              generatedMap.config,
+              item.wall.id,
+              "sketch",
+            )}
           />
         ))}
       </g>
@@ -2899,12 +5918,51 @@ export function renderMapAccessSymbols(generatedMap) {
           y: start.y + normal.y * config.gridSize * 0.32,
         };
         return (
-          <g key={access.id || `map-access-${index}`} className={`map-access map-access--${access.type}`}>
-            <path className="map-access-stem-sketch" d={createRoughWallPath({ x1: start.x, y1: start.y, x2: end.x, y2: end.y }, config, `map-access-stem-sketch-${access.id || index}`, "door-sketch")} />
-            <path className="map-access-line" d={createRoughWallPath({ x1: start.x, y1: start.y, x2: end.x, y2: end.y }, config, `map-access-stem-${access.id || index}`, "door")} />
-            {renderMapAccessArrowHead(end, start, config, `map-access-head-${access.id || index}`)}
-            {access.doubleHeaded && renderMapAccessArrowHead(start, end, config, `map-access-head-back-${access.id || index}`)}
-            {access.label && <text className="map-access-label" x={labelPoint.x} y={labelPoint.y} textAnchor="middle">{access.label}</text>}
+          <g
+            key={access.id || `map-access-${index}`}
+            className={`map-access map-access--${access.type}`}
+          >
+            <path
+              className="map-access-stem-sketch"
+              d={createRoughWallPath(
+                { x1: start.x, y1: start.y, x2: end.x, y2: end.y },
+                config,
+                `map-access-stem-sketch-${access.id || index}`,
+                "door-sketch",
+              )}
+            />
+            <path
+              className="map-access-line"
+              d={createRoughWallPath(
+                { x1: start.x, y1: start.y, x2: end.x, y2: end.y },
+                config,
+                `map-access-stem-${access.id || index}`,
+                "door",
+              )}
+            />
+            {renderMapAccessArrowHead(
+              end,
+              start,
+              config,
+              `map-access-head-${access.id || index}`,
+            )}
+            {access.doubleHeaded &&
+              renderMapAccessArrowHead(
+                start,
+                end,
+                config,
+                `map-access-head-back-${access.id || index}`,
+              )}
+            {access.label && (
+              <text
+                className="map-access-label"
+                x={labelPoint.x}
+                y={labelPoint.y}
+                textAnchor="middle"
+              >
+                {access.label}
+              </text>
+            )}
           </g>
         );
       })}
@@ -2943,7 +6001,9 @@ export function splitWallSegmentByGap(wall, gap) {
     const end = Math.min(wallMax, gapMax);
     if (end <= start) return [wall];
     return [
-      start - wallMin > epsilon ? { x1: wallMin, y1: y, x2: start, y2: y } : null,
+      start - wallMin > epsilon
+        ? { x1: wallMin, y1: y, x2: start, y2: y }
+        : null,
       wallMax - end > epsilon ? { x1: end, y1: y, x2: wallMax, y2: y } : null,
     ].filter(Boolean);
   }
@@ -2991,14 +6051,24 @@ export function splitWallIntoGridSegments(wall, gridSize) {
 
 export function segmentMatches(a, b) {
   const epsilon = 0.01;
-  const direct = Math.abs(a.x1 - b.x1) < epsilon && Math.abs(a.y1 - b.y1) < epsilon && Math.abs(a.x2 - b.x2) < epsilon && Math.abs(a.y2 - b.y2) < epsilon;
-  const reverse = Math.abs(a.x1 - b.x2) < epsilon && Math.abs(a.y1 - b.y2) < epsilon && Math.abs(a.x2 - b.x1) < epsilon && Math.abs(a.y2 - b.y1) < epsilon;
+  const direct =
+    Math.abs(a.x1 - b.x1) < epsilon &&
+    Math.abs(a.y1 - b.y1) < epsilon &&
+    Math.abs(a.x2 - b.x2) < epsilon &&
+    Math.abs(a.y2 - b.y2) < epsilon;
+  const reverse =
+    Math.abs(a.x1 - b.x2) < epsilon &&
+    Math.abs(a.y1 - b.y2) < epsilon &&
+    Math.abs(a.x2 - b.x1) < epsilon &&
+    Math.abs(a.y2 - b.y1) < epsilon;
   return direct || reverse;
 }
 
 export function getCircleRoomGridBoundarySegments(region, gridSize) {
   if (region.shape !== "circle") return [];
-  const cells = new Set(region.floorCells.map((cell) => cellKey(cell.x, cell.y)));
+  const cells = new Set(
+    region.floorCells.map((cell) => cellKey(cell.x, cell.y)),
+  );
   const seen = new Set();
   const segments = [];
 
@@ -3019,7 +6089,11 @@ export function getCircleRoomGridBoundarySegments(region, gridSize) {
 
 export function isWallSegmentOnCircleRoom(segment, region, generatedMap) {
   if (region.shape !== "circle") return false;
-  return getCircleRoomGridBoundarySegments(region, generatedMap.config.gridSize, generatedMap).some((edge) => segmentMatches(segment, edge));
+  return getCircleRoomGridBoundarySegments(
+    region,
+    generatedMap.config.gridSize,
+    generatedMap,
+  ).some((edge) => segmentMatches(segment, edge));
 }
 
 export function getCircleRoomCellKeys(generatedMap) {
@@ -3032,27 +6106,53 @@ export function getCircleRoomCellKeys(generatedMap) {
 }
 
 export function shouldHideCellWallForVectorRoom(segment, generatedMap) {
-  const adjacent = getWallSegmentAdjacentCells(segment, generatedMap.config.gridSize);
+  const adjacent = getWallSegmentAdjacentCells(
+    segment,
+    generatedMap.config.gridSize,
+  );
   if (!adjacent) return false;
   const hybridCells = getHybridLocalCaveRegionCellKeys(generatedMap);
-  if (hybridCells.has(cellKey(adjacent.a.x, adjacent.a.y)) || hybridCells.has(cellKey(adjacent.b.x, adjacent.b.y))) return true;
-  if (!generatedMap.regions.some((region) => isWallSegmentOnCircleRoom(segment, region, generatedMap))) return false;
+  if (
+    hybridCells.has(cellKey(adjacent.a.x, adjacent.a.y)) ||
+    hybridCells.has(cellKey(adjacent.b.x, adjacent.b.y))
+  )
+    return true;
+  if (
+    !generatedMap.regions.some((region) =>
+      isWallSegmentOnCircleRoom(segment, region, generatedMap),
+    )
+  )
+    return false;
   const circleCells = getCircleRoomCellKeys(generatedMap);
-  return circleCells.has(cellKey(adjacent.a.x, adjacent.a.y)) || circleCells.has(cellKey(adjacent.b.x, adjacent.b.y));
+  return (
+    circleCells.has(cellKey(adjacent.a.x, adjacent.a.y)) ||
+    circleCells.has(cellKey(adjacent.b.x, adjacent.b.y))
+  );
 }
 
 export function getHybridLocalCaveRegionCellKeys(generatedMap) {
   const keys = new Set();
   if (isPureCaveMap(generatedMap)) return keys;
-  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return keys;
-  const storedSurfaces = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
-    ? generatedMap.finalGeometry.regions || {}
-    : {};
+  if (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) !== "mine"
+  )
+    return keys;
+  const storedSurfaces =
+    generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+      ? generatedMap.finalGeometry.regions || {}
+      : {};
   generatedMap.regions
-    .filter((region) => region.surfaceKind === "cave" || region.surfaceKind === "hybrid")
+    .filter(
+      (region) =>
+        region.surfaceKind === "cave" || region.surfaceKind === "hybrid",
+    )
     .forEach((region) => {
       const surface = storedSurfaces[region.id];
-      (surface?.floorCells || region.floorCells || []).forEach((cell) => keys.add(cellKey(cell.x, cell.y)));
+      (surface?.floorCells || region.floorCells || []).forEach((cell) =>
+        keys.add(cellKey(cell.x, cell.y)),
+      );
     });
   return keys;
 }
@@ -3066,24 +6166,43 @@ export function getOrganicCorridorCellKeys(generatedMap) {
 }
 
 export function shouldHideCellWallForOrganicCorridor(segment, generatedMap) {
-  const adjacent = getWallSegmentAdjacentCells(segment, generatedMap.config.gridSize);
+  const adjacent = getWallSegmentAdjacentCells(
+    segment,
+    generatedMap.config.gridSize,
+  );
   if (!adjacent) return false;
   const organicCells = getOrganicCorridorCellKeys(generatedMap);
-  return organicCells.has(cellKey(adjacent.a.x, adjacent.a.y)) || organicCells.has(cellKey(adjacent.b.x, adjacent.b.y));
+  return (
+    organicCells.has(cellKey(adjacent.a.x, adjacent.a.y)) ||
+    organicCells.has(cellKey(adjacent.b.x, adjacent.b.y))
+  );
 }
 
 export function splitSegmentOutsideVectorRooms(segment, generatedMap) {
   return generatedMap.regions
     .filter((region) => region.shape === "circle")
-    .reduce((parts, region) => {
-      const circle = getCircleGeometryFromRegion(region, generatedMap.config.gridSize);
-      return parts.flatMap((part) => splitSegmentOutsideCircle(part, circle, generatedMap.config.gridSize));
-    }, [segment]);
+    .reduce(
+      (parts, region) => {
+        const circle = getCircleGeometryFromRegion(
+          region,
+          generatedMap.config.gridSize,
+        );
+        return parts.flatMap((part) =>
+          splitSegmentOutsideCircle(part, circle, generatedMap.config.gridSize),
+        );
+      },
+      [segment],
+    );
 }
 
 export function getCorridorWallSegmentsNearVectorRooms(generatedMap) {
-  return computeBoundarySegments(generatedMap.dungeonMask.corridorFloorCells || [], generatedMap.config.gridSize)
-    .flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize))
+  return computeBoundarySegments(
+    generatedMap.dungeonMask.corridorFloorCells || [],
+    generatedMap.config.gridSize,
+  )
+    .flatMap((wall) =>
+      splitWallIntoGridSegments(wall, generatedMap.config.gridSize),
+    )
     .filter((wall) => shouldHideCellWallForVectorRoom(wall, generatedMap))
     .flatMap((wall) => splitSegmentOutsideVectorRooms(wall, generatedMap));
 }
@@ -3119,7 +6238,8 @@ export function splitSegmentOutsideCircle(segment, circle, gridSize) {
     const mid = (start + end) / 2;
     const mx = segment.x1 + dx * mid;
     const my = segment.y1 + dy * mid;
-    const outside = Math.hypot(mx - circle.cx, my - circle.cy) >= circle.r - gridSize * 0.045;
+    const outside =
+      Math.hypot(mx - circle.cx, my - circle.cy) >= circle.r - gridSize * 0.045;
     if (!outside) continue;
     const clipped = {
       x1: segment.x1 + dx * start,
@@ -3127,24 +6247,40 @@ export function splitSegmentOutsideCircle(segment, circle, gridSize) {
       x2: segment.x1 + dx * end,
       y2: segment.y1 + dy * end,
     };
-    if (Math.hypot(clipped.x2 - clipped.x1, clipped.y2 - clipped.y1) >= gridSize * 0.08) segments.push(clipped);
+    if (
+      Math.hypot(clipped.x2 - clipped.x1, clipped.y2 - clipped.y1) >=
+      gridSize * 0.08
+    )
+      segments.push(clipped);
   }
   return segments;
 }
 
 export function getCirclePortalSquareWallSegments(region, generatedMap) {
   if (region.shape !== "circle") return [];
-  const circle = getCircleGeometryFromRegion(region, generatedMap.config.gridSize);
+  const circle = getCircleGeometryFromRegion(
+    region,
+    generatedMap.config.gridSize,
+  );
   const portals = getCircleCompositeSquareCells(generatedMap, region);
-  const extensionCellKeys = new Set(portals.map((cell) => cellKey(cell.x, cell.y)));
+  const extensionCellKeys = new Set(
+    portals.map((cell) => cellKey(cell.x, cell.y)),
+  );
   const seen = new Set();
   const segments = [];
 
   portals.forEach((portal) => {
-    getCellBoundarySegmentsForCell(portal, generatedMap.config.gridSize).forEach((edge) => {
+    getCellBoundarySegmentsForCell(
+      portal,
+      generatedMap.config.gridSize,
+    ).forEach((edge) => {
       const neighbor = getNeighborForCellSide(portal, edge.side);
       if (extensionCellKeys.has(cellKey(neighbor.x, neighbor.y))) return;
-      splitSegmentOutsideCircle(edge, circle, generatedMap.config.gridSize).forEach((part) => {
+      splitSegmentOutsideCircle(
+        edge,
+        circle,
+        generatedMap.config.gridSize,
+      ).forEach((part) => {
         const key = segmentKey({
           x1: Math.round(part.x1 * 100) / 100,
           y1: Math.round(part.y1 * 100) / 100,
@@ -3163,20 +6299,33 @@ export function getCirclePortalSquareWallSegments(region, generatedMap) {
 
 export function getDrawableWallSegments(generatedMap) {
   const gridWalls = trimWallSegmentsAgainstMineCaveOpenings(
-    (generatedMap.dungeonMask.wallSegments || []).flatMap((wall) => splitWallIntoGridSegments(wall, generatedMap.config.gridSize)),
-    generatedMap
+    (generatedMap.dungeonMask.wallSegments || []).flatMap((wall) =>
+      splitWallIntoGridSegments(wall, generatedMap.config.gridSize),
+    ),
+    generatedMap,
   )
     .filter((wall) => !shouldHideCellWallForVectorRoom(wall, generatedMap))
-    .filter((wall) => !shouldHideCellWallForOrganicCorridor(wall, generatedMap));
-  const corridorWallsNearCircles = getCorridorWallSegmentsNearVectorRooms(generatedMap);
+    .filter(
+      (wall) => !shouldHideCellWallForOrganicCorridor(wall, generatedMap),
+    );
+  const corridorWallsNearCircles =
+    getCorridorWallSegmentsNearVectorRooms(generatedMap);
   const baseWalls = trimWallSegmentsAgainstMineCaveOpenings(
     mergeCollinearWallSegments([...gridWalls, ...corridorWallsNearCircles]),
-    generatedMap
+    generatedMap,
   );
   const openDoorGaps = (generatedMap.dungeonMask.doorSegments || [])
-    .filter((door) => normalizeDoorType(door.doorType, door.secret ? "secret" : "default") === "open")
+    .filter(
+      (door) =>
+        normalizeDoorType(door.doorType, door.secret ? "secret" : "default") ===
+        "open",
+    )
     .map((door) => getOpenDoorWallGapSegment(door, generatedMap.config));
-  const mapAccessGaps = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || [])
+  const mapAccessGaps = (
+    generatedMap.dungeonMask.mapAccesses ||
+    generatedMap.mapAccesses ||
+    []
+  )
     .map((access) => access.wallGap)
     .filter(Boolean);
   const wallGaps = [...openDoorGaps, ...mapAccessGaps];
@@ -3192,14 +6341,22 @@ export function getDrawableWallSegments(generatedMap) {
 }
 
 export function getDoorCutClassName(door) {
-  const doorType = normalizeDoorType(door.doorType, door.secret ? "secret" : "default");
+  const doorType = normalizeDoorType(
+    door.doorType,
+    door.secret ? "secret" : "default",
+  );
   if (doorType === "secret") return "door-opening secret-door-opening";
   if (doorType === "open") return "door-opening open-door-opening";
   return "door-opening";
 }
 
-export function renderHexCaveUnifiedSurface(generatedMap, mapSurface, gridStyle = "solid") {
-  const caveSurface = mapSurface.caveSurface || createHexCaveSurface(generatedMap);
+export function renderHexCaveUnifiedSurface(
+  generatedMap,
+  mapSurface,
+  gridStyle = "solid",
+) {
+  const caveSurface =
+    mapSurface.caveSurface || createHexCaveSurface(generatedMap);
   const floorPath = caveSurface.visualFloorPath;
   const wallPath = caveSurface.wallPath || floorPath;
   const sketchPath = caveSurface.sketchPath || wallPath;
@@ -3208,7 +6365,11 @@ export function renderHexCaveUnifiedSurface(generatedMap, mapSurface, gridStyle 
       <path className="floor-fill" d={floorPath} fillRule="nonzero" />
       {createFloorTexture(generatedMap)}
       {renderFloorGrid(generatedMap, gridStyle)}
-      <g className="wall-shadow cave-wall-shadow" clipPath="url(#clip-dungeon-floor)" aria-hidden="true">
+      <g
+        className="wall-shadow cave-wall-shadow"
+        clipPath="url(#clip-dungeon-floor)"
+        aria-hidden="true"
+      >
         <path d={wallPath} />
       </g>
       <g className="wall-main cave-surface-walls">
@@ -3222,14 +6383,27 @@ export function renderHexCaveUnifiedSurface(generatedMap, mapSurface, gridStyle 
   );
 }
 
-export function renderOrganicCaveUnifiedSurface(generatedMap, mapSurface, gridStyle = "solid") {
-  const caveSurface = mapSurface.caveSurface || createCellBasedCaveSurface(generatedMap);
+export function renderOrganicCaveUnifiedSurface(
+  generatedMap,
+  mapSurface,
+  gridStyle = "solid",
+) {
+  const caveSurface =
+    mapSurface.caveSurface || createCellBasedCaveSurface(generatedMap);
   return (
     <>
-      <path className="floor-fill" d={caveSurface.visualFloorPath} fillRule="nonzero" />
+      <path
+        className="floor-fill"
+        d={caveSurface.visualFloorPath}
+        fillRule="nonzero"
+      />
       {createFloorTexture(generatedMap)}
       {renderFloorGrid(generatedMap, gridStyle)}
-      <g className="wall-shadow cave-wall-shadow" clipPath="url(#clip-dungeon-floor)" aria-hidden="true">
+      <g
+        className="wall-shadow cave-wall-shadow"
+        clipPath="url(#clip-dungeon-floor)"
+        aria-hidden="true"
+      >
         <path d={caveSurface.wallPath} />
       </g>
       <g className="wall-main cave-surface-walls">
@@ -3273,11 +6447,23 @@ export function renderUnifiedDungeonSurface(generatedMap, gridStyle = "solid") {
       {renderCrossLevelCorridorOverpasses(generatedMap)}
       <g className="door-cuts">
         {dungeonMask.doorSegments.map((door, index) => {
-          const doorType = normalizeDoorType(door.doorType, door.secret ? "secret" : "default");
+          const doorType = normalizeDoorType(
+            door.doorType,
+            door.secret ? "secret" : "default",
+          );
           if (door.breach) return null;
           if (doorType === "open") return null;
           const cut = getDoorCutSegment(door, config);
-          return <line key={`door-opening-${index}`} x1={cut.x1} y1={cut.y1} x2={cut.x2} y2={cut.y2} className={getDoorCutClassName(door)} />;
+          return (
+            <line
+              key={`door-opening-${index}`}
+              x1={cut.x1}
+              y1={cut.y1}
+              x2={cut.x2}
+              y2={cut.y2}
+              className={getDoorCutClassName(door)}
+            />
+          );
         })}
       </g>
       {renderDoorSymbols(generatedMap)}
@@ -3292,7 +6478,14 @@ export function renderProp(prop) {
   if (prop.kind === "pew") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.7} y={-s * 0.14} width={s * 1.4} height={s * 0.28} rx="1" />
+        <rect
+          className="prop-fill"
+          x={-s * 0.7}
+          y={-s * 0.14}
+          width={s * 1.4}
+          height={s * 0.28}
+          rx="1"
+        />
         <line x1={-s * 0.62} y1={s * 0.18} x2={s * 0.62} y2={s * 0.18} />
       </g>
     );
@@ -3300,7 +6493,14 @@ export function renderProp(prop) {
   if (prop.kind === "bed") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.48} y={-s * 0.56} width={s * 0.96} height={s * 1.12} rx="2" />
+        <rect
+          className="prop-fill"
+          x={-s * 0.48}
+          y={-s * 0.56}
+          width={s * 0.96}
+          height={s * 1.12}
+          rx="2"
+        />
         <line x1={-s * 0.42} y1={-s * 0.22} x2={s * 0.42} y2={-s * 0.22} />
       </g>
     );
@@ -3308,15 +6508,31 @@ export function renderProp(prop) {
   if (prop.kind === "desk") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.5} y={-s * 0.34} width={s} height={s * 0.68} rx="1" />
-        <path d={`M${-s * 0.32} ${-s * 0.08}h${s * 0.64}M${-s * 0.24} ${s * 0.12}h${s * 0.38}`} />
+        <rect
+          className="prop-fill"
+          x={-s * 0.5}
+          y={-s * 0.34}
+          width={s}
+          height={s * 0.68}
+          rx="1"
+        />
+        <path
+          d={`M${-s * 0.32} ${-s * 0.08}h${s * 0.64}M${-s * 0.24} ${s * 0.12}h${s * 0.38}`}
+        />
       </g>
     );
   }
   if (prop.kind === "chest") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.42} y={-s * 0.28} width={s * 0.84} height={s * 0.56} rx="1" />
+        <rect
+          className="prop-fill"
+          x={-s * 0.42}
+          y={-s * 0.28}
+          width={s * 0.84}
+          height={s * 0.56}
+          rx="1"
+        />
         <path d={`M${-s * 0.42} 0h${s * 0.84}M0 ${-s * 0.24}v${s * 0.48}`} />
       </g>
     );
@@ -3324,8 +6540,13 @@ export function renderProp(prop) {
   if (prop.kind === "fireplace") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <path className="prop-fill" d={`M${-s * 0.5} ${s * 0.3}V${-s * 0.3}H${s * 0.5}V${s * 0.3}`} />
-        <path d={`M${-s * 0.18} ${s * 0.22}C${-s * 0.1} ${-s * 0.1},${s * 0.1} ${-s * 0.1},${s * 0.18} ${s * 0.22}`} />
+        <path
+          className="prop-fill"
+          d={`M${-s * 0.5} ${s * 0.3}V${-s * 0.3}H${s * 0.5}V${s * 0.3}`}
+        />
+        <path
+          d={`M${-s * 0.18} ${s * 0.22}C${-s * 0.1} ${-s * 0.1},${s * 0.1} ${-s * 0.1},${s * 0.18} ${s * 0.22}`}
+        />
       </g>
     );
   }
@@ -3343,57 +6564,126 @@ export function renderProp(prop) {
   if (prop.kind === "mine-support") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <path d={`M${-s * 0.5} ${s * 0.42}V${-s * 0.42}H${s * 0.5}V${s * 0.42}`} />
+        <path
+          d={`M${-s * 0.5} ${s * 0.42}V${-s * 0.42}H${s * 0.5}V${s * 0.42}`}
+        />
       </g>
     );
   }
   if (prop.kind === "stalagmite") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <polygon className="prop-fill" points={`0,${-s * 0.48} ${-s * 0.22},${s * 0.34} ${s * 0.2},${s * 0.32}`} />
-        <polygon className="prop-fill" points={`${-s * 0.34},${-s * 0.12} ${-s * 0.52},${s * 0.36} ${-s * 0.16},${s * 0.28}`} />
+        <polygon
+          className="prop-fill"
+          points={`0,${-s * 0.48} ${-s * 0.22},${s * 0.34} ${s * 0.2},${s * 0.32}`}
+        />
+        <polygon
+          className="prop-fill"
+          points={`${-s * 0.34},${-s * 0.12} ${-s * 0.52},${s * 0.36} ${-s * 0.16},${s * 0.28}`}
+        />
       </g>
     );
   }
   if (prop.kind === "broken-wall") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <path d={`M${-s * 0.62} ${-s * 0.08}h${s * 0.38}m${s * 0.16} 0h${s * 0.46}`} />
-        <path className="prop-crack" d={`M${-s * 0.12} ${-s * 0.24}l${s * 0.16} ${s * 0.22}l${-s * 0.12} ${s * 0.18}`} />
+        <path
+          d={`M${-s * 0.62} ${-s * 0.08}h${s * 0.38}m${s * 0.16} 0h${s * 0.46}`}
+        />
+        <path
+          className="prop-crack"
+          d={`M${-s * 0.12} ${-s * 0.24}l${s * 0.16} ${s * 0.22}l${-s * 0.12} ${s * 0.18}`}
+        />
       </g>
     );
   }
-  if (prop.kind === "shelf") return <rect className="prop-shelf" x={prop.x - s * 0.66} y={prop.y - s * 0.18} width={s * 1.32} height={s * 0.36} transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`} />;
+  if (prop.kind === "shelf")
+    return (
+      <rect
+        className="prop-shelf"
+        x={prop.x - s * 0.66}
+        y={prop.y - s * 0.18}
+        width={s * 1.32}
+        height={s * 0.36}
+        transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`}
+      />
+    );
   if (prop.kind === "scroll-table") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.48} y={-s * 0.32} width={s * 0.96} height={s * 0.64} rx="1" />
-        <path d={`M${-s * 0.28} ${-s * 0.05}h${s * 0.56}M${-s * 0.22} ${s * 0.12}h${s * 0.38}`} />
+        <rect
+          className="prop-fill"
+          x={-s * 0.48}
+          y={-s * 0.32}
+          width={s * 0.96}
+          height={s * 0.64}
+          rx="1"
+        />
+        <path
+          d={`M${-s * 0.28} ${-s * 0.05}h${s * 0.56}M${-s * 0.22} ${s * 0.12}h${s * 0.38}`}
+        />
       </g>
     );
   }
-  if (prop.kind === "pit") return <circle className="prop-pit" cx={prop.x} cy={prop.y} r={s * 0.42} />;
-  if (prop.kind === "pillar") return <circle className="prop-light-fill" cx={prop.x} cy={prop.y} r={s * 0.22} />;
+  if (prop.kind === "pit")
+    return <circle className="prop-pit" cx={prop.x} cy={prop.y} r={s * 0.42} />;
+  if (prop.kind === "pillar")
+    return (
+      <circle
+        className="prop-light-fill"
+        cx={prop.x}
+        cy={prop.y}
+        r={s * 0.22}
+      />
+    );
   if (prop.kind === "statue") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-fill" x={-s * 0.22} y={-s * 0.38} width={s * 0.44} height={s * 0.76} rx="2" />
+        <rect
+          className="prop-fill"
+          x={-s * 0.22}
+          y={-s * 0.38}
+          width={s * 0.44}
+          height={s * 0.76}
+          rx="2"
+        />
         <circle cx="0" cy={-s * 0.24} r={s * 0.12} />
       </g>
     );
   }
-  if (prop.kind === "tomb") return <rect className="prop-tomb" x={prop.x - s * 0.52} y={prop.y - s * 0.28} width={s * 1.04} height={s * 0.56} rx="2" transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`} />;
+  if (prop.kind === "tomb")
+    return (
+      <rect
+        className="prop-tomb"
+        x={prop.x - s * 0.52}
+        y={prop.y - s * 0.28}
+        width={s * 1.04}
+        height={s * 0.56}
+        rx="2"
+        transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`}
+      />
+    );
   if (prop.kind === "altar") {
     return (
       <g transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <rect className="prop-altar" x={-s * 0.5} y={-s * 0.28} width={s} height={s * 0.56} rx="1" />
+        <rect
+          className="prop-altar"
+          x={-s * 0.5}
+          y={-s * 0.28}
+          width={s}
+          height={s * 0.56}
+          rx="1"
+        />
         <path d={`M${-s * 0.24} 0h${s * 0.48}M0 ${-s * 0.18}v${s * 0.36}`} />
       </g>
     );
   }
   if (prop.kind === "bones") {
     return (
-      <g className="prop-bones" transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
+      <g
+        className="prop-bones"
+        transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}
+      >
         <line x1={-s * 0.36} y1="0" x2={s * 0.36} y2="0" />
         <line x1="0" y1={-s * 0.25} x2="0" y2={s * 0.25} />
         <circle cx={-s * 0.42} cy="0" r={s * 0.08} />
@@ -3403,18 +6693,42 @@ export function renderProp(prop) {
   }
   if (prop.kind === "rubble") {
     return (
-      <g className="prop-rubble" transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <polygon points={`${-s * 0.38},${s * 0.2} ${-s * 0.14},${-s * 0.3} ${s * 0.2},${-s * 0.12} ${s * 0.4},${s * 0.28}`} />
-        <polygon points={`${-s * 0.08},${s * 0.34} ${s * 0.14},${s * 0.04} ${s * 0.34},${s * 0.36}`} />
+      <g
+        className="prop-rubble"
+        transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}
+      >
+        <polygon
+          points={`${-s * 0.38},${s * 0.2} ${-s * 0.14},${-s * 0.3} ${s * 0.2},${-s * 0.12} ${s * 0.4},${s * 0.28}`}
+        />
+        <polygon
+          points={`${-s * 0.08},${s * 0.34} ${s * 0.14},${s * 0.04} ${s * 0.34},${s * 0.36}`}
+        />
       </g>
     );
   }
-  if (prop.kind === "water") return <ellipse className="prop-water" cx={prop.x} cy={prop.y} rx={s * 0.72} ry={s * 0.42} transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`} />;
+  if (prop.kind === "water")
+    return (
+      <ellipse
+        className="prop-water"
+        cx={prop.x}
+        cy={prop.y}
+        rx={s * 0.72}
+        ry={s * 0.42}
+        transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`}
+      />
+    );
   if (prop.kind === "fog") {
     return (
-      <g className="prop-fog" transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}>
-        <path d={`M${-s * 0.7} ${-s * 0.08}C${-s * 0.36} ${-s * 0.28},${-s * 0.1} ${s * 0.16},${s * 0.28} ${-s * 0.06}S${s * 0.68} ${s * 0.08},${s * 0.78} ${-s * 0.02}`} />
-        <path d={`M${-s * 0.52} ${s * 0.2}C${-s * 0.16} ${s * 0.02},${s * 0.18} ${s * 0.36},${s * 0.56} ${s * 0.16}`} />
+      <g
+        className="prop-fog"
+        transform={`translate(${prop.x} ${prop.y}) rotate(${prop.rotation})`}
+      >
+        <path
+          d={`M${-s * 0.7} ${-s * 0.08}C${-s * 0.36} ${-s * 0.28},${-s * 0.1} ${s * 0.16},${s * 0.28} ${-s * 0.06}S${s * 0.68} ${s * 0.08},${s * 0.78} ${-s * 0.02}`}
+        />
+        <path
+          d={`M${-s * 0.52} ${s * 0.2}C${-s * 0.16} ${s * 0.02},${s * 0.18} ${s * 0.36},${s * 0.56} ${s * 0.16}`}
+        />
       </g>
     );
   }
@@ -3426,12 +6740,34 @@ export function renderProp(prop) {
       </g>
     );
   }
-  if (prop.kind === "table") return <rect className="prop-fill" x={prop.x - s * 0.45} y={prop.y - s * 0.3} width={s * 0.9} height={s * 0.6} rx="1" transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`} />;
-  return <path className="prop-crack" d={`M${prop.x - s * 0.36} ${prop.y + s * 0.14}C${prop.x - s * 0.1} ${prop.y - s * 0.38},${prop.x + s * 0.2} ${prop.y + s * 0.4},${prop.x + s * 0.42} ${prop.y - s * 0.16}`} />;
+  if (prop.kind === "table")
+    return (
+      <rect
+        className="prop-fill"
+        x={prop.x - s * 0.45}
+        y={prop.y - s * 0.3}
+        width={s * 0.9}
+        height={s * 0.6}
+        rx="1"
+        transform={`rotate(${prop.rotation} ${prop.x} ${prop.y})`}
+      />
+    );
+  return (
+    <path
+      className="prop-crack"
+      d={`M${prop.x - s * 0.36} ${prop.y + s * 0.14}C${prop.x - s * 0.1} ${prop.y - s * 0.38},${prop.x + s * 0.2} ${prop.y + s * 0.4},${prop.x + s * 0.42} ${prop.y - s * 0.16}`}
+    />
+  );
 }
 
 export function renderProps(props) {
-  return <g className="props">{props.map((prop) => <g key={prop.id}>{renderProp(prop)}</g>)}</g>;
+  return (
+    <g className="props">
+      {props.map((prop) => (
+        <g key={prop.id}>{renderProp(prop)}</g>
+      ))}
+    </g>
+  );
 }
 
 export function renderLabels(generatedMap, options) {
@@ -3440,8 +6776,23 @@ export function renderLabels(generatedMap, options) {
       {generatedMap.regions.map((region) => (
         <g key={`label-${region.id}`}>
           <circle cx={region.labelPoint.x} cy={region.labelPoint.y} r={11} />
-          <text x={region.labelPoint.x} y={region.labelPoint.y + 4} textAnchor="middle">{region.number}</text>
-          {options.showNames && <text className="room-name" x={region.labelPoint.x} y={region.labelPoint.y + 27} textAnchor="middle">{region.name}</text>}
+          <text
+            x={region.labelPoint.x}
+            y={region.labelPoint.y + 4}
+            textAnchor="middle"
+          >
+            {region.number}
+          </text>
+          {options.showNames && (
+            <text
+              className="room-name"
+              x={region.labelPoint.x}
+              y={region.labelPoint.y + 27}
+              textAnchor="middle"
+            >
+              {region.name}
+            </text>
+          )}
         </g>
       ))}
     </g>
@@ -3449,12 +6800,15 @@ export function renderLabels(generatedMap, options) {
 }
 
 export function getRoomDragCells(region, gridSize) {
-  const regionCells = new Set(region.floorCells.map((cell) => cellKey(cell.x, cell.y)));
-  const interiorCells = region.floorCells.filter((cell) =>
-    regionCells.has(cellKey(cell.x + 1, cell.y)) &&
-    regionCells.has(cellKey(cell.x - 1, cell.y)) &&
-    regionCells.has(cellKey(cell.x, cell.y + 1)) &&
-    regionCells.has(cellKey(cell.x, cell.y - 1))
+  const regionCells = new Set(
+    region.floorCells.map((cell) => cellKey(cell.x, cell.y)),
+  );
+  const interiorCells = region.floorCells.filter(
+    (cell) =>
+      regionCells.has(cellKey(cell.x + 1, cell.y)) &&
+      regionCells.has(cellKey(cell.x - 1, cell.y)) &&
+      regionCells.has(cellKey(cell.x, cell.y + 1)) &&
+      regionCells.has(cellKey(cell.x, cell.y - 1)),
   );
   if (interiorCells.length > 0) return interiorCells;
   const center = {
@@ -3477,7 +6831,14 @@ export function createOppositeSharedAnchor(anchor, adjacentRegionId) {
   if (!anchor || !adjacentRegionId) return null;
   return {
     regionId: adjacentRegionId,
-    side: anchor.side === "north" ? "south" : anchor.side === "south" ? "north" : anchor.side === "east" ? "west" : "east",
+    side:
+      anchor.side === "north"
+        ? "south"
+        : anchor.side === "south"
+          ? "north"
+          : anchor.side === "east"
+            ? "west"
+            : "east",
     cell: { x: anchor.outsideCell.x, y: anchor.outsideCell.y },
     outsideCell: { x: anchor.cell.x, y: anchor.cell.y },
     normal: { x: -anchor.normal.x, y: -anchor.normal.y },
@@ -3487,25 +6848,46 @@ export function createOppositeSharedAnchor(anchor, adjacentRegionId) {
 export function getCellRegionOwnerMap(regions) {
   const owners = new Map();
   regions.forEach((region) => {
-    region.floorCells.forEach((cell) => owners.set(cellKey(cell.x, cell.y), region.id));
+    region.floorCells.forEach((cell) =>
+      owners.set(cellKey(cell.x, cell.y), region.id),
+    );
   });
   return owners;
 }
 
 export function getHybridFinalWallConnectionZones(region, generatedMap) {
   if (isPureCaveMap(generatedMap)) return [];
-  if (getContextKey(generatedMap?.config?.context || generatedMap?.config?.biome) !== "mine") return [];
-  if (region?.surfaceKind !== "cave" && region?.surfaceKind !== "hybrid") return [];
-  const surface = generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
-    ? generatedMap.finalGeometry.regions?.[region.id]
-    : null;
-  const segments = surface?.finalGeometry && Array.isArray(surface.boundarySegments)
-    ? surface.boundarySegments
-    : [];
+  if (
+    getContextKey(
+      generatedMap?.config?.context || generatedMap?.config?.biome,
+    ) !== "mine"
+  )
+    return [];
+  if (region?.surfaceKind !== "cave" && region?.surfaceKind !== "hybrid")
+    return [];
+  const surface =
+    generatedMap?.finalGeometry?.kind === "final-hybrid-geometry"
+      ? generatedMap.finalGeometry.regions?.[region.id]
+      : null;
+  const segments =
+    surface?.finalGeometry && Array.isArray(surface.boundarySegments)
+      ? surface.boundarySegments
+      : [];
   return segments
-    .filter((segment) => Number.isFinite(segment.x1) && Number.isFinite(segment.y1) && Number.isFinite(segment.x2) && Number.isFinite(segment.y2))
+    .filter(
+      (segment) =>
+        Number.isFinite(segment.x1) &&
+        Number.isFinite(segment.y1) &&
+        Number.isFinite(segment.x2) &&
+        Number.isFinite(segment.y2),
+    )
     .map((segment, index) => {
-      const anchor = createFinalAnchorFromSegment(segment, region, generatedMap, index);
+      const anchor = createFinalAnchorFromSegment(
+        segment,
+        region,
+        generatedMap,
+        index,
+      );
       const point = getAnchorHandlePoint(anchor, generatedMap.config.gridSize);
       return {
         id: `hybrid-cave-boundary:${region.id}:${index}`,
@@ -3519,23 +6901,38 @@ export function getHybridFinalWallConnectionZones(region, generatedMap) {
     });
 }
 
-export function getWallConnectionZones(region, regions, gridSize, generatedMap = null) {
+export function getWallConnectionZones(
+  region,
+  regions,
+  gridSize,
+  generatedMap = null,
+) {
   if (isPureCaveMap(generatedMap)) {
-    const segments = generatedMap?.finalGeometry?.caveSurface?.boundarySegments || [];
+    const segments =
+      generatedMap?.finalGeometry?.caveSurface?.boundarySegments || [];
     if (!Array.isArray(segments) || segments.length === 0) return [];
     const bounds = getCaveAccessBounds(segments, generatedMap);
     return segments
       .map((segment, index) => {
-        const point = { x: (segment.x1 + segment.x2) / 2, y: (segment.y1 + segment.y2) / 2 };
-        const owner = regions
-          .map((candidate) => {
-            const dx = candidate.labelPoint.x - point.x;
-            const dy = candidate.labelPoint.y - point.y;
-            return { region: candidate, score: dx * dx + dy * dy };
-          })
-          .sort((a, b) => a.score - b.score)[0]?.region || region;
+        const point = {
+          x: (segment.x1 + segment.x2) / 2,
+          y: (segment.y1 + segment.y2) / 2,
+        };
+        const owner =
+          regions
+            .map((candidate) => {
+              const dx = candidate.labelPoint.x - point.x;
+              const dy = candidate.labelPoint.y - point.y;
+              return { region: candidate, score: dx * dx + dy * dy };
+            })
+            .sort((a, b) => a.score - b.score)[0]?.region || region;
         if (owner.id !== region.id) return null;
-        const anchor = createCaveAccessBoundaryAnchor(segment, generatedMap, index, bounds);
+        const anchor = createCaveAccessBoundaryAnchor(
+          segment,
+          generatedMap,
+          index,
+          bounds,
+        );
         return {
           id: `cave-boundary:${owner.id}:${index}`,
           regionId: owner.id,
@@ -3548,28 +6945,41 @@ export function getWallConnectionZones(region, regions, gridSize, generatedMap =
       })
       .filter(Boolean);
   }
-  const hybridFinalZones = getHybridFinalWallConnectionZones(region, generatedMap);
+  const hybridFinalZones = getHybridFinalWallConnectionZones(
+    region,
+    generatedMap,
+  );
   if (hybridFinalZones.length > 0) return hybridFinalZones;
   const ownerByCell = getCellRegionOwnerMap(regions);
   const finalAnchors = getFinalConnectionAnchors(generatedMap, region);
-  const anchors = finalAnchors.length > 0 ? finalAnchors : getBoundaryCells(region);
-  return anchors.map((anchor) => {
-    const segment = anchor.segment || getSharedEdgeSegment(anchor.cell, anchor.outsideCell, gridSize);
-    const point = getAnchorHandlePoint(anchor, gridSize);
-    const adjacentRegionId = ownerByCell.get(cellKey(anchor.outsideCell.x, anchor.outsideCell.y));
-    const adjacentAnchor = adjacentRegionId && adjacentRegionId !== region.id
-      ? createOppositeSharedAnchor(anchor, adjacentRegionId)
-      : null;
-    return segment ? {
-      id: `${region.id}:${anchor.side}:${anchor.cell.x}:${anchor.cell.y}`,
-      regionId: region.id,
-      adjacentRegionId: adjacentAnchor ? adjacentRegionId : null,
-      adjacentAnchor,
-      anchor,
-      point,
-      ...segment,
-    } : null;
-  }).filter(Boolean);
+  const anchors =
+    finalAnchors.length > 0 ? finalAnchors : getBoundaryCells(region);
+  return anchors
+    .map((anchor) => {
+      const segment =
+        anchor.segment ||
+        getSharedEdgeSegment(anchor.cell, anchor.outsideCell, gridSize);
+      const point = getAnchorHandlePoint(anchor, gridSize);
+      const adjacentRegionId = ownerByCell.get(
+        cellKey(anchor.outsideCell.x, anchor.outsideCell.y),
+      );
+      const adjacentAnchor =
+        adjacentRegionId && adjacentRegionId !== region.id
+          ? createOppositeSharedAnchor(anchor, adjacentRegionId)
+          : null;
+      return segment
+        ? {
+            id: `${region.id}:${anchor.side}:${anchor.cell.x}:${anchor.cell.y}`,
+            regionId: region.id,
+            adjacentRegionId: adjacentAnchor ? adjacentRegionId : null,
+            adjacentAnchor,
+            anchor,
+            point,
+            ...segment,
+          }
+        : null;
+    })
+    .filter(Boolean);
 }
 
 export function getClosestCorridorPathIndex(corridor, cell) {
@@ -3591,9 +7001,15 @@ export function getClosestCorridorPathIndex(corridor, cell) {
 
 export function getManualWaypointInsertIndex(corridor, cell) {
   const targetIndex = getClosestCorridorPathIndex(corridor, cell);
-  const manualPoints = Array.isArray(corridor.manualWaypoints) ? corridor.manualWaypoints.filter(isValidPoint) : [];
-  const manualPathIndexes = manualPoints.map((point) => getClosestCorridorPathIndex(corridor, point));
-  const insertIndex = manualPathIndexes.findIndex((pathIndex) => pathIndex > targetIndex);
+  const manualPoints = Array.isArray(corridor.manualWaypoints)
+    ? corridor.manualWaypoints.filter(isValidPoint)
+    : [];
+  const manualPathIndexes = manualPoints.map((point) =>
+    getClosestCorridorPathIndex(corridor, point),
+  );
+  const insertIndex = manualPathIndexes.findIndex(
+    (pathIndex) => pathIndex > targetIndex,
+  );
   return insertIndex === -1 ? manualPoints.length : insertIndex;
 }
 
@@ -3617,28 +7033,79 @@ export function renderCorridorJunctionOverrides(generatedMap) {
   const manualJunctions = generatedMap.config.manualCorridorJunctions || {};
   const visible = junctions
     .map((junction) => {
-      const override = getManualJunctionOverride(manualJunctions, junction.key, "merge");
-      return { ...junction, type: override.type, sideIndex: override.sideIndex };
+      const override = getManualJunctionOverride(
+        manualJunctions,
+        junction.key,
+        "merge",
+      );
+      return {
+        ...junction,
+        type: override.type,
+        sideIndex: override.sideIndex,
+      };
     })
     .filter((junction) => junction.type !== "merge");
   if (visible.length === 0) return null;
   return (
     <g className="corridor-junctions">
       {visible.map((junction, index) => {
-        const geometry = getCorridorJunctionGeometry(junction, generatedMap.config, junction.sideIndex);
+        const geometry = getCorridorJunctionGeometry(
+          junction,
+          generatedMap.config,
+          junction.sideIndex,
+        );
         if (junction.type === "wall") {
           return (
             <g key={`junction-wall-${junction.key}`}>
-              <path className="junction-wall-line" d={createRoughWallPath(geometry.line, generatedMap.config, `junction-${junction.key}-${index}`, "main")} />
-              <path className="junction-wall-sketch" d={createRoughWallPath(geometry.line, generatedMap.config, `junction-sketch-${junction.key}-${index}`, "sketch")} />
+              <path
+                className="junction-wall-line"
+                d={createRoughWallPath(
+                  geometry.line,
+                  generatedMap.config,
+                  `junction-${junction.key}-${index}`,
+                  "main",
+                )}
+              />
+              <path
+                className="junction-wall-sketch"
+                d={createRoughWallPath(
+                  geometry.line,
+                  generatedMap.config,
+                  `junction-sketch-${junction.key}-${index}`,
+                  "sketch",
+                )}
+              />
             </g>
           );
         }
         return (
           <g key={`junction-door-${junction.key}`}>
-            <path className="junction-wall-line" d={createRoughWallPath(geometry.line, generatedMap.config, `junction-door-${junction.key}-${index}`, "door")} />
-            <path className="junction-wall-sketch" d={createRoughWallPath(geometry.line, generatedMap.config, `junction-door-sketch-${junction.key}-${index}`, "door-sketch")} />
-            <path className="junction-door-panel" d={createRoughDoorPanelPath(geometry.panel, generatedMap.config, `junction-door-panel-${junction.key}-${index}`)} />
+            <path
+              className="junction-wall-line"
+              d={createRoughWallPath(
+                geometry.line,
+                generatedMap.config,
+                `junction-door-${junction.key}-${index}`,
+                "door",
+              )}
+            />
+            <path
+              className="junction-wall-sketch"
+              d={createRoughWallPath(
+                geometry.line,
+                generatedMap.config,
+                `junction-door-sketch-${junction.key}-${index}`,
+                "door-sketch",
+              )}
+            />
+            <path
+              className="junction-door-panel"
+              d={createRoughDoorPanelPath(
+                geometry.panel,
+                generatedMap.config,
+                `junction-door-panel-${junction.key}-${index}`,
+              )}
+            />
           </g>
         );
       })}
@@ -3647,15 +7114,24 @@ export function renderCorridorJunctionOverrides(generatedMap) {
 }
 
 export function renderCrossLevelCorridorOverpasses(generatedMap) {
-  const crossings = getCrossLevelCorridorIntersectionCells(generatedMap.corridors)
+  const crossings = getCrossLevelCorridorIntersectionCells(
+    generatedMap.corridors,
+  )
     .map((crossing) => {
       const topLevel = Math.max(...crossing.levels);
-      const topCorridor = crossing.corridors.find((corridor) => getCorridorPlanarLevel(corridor) === topLevel) || crossing.corridors[0];
+      const topCorridor =
+        crossing.corridors.find(
+          (corridor) => getCorridorPlanarLevel(corridor) === topLevel,
+        ) || crossing.corridors[0];
       return {
         ...crossing,
         topLevel,
         topCorridor,
-        topWalls: getCorridorLocalWallSegmentsForCell(topCorridor, crossing.cell, generatedMap.config.gridSize),
+        topWalls: getCorridorLocalWallSegmentsForCell(
+          topCorridor,
+          crossing.cell,
+          generatedMap.config.gridSize,
+        ),
       };
     })
     .filter((crossing) => crossing.topCorridor && crossing.topWalls.length > 0)
@@ -3666,13 +7142,24 @@ export function renderCrossLevelCorridorOverpasses(generatedMap) {
   return (
     <g className="corridor-overpass-patches">
       {crossings.map((crossing, index) => (
-        <g key={`cross-level-corridor-${crossing.key}-${index}`} className="corridor-overpass-patch">
-          <path className="overpass-corridor-floor" d={cellRectToPath(crossing.cell, config.gridSize)} />
+        <g
+          key={`cross-level-corridor-${crossing.key}-${index}`}
+          className="corridor-overpass-patch"
+        >
+          <path
+            className="overpass-corridor-floor"
+            d={cellRectToPath(crossing.cell, config.gridSize)}
+          />
           <g className="wall-main overpass-corridor-walls">
             {crossing.topWalls.map((wall, wallIndex) => (
               <path
                 key={`cross-level-wall-${crossing.key}-${wallIndex}`}
-                d={createRoughWallPath(wall, config, `cross-level-top-${crossing.key}-${index}-${wallIndex}`, "main")}
+                d={createRoughWallPath(
+                  wall,
+                  config,
+                  `cross-level-top-${crossing.key}-${index}-${wallIndex}`,
+                  "main",
+                )}
               />
             ))}
           </g>
@@ -3680,7 +7167,12 @@ export function renderCrossLevelCorridorOverpasses(generatedMap) {
             {crossing.topWalls.map((wall, wallIndex) => (
               <path
                 key={`cross-level-wall-sketch-${crossing.key}-${wallIndex}`}
-                d={createRoughWallPath(wall, config, `cross-level-top-sketch-${crossing.key}-${index}-${wallIndex}`, "sketch")}
+                d={createRoughWallPath(
+                  wall,
+                  config,
+                  `cross-level-top-sketch-${crossing.key}-${index}-${wallIndex}`,
+                  "sketch",
+                )}
               />
             ))}
           </g>
@@ -3694,26 +7186,38 @@ export function renderRoomHoverHighlight(region, generatedMap) {
   if (!region) return null;
   if (isPureCaveMap(generatedMap)) return null;
 
-  const shape = getRegionCompositeShape(region, generatedMap, generatedMap.config.gridSize);
-  const pathOnlyHighlight = Boolean(shape.hoverPath) && (shape.surfaceKind === "cave" || shape.geometryKind === "organic-cell-mask" || isPureCaveMap(generatedMap));
-  const haloSegments = pathOnlyHighlight ? [] : shape.hoverSegments.map((segment, index) => (
-    <line
-      key={`room-hover-halo-${region.id}-${index}`}
-      x1={segment.x1}
-      y1={segment.y1}
-      x2={segment.x2}
-      y2={segment.y2}
-    />
-  ));
-  const edgeSegments = pathOnlyHighlight ? [] : shape.hoverSegments.map((segment, index) => (
-    <line
-      key={`room-hover-edge-${region.id}-${index}`}
-      x1={segment.x1}
-      y1={segment.y1}
-      x2={segment.x2}
-      y2={segment.y2}
-    />
-  ));
+  const shape = getRegionCompositeShape(
+    region,
+    generatedMap,
+    generatedMap.config.gridSize,
+  );
+  const pathOnlyHighlight =
+    Boolean(shape.hoverPath) &&
+    (shape.surfaceKind === "cave" ||
+      shape.geometryKind === "organic-cell-mask" ||
+      isPureCaveMap(generatedMap));
+  const haloSegments = pathOnlyHighlight
+    ? []
+    : shape.hoverSegments.map((segment, index) => (
+        <line
+          key={`room-hover-halo-${region.id}-${index}`}
+          x1={segment.x1}
+          y1={segment.y1}
+          x2={segment.x2}
+          y2={segment.y2}
+        />
+      ));
+  const edgeSegments = pathOnlyHighlight
+    ? []
+    : shape.hoverSegments.map((segment, index) => (
+        <line
+          key={`room-hover-edge-${region.id}-${index}`}
+          x1={segment.x1}
+          y1={segment.y1}
+          x2={segment.x2}
+          y2={segment.y2}
+        />
+      ));
 
   return (
     <g className="room-hover-highlight">
@@ -3737,11 +7241,16 @@ export function corridorPathD(corridor, gridSize) {
     const startAnchor = corridor.fromAnchor;
     const endAnchor = corridor.toAnchor;
     if (startAnchor && endAnchor) {
-      points = [getAnchorHandlePoint(startAnchor, gridSize), getAnchorHandlePoint(endAnchor, gridSize)];
+      points = [
+        getAnchorHandlePoint(startAnchor, gridSize),
+        getAnchorHandlePoint(endAnchor, gridSize),
+      ];
     }
   }
   if (points.length < 2) return "";
-  return points.map((point, index) => `${index === 0 ? "M" : "L"}${point.x} ${point.y}`).join("");
+  return points
+    .map((point, index) => `${index === 0 ? "M" : "L"}${point.x} ${point.y}`)
+    .join("");
 }
 
 export function renderCorridorHoverHighlight(corridor, gridSize) {
@@ -3758,7 +7267,12 @@ export function renderCorridorHoverHighlight(corridor, gridSize) {
 
 export function getCaveEditorZonePath(region, generatedMap, gridSize) {
   const surface = getRegionSurface(region, generatedMap);
-  return surface?.hoverPath || surface?.visualFloorPath || buildOrganicCellBoundaryPath(region, generatedMap, gridSize) || buildFloorPath(region.floorCells || [], gridSize);
+  return (
+    surface?.hoverPath ||
+    surface?.visualFloorPath ||
+    buildOrganicCellBoundaryPath(region, generatedMap, gridSize) ||
+    buildFloorPath(region.floorCells || [], gridSize)
+  );
 }
 
 export function renderCaveEditorZoneOverlays(generatedMap, editorOptions = {}) {
@@ -3778,12 +7292,26 @@ export function renderCaveEditorZoneOverlays(generatedMap, editorOptions = {}) {
           "cave-zone-overlay",
           hoveredRegionId === region.id ? "cave-zone-overlay--hovered" : "",
           draggingRegionId === region.id ? "cave-zone-overlay--selected" : "",
-        ].filter(Boolean).join(" ");
+        ]
+          .filter(Boolean)
+          .join(" ");
         return (
           <g key={`cave-zone-${region.id}`} className={classes}>
             <path d={d} fillRule="nonzero" />
-            <circle className="cave-zone-overlay__node" cx={point.x} cy={point.y} r={8} />
-            <text className="cave-zone-overlay__label" x={point.x} y={point.y + 3.2} textAnchor="middle">{region.number || ""}</text>
+            <circle
+              className="cave-zone-overlay__node"
+              cx={point.x}
+              cy={point.y}
+              r={8}
+            />
+            <text
+              className="cave-zone-overlay__label"
+              x={point.x}
+              y={point.y + 3.2}
+              textAnchor="middle"
+            >
+              {region.number || ""}
+            </text>
           </g>
         );
       })}
@@ -3804,8 +7332,16 @@ export function renderCaveTunnelTraces(generatedMap, activeCorridorId = null) {
         const classes = [
           "cave-tunnel-trace",
           corridor.id === activeCorridorId ? "cave-tunnel-trace--active" : "",
-        ].filter(Boolean).join(" ");
-        return <path key={`cave-tunnel-trace-${corridor.id}`} className={classes} d={d} />;
+        ]
+          .filter(Boolean)
+          .join(" ");
+        return (
+          <path
+            key={`cave-tunnel-trace-${corridor.id}`}
+            className={classes}
+            d={d}
+          />
+        );
       })}
     </g>
   );
@@ -3814,22 +7350,25 @@ export function renderCaveTunnelTraces(generatedMap, activeCorridorId = null) {
 export function getCavePassageHandles(generatedMap) {
   if (!isPureCaveMap(generatedMap)) return [];
   const { corridors, config } = generatedMap;
-  return corridors.flatMap((corridor) => {
-    if (!isOrganicCorridor(corridor)) return [];
-    return [
-      { corridor, endpoint: "from", anchor: corridor.fromAnchor },
-      { corridor, endpoint: "to", anchor: corridor.toAnchor },
-    ];
-  }).filter((item) => item.anchor).map((item) => {
-    const point = getAnchorHandlePoint(item.anchor, config.gridSize);
-    return {
-      id: `${item.corridor.id}:${item.endpoint}`,
-      corridor: item.corridor,
-      endpoint: item.endpoint,
-      x: point.x,
-      y: point.y,
-    };
-  });
+  return corridors
+    .flatMap((corridor) => {
+      if (!isOrganicCorridor(corridor)) return [];
+      return [
+        { corridor, endpoint: "from", anchor: corridor.fromAnchor },
+        { corridor, endpoint: "to", anchor: corridor.toAnchor },
+      ];
+    })
+    .filter((item) => item.anchor)
+    .map((item) => {
+      const point = getAnchorHandlePoint(item.anchor, config.gridSize);
+      return {
+        id: `${item.corridor.id}:${item.endpoint}`,
+        corridor: item.corridor,
+        endpoint: item.endpoint,
+        x: point.x,
+        y: point.y,
+      };
+    });
 }
 
 export function renderEditorOverlays(generatedMap, editorOptions = {}) {
@@ -3866,30 +7405,44 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
     onMapAccessPointerDown,
     onMapAccessContextMenu,
   } = editorOptions;
-  const wallConnectionZones = regions.flatMap((region) => getWallConnectionZones(region, regions, config.gridSize, generatedMap));
-  const corridorInsertionZones = corridors.flatMap((corridor) => getCorridorInsertionZones(corridor, config.gridSize));
-  const junctionByCell = new Map(getCorridorIntersectionCells(corridors).map((junction) => [junction.key, junction]));
-  const endpointHandles = corridors.flatMap((corridor) => {
-    if (isPureCaveMap(generatedMap) && isOrganicCorridor(corridor)) return [];
-    if (corridor.isRoomLink && corridor.fromAnchor) {
-      return [{ corridor, endpoint: "shared", anchor: corridor.fromAnchor }];
-    }
-    return [
-      { corridor, endpoint: "from", anchor: corridor.fromAnchor },
-      { corridor, endpoint: "to", anchor: corridor.toAnchor },
-    ];
-  }).filter((item) => item.anchor).map((item) => {
-    const door = createDoorFromAnchor(item.anchor, config.gridSize, false);
-    return {
-      id: `${item.corridor.id}:${item.endpoint}`,
-      corridor: item.corridor,
-      endpoint: item.endpoint,
-      x: (door.x1 + door.x2) / 2,
-      y: (door.y1 + door.y2) / 2,
-    };
-  });
+  const wallConnectionZones = regions.flatMap((region) =>
+    getWallConnectionZones(region, regions, config.gridSize, generatedMap),
+  );
+  const corridorInsertionZones = corridors.flatMap((corridor) =>
+    getCorridorInsertionZones(corridor, config.gridSize),
+  );
+  const junctionByCell = new Map(
+    getCorridorIntersectionCells(corridors).map((junction) => [
+      junction.key,
+      junction,
+    ]),
+  );
+  const endpointHandles = corridors
+    .flatMap((corridor) => {
+      if (isPureCaveMap(generatedMap) && isOrganicCorridor(corridor)) return [];
+      if (corridor.isRoomLink && corridor.fromAnchor) {
+        return [{ corridor, endpoint: "shared", anchor: corridor.fromAnchor }];
+      }
+      return [
+        { corridor, endpoint: "from", anchor: corridor.fromAnchor },
+        { corridor, endpoint: "to", anchor: corridor.toAnchor },
+      ];
+    })
+    .filter((item) => item.anchor)
+    .map((item) => {
+      const door = createDoorFromAnchor(item.anchor, config.gridSize, false);
+      return {
+        id: `${item.corridor.id}:${item.endpoint}`,
+        corridor: item.corridor,
+        endpoint: item.endpoint,
+        x: (door.x1 + door.x2) / 2,
+        y: (door.y1 + door.y2) / 2,
+      };
+    });
   const waypointHandles = corridors.flatMap((corridor) => {
-    const manualPoints = Array.isArray(corridor.manualWaypoints) ? corridor.manualWaypoints.filter(isValidPoint) : [];
+    const manualPoints = Array.isArray(corridor.manualWaypoints)
+      ? corridor.manualWaypoints.filter(isValidPoint)
+      : [];
     return manualPoints.map((cell, index) => ({
       id: `${corridor.id}:manual-waypoint:${index}`,
       corridor,
@@ -3899,30 +7452,59 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
       y: (cell.y + 0.5) * config.gridSize,
     }));
   });
-  const accessHandles = (generatedMap.dungeonMask.mapAccesses || generatedMap.mapAccesses || []).map((access) => {
-    const preview = mapAccessDragPreview?.id === access.id ? mapAccessDragPreview : null;
+  const accessHandles = (
+    generatedMap.dungeonMask.mapAccesses ||
+    generatedMap.mapAccesses ||
+    []
+  ).map((access) => {
+    const preview =
+      mapAccessDragPreview?.id === access.id ? mapAccessDragPreview : null;
     return {
       access,
       id: access.id,
       regionId: access.regionId,
-      x: preview?.x ?? access.displayPoint?.x ?? ((access.displayWallGap || access.wallGap).x1 + (access.displayWallGap || access.wallGap).x2) / 2,
-      y: preview?.y ?? access.displayPoint?.y ?? ((access.displayWallGap || access.wallGap).y1 + (access.displayWallGap || access.wallGap).y2) / 2,
+      x:
+        preview?.x ??
+        access.displayPoint?.x ??
+        ((access.displayWallGap || access.wallGap).x1 +
+          (access.displayWallGap || access.wallGap).x2) /
+          2,
+      y:
+        preview?.y ??
+        access.displayPoint?.y ??
+        ((access.displayWallGap || access.wallGap).y1 +
+          (access.displayWallGap || access.wallGap).y2) /
+          2,
     };
   });
-  const highlightedRegion = regions.find((region) => region.id === (draggingRegionId || hoveredRegionId));
-  const activeCorridorId = draggingCorridorHandle?.split(":")[0] || editorOptions.hoverCorridorHandle?.corridor?.id || hoveredCorridorId;
-  const highlightedCorridor = corridors.find((corridor) => corridor.id === activeCorridorId);
+  const highlightedRegion = regions.find(
+    (region) => region.id === (draggingRegionId || hoveredRegionId),
+  );
+  const activeCorridorId =
+    draggingCorridorHandle?.split(":")[0] ||
+    editorOptions.hoverCorridorHandle?.corridor?.id ||
+    hoveredCorridorId;
+  const highlightedCorridor = corridors.find(
+    (corridor) => corridor.id === activeCorridorId,
+  );
   const cavePassageHandles = getCavePassageHandles(generatedMap);
   return (
     <g className="editor-overlays">
-      {renderCaveEditorZoneOverlays(generatedMap, { draggingRegionId, hoveredRegionId })}
+      {renderCaveEditorZoneOverlays(generatedMap, {
+        draggingRegionId,
+        hoveredRegionId,
+      })}
       {renderCaveTunnelTraces(generatedMap, activeCorridorId)}
       {renderRoomHoverHighlight(highlightedRegion, generatedMap)}
       {renderCorridorHoverHighlight(highlightedCorridor, config.gridSize)}
       {regions.map((region) => (
         <path
           key={`overlay-${region.id}`}
-          className={draggingRegionId === region.id ? "room-drag-handle is-dragging" : "room-drag-handle"}
+          className={
+            draggingRegionId === region.id
+              ? "room-drag-handle is-dragging"
+              : "room-drag-handle"
+          }
           d={buildRegionVisualFloorPath(region, config.gridSize, generatedMap)}
           fillRule="nonzero"
           onPointerDown={(event) => onRoomPointerDown?.(event, region)}
@@ -3934,7 +7516,11 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
           tabIndex={0}
           focusable="true"
           role="button"
-          aria-label={region.name ? `${region.name} region` : `Region ${region.number || ""}`.trim()}
+          aria-label={
+            region.name
+              ? `${region.name} region`
+              : `Region ${region.number || ""}`.trim()
+          }
         />
       ))}
       {wallConnectionZones.map((zone) => (
@@ -3955,7 +7541,11 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
       {corridorInsertionZones.map((zone) => (
         <rect
           key={`corridor-zone-${zone.id}`}
-          className={junctionByCell.has(cellKey(zone.cell.x, zone.cell.y)) ? "corridor-hover-zone is-junction" : "corridor-hover-zone"}
+          className={
+            junctionByCell.has(cellKey(zone.cell.x, zone.cell.y))
+              ? "corridor-hover-zone is-junction"
+              : "corridor-hover-zone"
+          }
           x={zone.x}
           y={zone.y}
           width={config.gridSize}
@@ -3968,27 +7558,57 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
       ))}
       {connectionDraft && (
         <g className="connection-preview-layer">
-          <line className="connection-preview" x1={connectionDraft.start.x} y1={connectionDraft.start.y} x2={connectionDraft.current.x} y2={connectionDraft.current.y} />
-          <circle className="connection-preview__endpoint" cx={connectionDraft.start.x} cy={connectionDraft.start.y} r={4} />
-          <circle className="connection-preview__endpoint" cx={connectionDraft.current.x} cy={connectionDraft.current.y} r={4} />
+          <line
+            className="connection-preview"
+            x1={connectionDraft.start.x}
+            y1={connectionDraft.start.y}
+            x2={connectionDraft.current.x}
+            y2={connectionDraft.current.y}
+          />
+          <circle
+            className="connection-preview__endpoint"
+            cx={connectionDraft.start.x}
+            cy={connectionDraft.start.y}
+            r={4}
+          />
+          <circle
+            className="connection-preview__endpoint"
+            cx={connectionDraft.current.x}
+            cy={connectionDraft.current.y}
+            r={4}
+          />
         </g>
       )}
-      {editorOptions.hoverCorridorHandle && !connectionDraft && (() => {
-        const handle = editorOptions.hoverCorridorHandle;
-        const junction = junctionByCell.get(cellKey(handle.cell.x, handle.cell.y));
-        return (
-          <circle
-            key={`corridor-add-${handle.id}`}
-            className={junction ? "corridor-add-handle is-junction" : "corridor-add-handle"}
-            cx={handle.point.x}
-            cy={handle.point.y}
-            r={junction ? 6.5 : 5}
-            onPointerDown={(event) => onCorridorAddPointerDown?.(event, handle)}
-            onPointerLeave={(event) => onCorridorAddPointerLeave?.(event, handle)}
-            onContextMenu={(event) => onCorridorAddContextMenu?.(event, handle)}
-          />
-        );
-      })()}
+      {editorOptions.hoverCorridorHandle &&
+        !connectionDraft &&
+        (() => {
+          const handle = editorOptions.hoverCorridorHandle;
+          const junction = junctionByCell.get(
+            cellKey(handle.cell.x, handle.cell.y),
+          );
+          return (
+            <circle
+              key={`corridor-add-${handle.id}`}
+              className={
+                junction
+                  ? "corridor-add-handle is-junction"
+                  : "corridor-add-handle"
+              }
+              cx={handle.point.x}
+              cy={handle.point.y}
+              r={junction ? 6.5 : 5}
+              onPointerDown={(event) =>
+                onCorridorAddPointerDown?.(event, handle)
+              }
+              onPointerLeave={(event) =>
+                onCorridorAddPointerLeave?.(event, handle)
+              }
+              onContextMenu={(event) =>
+                onCorridorAddContextMenu?.(event, handle)
+              }
+            />
+          );
+        })()}
       {hoverWallHandle && !connectionDraft && (
         <circle
           key={`wall-connect-${hoverWallHandle.regionId}-${hoverWallHandle.anchor.cell.x}-${hoverWallHandle.anchor.cell.y}-${hoverWallHandle.anchor.side}`}
@@ -3996,8 +7616,12 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
           cx={hoverWallHandle.point.x}
           cy={hoverWallHandle.point.y}
           r={6}
-          onPointerDown={(event) => onWallHandlePointerDown?.(event, hoverWallHandle)}
-          onPointerLeave={(event) => onWallHandlePointerLeave?.(event, hoverWallHandle)}
+          onPointerDown={(event) =>
+            onWallHandlePointerDown?.(event, hoverWallHandle)
+          }
+          onPointerLeave={(event) =>
+            onWallHandlePointerLeave?.(event, hoverWallHandle)
+          }
         />
       )}
       {accessHandles.map((handle) => (
@@ -4007,23 +7631,38 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
           onContextMenu={(event) => onMapAccessContextMenu?.(event, handle)}
         >
           <circle
-            className={draggingMapAccessId === handle.id ? "map-access-handle is-dragging" : "map-access-handle"}
+            className={
+              draggingMapAccessId === handle.id
+                ? "map-access-handle is-dragging"
+                : "map-access-handle"
+            }
             cx={handle.x}
             cy={handle.y}
             r={6}
           />
-          <path className="map-access-handle__icon" d={`M${handle.x - 2.5} ${handle.y}H${handle.x + 2.5}M${handle.x + 0.8} ${handle.y - 2.2}L${handle.x + 3.1} ${handle.y}L${handle.x + 0.8} ${handle.y + 2.2}`} />
+          <path
+            className="map-access-handle__icon"
+            d={`M${handle.x - 2.5} ${handle.y}H${handle.x + 2.5}M${handle.x + 0.8} ${handle.y - 2.2}L${handle.x + 3.1} ${handle.y}L${handle.x + 0.8} ${handle.y + 2.2}`}
+          />
         </g>
       ))}
       {endpointHandles.map((handle) => (
         <circle
           key={`endpoint-${handle.id}`}
-          className={draggingCorridorHandle === handle.id ? "endpoint-handle is-dragging" : "endpoint-handle"}
+          className={
+            draggingCorridorHandle === handle.id
+              ? "endpoint-handle is-dragging"
+              : "endpoint-handle"
+          }
           cx={handle.x}
           cy={handle.y}
           r={5}
-          onPointerEnter={(event) => editorOptions.onCorridorHandlePointerEnter?.(event, handle)}
-          onPointerLeave={(event) => editorOptions.onCorridorHandlePointerLeave?.(event, handle)}
+          onPointerEnter={(event) =>
+            editorOptions.onCorridorHandlePointerEnter?.(event, handle)
+          }
+          onPointerLeave={(event) =>
+            editorOptions.onCorridorHandlePointerLeave?.(event, handle)
+          }
           onPointerDown={(event) => onDoorPointerDown?.(event, handle)}
           onContextMenu={(event) => onDoorContextMenu?.(event, handle)}
         />
@@ -4031,19 +7670,36 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
       {cavePassageHandles.map((handle) => (
         <circle
           key={`cave-passage-${handle.id}`}
-          className={draggingCorridorHandle === handle.id ? "cave-passage-handle is-dragging" : "cave-passage-handle"}
+          className={
+            draggingCorridorHandle === handle.id
+              ? "cave-passage-handle is-dragging"
+              : "cave-passage-handle"
+          }
           cx={handle.x}
           cy={handle.y}
           r={5.5}
-          onPointerEnter={(event) => editorOptions.onCorridorHandlePointerEnter?.(event, handle)}
-          onPointerLeave={(event) => editorOptions.onCorridorHandlePointerLeave?.(event, handle)}
+          onPointerEnter={(event) =>
+            editorOptions.onCorridorHandlePointerEnter?.(event, handle)
+          }
+          onPointerLeave={(event) =>
+            editorOptions.onCorridorHandlePointerLeave?.(event, handle)
+          }
           onPointerDown={(event) => onDoorPointerDown?.(event, handle)}
         />
       ))}
       {waypointHandles.map((handle) => {
-        const cell = { x: Math.floor(handle.x / config.gridSize), y: Math.floor(handle.y / config.gridSize) };
+        const cell = {
+          x: Math.floor(handle.x / config.gridSize),
+          y: Math.floor(handle.y / config.gridSize),
+        };
         const isJunction = junctionByCell.has(cellKey(cell.x, cell.y));
-        const classes = ["waypoint-handle", isJunction ? "is-junction" : "", draggingCorridorHandle === handle.id ? "is-dragging" : ""].filter(Boolean).join(" ");
+        const classes = [
+          "waypoint-handle",
+          isJunction ? "is-junction" : "",
+          draggingCorridorHandle === handle.id ? "is-dragging" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
         return (
           <rect
             key={`waypoint-${handle.id}`}
@@ -4052,8 +7708,12 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
             y={handle.y - (isJunction ? 5 : 4)}
             width={isJunction ? 10 : 8}
             height={isJunction ? 10 : 8}
-            onPointerEnter={(event) => editorOptions.onCorridorHandlePointerEnter?.(event, handle)}
-            onPointerLeave={(event) => editorOptions.onCorridorHandlePointerLeave?.(event, handle)}
+            onPointerEnter={(event) =>
+              editorOptions.onCorridorHandlePointerEnter?.(event, handle)
+            }
+            onPointerLeave={(event) =>
+              editorOptions.onCorridorHandlePointerLeave?.(event, handle)
+            }
             onPointerDown={(event) => onWaypointPointerDown?.(event, handle)}
             onContextMenu={(event) => onWaypointContextMenu?.(event, handle)}
           />
@@ -4063,16 +7723,39 @@ export function renderEditorOverlays(generatedMap, editorOptions = {}) {
   );
 }
 
-export function MapSvg({ generatedMap, showGrid, gridStyle, showEditor, showNames, showProps, levelView = LEVEL_VIEW_ALL, fadeOtherLevels = true, editorOptions = {}, viewportViewBox = null }) {
+export function MapSvg({
+  generatedMap,
+  showGrid,
+  gridStyle,
+  showEditor,
+  showNames,
+  showProps,
+  levelView = LEVEL_VIEW_ALL,
+  fadeOtherLevels = true,
+  editorOptions = {},
+  viewportViewBox = null,
+}) {
   const { config } = generatedMap;
-  const viewBox = viewportViewBox || `0 0 ${config.mapWidth} ${config.mapHeight}`;
+  const viewBox =
+    viewportViewBox || `0 0 ${config.mapWidth} ${config.mapHeight}`;
   const availableLevels = getAvailableMapLevels(generatedMap);
   const normalizedLevelView = normalizeLevelView(levelView, availableLevels);
   const isLevelFiltered = normalizedLevelView !== LEVEL_VIEW_ALL;
-  const activeMap = isLevelFiltered ? createLevelFilteredMap(generatedMap, normalizedLevelView, "active") : generatedMap;
-  const fadedMap = isLevelFiltered && fadeOtherLevels ? createLevelFilteredMap(generatedMap, normalizedLevelView, "inactive") : null;
-  const layerGridStyle = isLevelFiltered ? "none" : showGrid ? gridStyle : "none";
-  const activeEditorMap = hasRenderableGeometry(activeMap) ? activeMap : generatedMap;
+  const activeMap = isLevelFiltered
+    ? createLevelFilteredMap(generatedMap, normalizedLevelView, "active")
+    : generatedMap;
+  const fadedMap =
+    isLevelFiltered && fadeOtherLevels
+      ? createLevelFilteredMap(generatedMap, normalizedLevelView, "inactive")
+      : null;
+  const layerGridStyle = isLevelFiltered
+    ? "none"
+    : showGrid
+      ? gridStyle
+      : "none";
+  const activeEditorMap = hasRenderableGeometry(activeMap)
+    ? activeMap
+    : generatedMap;
 
   return (
     <svg
@@ -4088,7 +7771,12 @@ export function MapSvg({ generatedMap, showGrid, gridStyle, showEditor, showName
       <defs>
         <style>{`${SVG_STYLE}${EDITOR_CAVE_STYLE}`}</style>
         <filter id="paperNoise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" />
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.85"
+            numOctaves="2"
+            stitchTiles="stitch"
+          />
           <feColorMatrix type="saturate" values="0" />
           <feComponentTransfer>
             <feFuncA type="table" tableValues="0 0.06" />
@@ -4098,8 +7786,21 @@ export function MapSvg({ generatedMap, showGrid, gridStyle, showEditor, showName
         {renderDungeonFloorClipPath(generatedMap)}
         {renderCaveWallAccessMask(generatedMap)}
       </defs>
-      <rect className="paper" x="0" y="0" width={config.mapWidth} height={config.mapHeight} />
-      <rect className="paper-texture" x="0" y="0" width={config.mapWidth} height={config.mapHeight} filter="url(#paperNoise)" />
+      <rect
+        className="paper"
+        x="0"
+        y="0"
+        width={config.mapWidth}
+        height={config.mapHeight}
+      />
+      <rect
+        className="paper-texture"
+        x="0"
+        y="0"
+        width={config.mapWidth}
+        height={config.mapHeight}
+        filter="url(#paperNoise)"
+      />
       {showGrid && renderGrid(config, gridStyle)}
       {fadedMap && hasRenderableGeometry(fadedMap) && (
         <g className="level-layer level-layer--faded">

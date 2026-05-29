@@ -50,7 +50,6 @@ The map generator should consume this kind of object:
 
 Darken a Location may have richer narrative data, but the map generator should only receive normalized structural data.
 
-
 ---
 
 ## 9. `docs/features/map-generator/REFERENCES.md`

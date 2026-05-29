@@ -17,12 +17,19 @@ function appendFact(parent, label, value) {
 }
 
 function getRoomIcon(payload) {
-  const text = [payload.role, payload.meta, payload.title, payload.shape].filter(Boolean).join(" ").toLowerCase();
-  if (text.includes("corridor") || text.includes("connector")) return "fa-route";
-  if (text.includes("entrance") || text.includes("threshold")) return "fa-door-open";
+  const text = [payload.role, payload.meta, payload.title, payload.shape]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  if (text.includes("corridor") || text.includes("connector"))
+    return "fa-route";
+  if (text.includes("entrance") || text.includes("threshold"))
+    return "fa-door-open";
   if (text.includes("clue")) return "fa-magnifying-glass";
-  if (text.includes("hazard") || text.includes("danger")) return "fa-triangle-exclamation";
-  if (text.includes("vertical") || text.includes("shaft")) return "fa-arrow-down-up-across-line";
+  if (text.includes("hazard") || text.includes("danger"))
+    return "fa-triangle-exclamation";
+  if (text.includes("vertical") || text.includes("shaft"))
+    return "fa-arrow-down-up-across-line";
   return "fa-dungeon";
 }
 
@@ -32,16 +39,27 @@ function renderGenericTooltip(payload) {
   tooltip.setAttribute("role", "tooltip");
   const head = document.createElement("div");
   head.className = "cruor-tooltip__generic-head";
-  appendText(head, "h2", "cruor-tooltip__title", payload.title || payload.text || "");
+  appendText(
+    head,
+    "h2",
+    "cruor-tooltip__title",
+    payload.title || payload.text || "",
+  );
   appendText(head, "kbd", "cruor-tooltip__kbd", payload.kbd || "");
   tooltip.appendChild(head);
-  appendText(tooltip, "p", "cruor-tooltip__body", payload.text && payload.text !== payload.title ? payload.text : "");
+  appendText(
+    tooltip,
+    "p",
+    "cruor-tooltip__body",
+    payload.text && payload.text !== payload.title ? payload.text : "",
+  );
   return tooltip;
 }
 
 function renderRoomTooltip(payload) {
   const tooltip = document.createElement("article");
-  tooltip.className = "cruor-tooltip cruor-tooltip--room region-card cruor-tooltip-region-card";
+  tooltip.className =
+    "cruor-tooltip cruor-tooltip--room region-card cruor-tooltip-region-card";
   tooltip.setAttribute("role", "tooltip");
 
   const top = document.createElement("div");

@@ -2,7 +2,8 @@ import { getTooltipPayload } from "./tooltip.registry.js";
 import { renderTooltipPayload } from "./tooltip.renderers.js";
 
 const TOOLTIP_SELECTOR = "[data-key][data-tooltip]";
-const MAP_BOUNDARY_SELECTOR = ".map-viewport, .map-viewport-frame, .map-canvas-area";
+const MAP_BOUNDARY_SELECTOR =
+  ".map-viewport, .map-viewport-frame, .map-canvas-area";
 const OFFSET = 14;
 const BOUNDARY_INSET = 12;
 let runtime = null;
@@ -42,8 +43,8 @@ function getTooltipBoundary(trigger) {
 function clampToBoundary(x, y, tooltip, boundaryRect) {
   const tooltipRect = tooltip.getBoundingClientRect();
   if (
-    tooltipRect.width + BOUNDARY_INSET * 2 > boundaryRect.width
-    || tooltipRect.height + BOUNDARY_INSET * 2 > boundaryRect.height
+    tooltipRect.width + BOUNDARY_INSET * 2 > boundaryRect.width ||
+    tooltipRect.height + BOUNDARY_INSET * 2 > boundaryRect.height
   ) {
     return clampPosition(x, y, tooltip);
   }
@@ -60,22 +61,42 @@ function clampToBoundary(x, y, tooltip, boundaryRect) {
   };
 }
 
-function positionTooltipTowardBoundaryCenter({ trigger, pointer, tooltip, boundary }) {
+function positionTooltipTowardBoundaryCenter({
+  trigger,
+  pointer,
+  tooltip,
+  boundary,
+}) {
   const boundaryRect = boundary?.getBoundingClientRect?.();
-  if (!boundaryRect || boundaryRect.width <= 0 || boundaryRect.height <= 0) return null;
+  if (!boundaryRect || boundaryRect.width <= 0 || boundaryRect.height <= 0)
+    return null;
 
   const tooltipRect = tooltip.getBoundingClientRect();
   const triggerRect = trigger?.getBoundingClientRect?.();
   const origin = {
-    x: pointer?.x ?? (triggerRect ? triggerRect.left + triggerRect.width / 2 : boundaryRect.left + boundaryRect.width / 2),
-    y: pointer?.y ?? (triggerRect ? triggerRect.top + triggerRect.height / 2 : boundaryRect.top + boundaryRect.height / 2),
+    x:
+      pointer?.x ??
+      (triggerRect
+        ? triggerRect.left + triggerRect.width / 2
+        : boundaryRect.left + boundaryRect.width / 2),
+    y:
+      pointer?.y ??
+      (triggerRect
+        ? triggerRect.top + triggerRect.height / 2
+        : boundaryRect.top + boundaryRect.height / 2),
   };
   const center = {
     x: boundaryRect.left + boundaryRect.width / 2,
     y: boundaryRect.top + boundaryRect.height / 2,
   };
-  const x = origin.x < center.x ? origin.x + OFFSET : origin.x - tooltipRect.width - OFFSET;
-  const y = origin.y < center.y ? origin.y + OFFSET : origin.y - tooltipRect.height - OFFSET;
+  const x =
+    origin.x < center.x
+      ? origin.x + OFFSET
+      : origin.x - tooltipRect.width - OFFSET;
+  const y =
+    origin.y < center.y
+      ? origin.y + OFFSET
+      : origin.y - tooltipRect.height - OFFSET;
   return clampToBoundary(x, y, tooltip, boundaryRect);
 }
 
@@ -89,14 +110,14 @@ function placeTooltip(state, options = {}) {
     const boundary = getTooltipBoundary(state.trigger);
     const point = boundary
       ? positionTooltipTowardBoundaryCenter({
-        trigger: state.trigger,
-        pointer: {
-          x: options.clientX ?? state.pointer.x,
-          y: options.clientY ?? state.pointer.y,
-        },
-        tooltip: state.tooltip,
-        boundary,
-      })
+          trigger: state.trigger,
+          pointer: {
+            x: options.clientX ?? state.pointer.x,
+            y: options.clientY ?? state.pointer.y,
+          },
+          tooltip: state.tooltip,
+          boundary,
+        })
       : null;
     if (point) {
       state.portal.style.transform = `translate(${Math.round(point.x)}px, ${Math.round(point.y)}px)`;
@@ -150,7 +171,8 @@ function openTooltip(state, trigger, options = {}) {
 }
 
 export function startTooltipRuntime() {
-  if (runtime || typeof document === "undefined") return runtime?.cleanup || (() => {});
+  if (runtime || typeof document === "undefined")
+    return runtime?.cleanup || (() => {});
 
   const state = {
     portal: getPortal(),
@@ -179,7 +201,8 @@ export function startTooltipRuntime() {
   function handlePointerOut(event) {
     if (!state.trigger) return;
     const nextTarget = event.relatedTarget;
-    if (nextTarget instanceof Node && state.trigger.contains(nextTarget)) return;
+    if (nextTarget instanceof Node && state.trigger.contains(nextTarget))
+      return;
     closeTooltip(state);
   }
 
@@ -192,7 +215,8 @@ export function startTooltipRuntime() {
   function handleFocusOut(event) {
     if (!state.trigger) return;
     const nextTarget = event.relatedTarget;
-    if (nextTarget instanceof Node && state.trigger.contains(nextTarget)) return;
+    if (nextTarget instanceof Node && state.trigger.contains(nextTarget))
+      return;
     closeTooltip(state);
   }
 

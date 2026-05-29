@@ -6,7 +6,17 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "vscode:clutter": "node .vscode/dev/toggle-vscode-clutter.mjs",
+    "git:auto-update": "node .vscode/dev/git-auto-update.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
@@ -15,5 +25,16 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "vite": "^6.0.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.60.0",
+    "@vitest/ui": "^4.1.7",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
+    "playwright": "^1.60.0",
+    "prettier": "^3.8.3",
+    "vitest": "^4.1.7"
   }
 }

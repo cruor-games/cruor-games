@@ -12,7 +12,8 @@ function hashStringToSeed(...parts) {
 }
 
 function createSeededRng(seed) {
-  let state = typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
+  let state =
+    typeof seed === "number" ? seed >>> 0 : hashStringToSeed(String(seed));
   return function rng() {
     state += 0x6d2b79f5;
     let t = state;
@@ -110,9 +111,12 @@ export function ensureRoomMaskViable(cells, room) {
 
 export function carveCorner(cells, x, y, w, h, corner, notchW, notchH) {
   if (corner === "nw") removeRectCells(cells, x, y, notchW, notchH);
-  if (corner === "ne") removeRectCells(cells, x + w - notchW, y, notchW, notchH);
-  if (corner === "sw") removeRectCells(cells, x, y + h - notchH, notchW, notchH);
-  if (corner === "se") removeRectCells(cells, x + w - notchW, y + h - notchH, notchW, notchH);
+  if (corner === "ne")
+    removeRectCells(cells, x + w - notchW, y, notchW, notchH);
+  if (corner === "sw")
+    removeRectCells(cells, x, y + h - notchH, notchW, notchH);
+  if (corner === "se")
+    removeRectCells(cells, x + w - notchW, y + h - notchH, notchW, notchH);
 }
 
 export function buildRectMask(room) {
@@ -128,7 +132,16 @@ export function buildLShapeMask(room, rng) {
   if (w < 3 || h < 3) return cells;
   const notchW = clamp(Math.floor(w * 0.38), 1, Math.max(1, w - 2));
   const notchH = clamp(Math.floor(h * 0.42), 1, Math.max(1, h - 2));
-  carveCorner(cells, x, y, w, h, pickOne(rng, ["nw", "ne", "sw", "se"]), notchW, notchH);
+  carveCorner(
+    cells,
+    x,
+    y,
+    w,
+    h,
+    pickOne(rng, ["nw", "ne", "sw", "se"]),
+    notchW,
+    notchH,
+  );
   return cells;
 }
 
@@ -137,15 +150,32 @@ export function buildNotchedMask(room, rng) {
   const { x, y, w, h } = room.cellRect;
   if (w < 3 || h < 3) return cells;
   const side = pickOne(rng, ["north", "south", "east", "west"]);
-  const notchLength = side === "north" || side === "south" ? clamp(Math.floor(w * 0.32), 1, Math.max(1, w - 2)) : clamp(Math.floor(h * 0.32), 1, Math.max(1, h - 2));
-  const offsetMax = side === "north" || side === "south" ? Math.max(1, w - notchLength - 1) : Math.max(1, h - notchLength - 1);
+  const notchLength =
+    side === "north" || side === "south"
+      ? clamp(Math.floor(w * 0.32), 1, Math.max(1, w - 2))
+      : clamp(Math.floor(h * 0.32), 1, Math.max(1, h - 2));
+  const offsetMax =
+    side === "north" || side === "south"
+      ? Math.max(1, w - notchLength - 1)
+      : Math.max(1, h - notchLength - 1);
   const offset = randomInt(rng, 1, offsetMax);
   if (side === "north") removeRectCells(cells, x + offset, y, notchLength, 1);
-  if (side === "south") removeRectCells(cells, x + offset, y + h - 1, notchLength, 1);
+  if (side === "south")
+    removeRectCells(cells, x + offset, y + h - 1, notchLength, 1);
   if (side === "west") removeRectCells(cells, x, y + offset, 1, notchLength);
-  if (side === "east") removeRectCells(cells, x + w - 1, y + offset, 1, notchLength);
+  if (side === "east")
+    removeRectCells(cells, x + w - 1, y + offset, 1, notchLength);
   if (w >= 7 && h >= 5 && rng() > 0.45) {
-    carveCorner(cells, x, y, w, h, pickOne(rng, ["nw", "ne", "sw", "se"]), 1, 1);
+    carveCorner(
+      cells,
+      x,
+      y,
+      w,
+      h,
+      pickOne(rng, ["nw", "ne", "sw", "se"]),
+      1,
+      1,
+    );
   }
   return cells;
 }
@@ -154,15 +184,32 @@ export function buildRuinedMask(room, rng) {
   const cells = buildRectMask(room);
   const { x, y, w, h } = room.cellRect;
   if (w < 5 || h < 5) return buildNotchedMask(room, rng);
-  const corners = ["nw", "ne", "sw", "se"].sort(() => rng() - 0.5).slice(0, randomInt(rng, 1, 2));
-  corners.forEach((corner) => carveCorner(cells, x, y, w, h, corner, randomInt(rng, 1, 2), randomInt(rng, 1, 2)));
+  const corners = ["nw", "ne", "sw", "se"]
+    .sort(() => rng() - 0.5)
+    .slice(0, randomInt(rng, 1, 2));
+  corners.forEach((corner) =>
+    carveCorner(
+      cells,
+      x,
+      y,
+      w,
+      h,
+      corner,
+      randomInt(rng, 1, 2),
+      randomInt(rng, 1, 2),
+    ),
+  );
   const breaks = randomInt(rng, 1, 3);
   for (let i = 0; i < breaks; i += 1) {
     const side = pickOne(rng, ["north", "south", "east", "west"]);
-    if (side === "north") cells.delete(cellKey(randomInt(rng, x + 1, x + w - 2), y));
-    if (side === "south") cells.delete(cellKey(randomInt(rng, x + 1, x + w - 2), y + h - 1));
-    if (side === "west") cells.delete(cellKey(x, randomInt(rng, y + 1, y + h - 2)));
-    if (side === "east") cells.delete(cellKey(x + w - 1, randomInt(rng, y + 1, y + h - 2)));
+    if (side === "north")
+      cells.delete(cellKey(randomInt(rng, x + 1, x + w - 2), y));
+    if (side === "south")
+      cells.delete(cellKey(randomInt(rng, x + 1, x + w - 2), y + h - 1));
+    if (side === "west")
+      cells.delete(cellKey(x, randomInt(rng, y + 1, y + h - 2)));
+    if (side === "east")
+      cells.delete(cellKey(x + w - 1, randomInt(rng, y + 1, y + h - 2)));
   }
   return cells;
 }
@@ -225,12 +272,14 @@ export function buildHallMask(room, rng) {
     const hallH = clamp(Math.min(h, Math.max(2, Math.round(h * 0.58))), 1, h);
     const startY = y + Math.floor((h - hallH) / 2);
     addRectCells(cells, x, startY, w, hallH);
-    if (h >= 4 && rng() > 0.5) cells.delete(cellKey(x + randomInt(rng, 0, Math.max(0, w - 1)), startY));
+    if (h >= 4 && rng() > 0.5)
+      cells.delete(cellKey(x + randomInt(rng, 0, Math.max(0, w - 1)), startY));
   } else {
     const hallW = clamp(Math.min(w, Math.max(2, Math.round(w * 0.58))), 1, w);
     const startX = x + Math.floor((w - hallW) / 2);
     addRectCells(cells, startX, y, hallW, h);
-    if (w >= 4 && rng() > 0.5) cells.delete(cellKey(startX, y + randomInt(rng, 0, Math.max(0, h - 1))));
+    if (w >= 4 && rng() > 0.5)
+      cells.delete(cellKey(startX, y + randomInt(rng, 0, Math.max(0, h - 1))));
   }
   return cells;
 }
@@ -262,7 +311,8 @@ export function buildCircleMask(room) {
     for (let xx = x; xx < x + w; xx += 1) {
       const dx = xx + 0.5 - cx;
       const dy = yy + 0.5 - cy;
-      if ((dx * dx + dy * dy) <= radius * radius * 1.015) cells.add(cellKey(xx, yy));
+      if (dx * dx + dy * dy <= radius * radius * 1.015)
+        cells.add(cellKey(xx, yy));
     }
   }
   return cells;
@@ -294,8 +344,16 @@ export function buildCaveMask(room, rng) {
     const horizontal = side === "north" || side === "south";
     return {
       side,
-      x: horizontal ? x + 1 + rng() * Math.max(1, w - 2) : side === "west" ? x - 0.35 : x + w + 0.35,
-      y: horizontal ? side === "north" ? y - 0.35 : y + h + 0.35 : y + 1 + rng() * Math.max(1, h - 2),
+      x: horizontal
+        ? x + 1 + rng() * Math.max(1, w - 2)
+        : side === "west"
+          ? x - 0.35
+          : x + w + 0.35,
+      y: horizontal
+        ? side === "north"
+          ? y - 0.35
+          : y + h + 0.35
+        : y + 1 + rng() * Math.max(1, h - 2),
       rx: Math.max(1.1, w * (0.14 + rng() * 0.16)),
       ry: Math.max(1.1, h * (0.14 + rng() * 0.16)),
       index,
@@ -308,9 +366,16 @@ export function buildCaveMask(room, rng) {
       const py = yy + 0.5;
       const nx = (px - cx) / rx;
       const ny = (py - cy) / ry;
-      const superEllipse = Math.pow(Math.abs(nx), 2.15) + Math.pow(Math.abs(ny), 2.05);
-      const edgeNoise = ((hashStringToSeed(room.id, xx, yy, "cave-edge-noise") % 100) / 100 - 0.5) * 0.38;
-      const grainNoise = ((hashStringToSeed(room.id, xx, yy, "cave-grain-noise") % 100) / 100 - 0.5) * 0.12;
+      const superEllipse =
+        Math.pow(Math.abs(nx), 2.15) + Math.pow(Math.abs(ny), 2.05);
+      const edgeNoise =
+        ((hashStringToSeed(room.id, xx, yy, "cave-edge-noise") % 100) / 100 -
+          0.5) *
+        0.38;
+      const grainNoise =
+        ((hashStringToSeed(room.id, xx, yy, "cave-grain-noise") % 100) / 100 -
+          0.5) *
+        0.12;
       const lobeBoost = lobes.reduce((boost, lobe) => {
         const lx = (px - lobe.x) / lobe.rx;
         const ly = (py - lobe.y) / lobe.ry;
@@ -322,13 +387,16 @@ export function buildCaveMask(room, rng) {
         const by = (py - bite.y) / bite.ry;
         return bx * bx + by * by < 0.96;
       });
-      const rimCell = xx === x || yy === y || xx === x + w - 1 || yy === y + h - 1;
-      const threshold = 0.88 + edgeNoise + lobeBoost + grainNoise - (rimCell ? 0.08 : 0);
+      const rimCell =
+        xx === x || yy === y || xx === x + w - 1 || yy === y + h - 1;
+      const threshold =
+        0.88 + edgeNoise + lobeBoost + grainNoise - (rimCell ? 0.08 : 0);
       if (superEllipse <= threshold && !biteCut) cells.add(cellKey(xx, yy));
     }
   }
 
-  const withinRoom = (cell) => cell.x >= x && cell.y >= y && cell.x < x + w && cell.y < y + h;
+  const withinRoom = (cell) =>
+    cell.x >= x && cell.y >= y && cell.x < x + w && cell.y < y + h;
   const countNeighbors8 = (set, cell) => {
     let count = 0;
     for (let dy = -1; dy <= 1; dy += 1) {
@@ -350,7 +418,8 @@ export function buildCaveMask(room, rng) {
         const neighbors = countNeighbors8(draft, cell);
         const nx = (xx + 0.5 - cx) / rx;
         const ny = (yy + 0.5 - cy) / ry;
-        const radial = Math.pow(Math.abs(nx), 2.15) + Math.pow(Math.abs(ny), 2.05);
+        const radial =
+          Math.pow(Math.abs(nx), 2.15) + Math.pow(Math.abs(ny), 2.05);
         if (draft.has(key) && neighbors <= 2) next.delete(key);
         if (!draft.has(key) && neighbors >= 5 && radial < 1.08) next.add(key);
       }
@@ -363,21 +432,44 @@ export function buildCaveMask(room, rng) {
   if (connected.size < minimum) {
     const fallback = buildOvalMask(room);
     const fallbackCells = new Set(fallback);
-    carveCorner(fallbackCells, x, y, w, h, pickOne(rng, ["nw", "ne", "sw", "se"]), 1, 1);
+    carveCorner(
+      fallbackCells,
+      x,
+      y,
+      w,
+      h,
+      pickOne(rng, ["nw", "ne", "sw", "se"]),
+      1,
+      1,
+    );
     return ensureRoomMaskViable(fallbackCells, room);
   }
 
-  const organic = new Set(Array.from(connected).filter((key) => withinRoom(parseCellKey(key))));
+  const organic = new Set(
+    Array.from(connected).filter((key) => withinRoom(parseCellKey(key))),
+  );
   const area = w * h;
   if (organic.size > area * 0.9 && w >= 5 && h >= 4) {
     const corner = pickOne(rng, ["nw", "ne", "sw", "se"]);
-    carveCorner(organic, x, y, w, h, corner, randomInt(rng, 1, Math.max(1, Math.floor(w * 0.22))), randomInt(rng, 1, Math.max(1, Math.floor(h * 0.22))));
+    carveCorner(
+      organic,
+      x,
+      y,
+      w,
+      h,
+      corner,
+      randomInt(rng, 1, Math.max(1, Math.floor(w * 0.22))),
+      randomInt(rng, 1, Math.max(1, Math.floor(h * 0.22))),
+    );
   }
   return ensureRoomMaskViable(organic, room);
 }
 
 export function isMineHybridCaveRoom(room) {
-  return room?.placementProfile === "mine" && (room?.surfaceKind === "cave" || room?.surfaceKind === "hybrid");
+  return (
+    room?.placementProfile === "mine" &&
+    (room?.surfaceKind === "cave" || room?.surfaceKind === "hybrid")
+  );
 }
 
 export function buildMineCaveChamberMask(room, rng) {
@@ -407,43 +499,66 @@ export function buildMineCaveChamberMask(room, rng) {
     }
   };
 
-  const mainRx = Math.max(2.2, w * (profile === "narrow-fissure" ? 0.33 : 0.42));
-  const mainRy = Math.max(2.2, h * (profile === "narrow-fissure" ? 0.33 : 0.42));
+  const mainRx = Math.max(
+    2.2,
+    w * (profile === "narrow-fissure" ? 0.33 : 0.42),
+  );
+  const mainRy = Math.max(
+    2.2,
+    h * (profile === "narrow-fissure" ? 0.33 : 0.42),
+  );
   addEllipse(center.x, center.y, mainRx, mainRy);
 
-  const lobeCount = profile === "clustered-alcoves" || profile === "branching-pocket"
-    ? randomInt(rng, 4, 6)
-    : profile === "narrow-fissure"
-      ? randomInt(rng, 2, 3)
-      : randomInt(rng, 3, 5);
-  const axis = profile === "narrow-fissure" || profile === "rough-gallery"
-    ? (w >= h ? 0 : Math.PI / 2)
-    : rng() * Math.PI;
+  const lobeCount =
+    profile === "clustered-alcoves" || profile === "branching-pocket"
+      ? randomInt(rng, 4, 6)
+      : profile === "narrow-fissure"
+        ? randomInt(rng, 2, 3)
+        : randomInt(rng, 3, 5);
+  const axis =
+    profile === "narrow-fissure" || profile === "rough-gallery"
+      ? w >= h
+        ? 0
+        : Math.PI / 2
+      : rng() * Math.PI;
 
   for (let index = 0; index < lobeCount; index += 1) {
-    const angle = profile === "narrow-fissure" || profile === "rough-gallery"
-      ? axis + (index % 2 === 0 ? 0 : Math.PI) + (rng() - 0.5) * 0.75
-      : rng() * Math.PI * 2;
-    const distance = profile === "clustered-alcoves" ? 0.48 + rng() * 0.32 : 0.38 + rng() * 0.34;
-    const lobeRx = Math.max(1.35, w * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12));
-    const lobeRy = Math.max(1.35, h * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12));
+    const angle =
+      profile === "narrow-fissure" || profile === "rough-gallery"
+        ? axis + (index % 2 === 0 ? 0 : Math.PI) + (rng() - 0.5) * 0.75
+        : rng() * Math.PI * 2;
+    const distance =
+      profile === "clustered-alcoves"
+        ? 0.48 + rng() * 0.32
+        : 0.38 + rng() * 0.34;
+    const lobeRx = Math.max(
+      1.35,
+      w * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12),
+    );
+    const lobeRy = Math.max(
+      1.35,
+      h * (profile === "narrow-fissure" ? 0.18 : 0.18 + rng() * 0.12),
+    );
     addEllipse(
       center.x + Math.cos(angle) * w * distance * 0.45,
       center.y + Math.sin(angle) * h * distance * 0.45,
       lobeRx,
-      lobeRy
+      lobeRy,
     );
   }
 
-  const biteCount = profile === "collapsed-pocket" ? randomInt(rng, 3, 5) : randomInt(rng, 2, 4);
+  const biteCount =
+    profile === "collapsed-pocket"
+      ? randomInt(rng, 3, 5)
+      : randomInt(rng, 2, 4);
   for (let index = 0; index < biteCount; index += 1) {
     const side = pickOne(rng, ["north", "south", "east", "west"]);
     const horizontal = side === "north" || side === "south";
     removeEllipse(
       horizontal ? x + rng() * w : side === "west" ? x - 0.15 : x + w + 0.15,
-      horizontal ? side === "north" ? y - 0.15 : y + h + 0.15 : y + rng() * h,
+      horizontal ? (side === "north" ? y - 0.15 : y + h + 0.15) : y + rng() * h,
       Math.max(1.1, w * (0.12 + rng() * 0.1)),
-      Math.max(1.1, h * (0.12 + rng() * 0.1))
+      Math.max(1.1, h * (0.12 + rng() * 0.1)),
     );
   }
 
@@ -454,7 +569,8 @@ export function buildMineCaveChamberMask(room, rng) {
       if (!draft.has(key)) continue;
       let neighbors = 0;
       ORTHOGONAL_DIRECTIONS.forEach((direction) => {
-        if (draft.has(cellKey(xx + direction.dx, yy + direction.dy))) neighbors += 1;
+        if (draft.has(cellKey(xx + direction.dx, yy + direction.dy)))
+          neighbors += 1;
       });
       if (neighbors <= 1 && rng() > 0.25) cells.delete(key);
     }
@@ -462,24 +578,37 @@ export function buildMineCaveChamberMask(room, rng) {
   draft = getLargestConnectedCellSet(cells);
   const minimum = Math.max(6, Math.floor(w * h * 0.42));
   if (draft.size < minimum) {
-    addEllipse(center.x, center.y, Math.max(2.2, w * 0.46), Math.max(2.1, h * 0.44));
+    addEllipse(
+      center.x,
+      center.y,
+      Math.max(2.2, w * 0.46),
+      Math.max(2.1, h * 0.44),
+    );
     draft = getLargestConnectedCellSet(cells);
   }
   return ensureRoomMaskViable(draft, room);
 }
 
 export function buildBaseRoomMask(room, rng) {
-  if (isMineHybridCaveRoom(room) && room.shape === "cave") return buildMineCaveChamberMask(room, rng);
+  if (isMineHybridCaveRoom(room) && room.shape === "cave")
+    return buildMineCaveChamberMask(room, rng);
   if (room.shape === "hall") return buildHallMask(room, rng);
   if (room.shape === "l-shape") return buildLShapeMask(room, rng);
   if (room.shape === "notched") return buildNotchedMask(room, rng);
-  if (room.shape === "broken" || room.shape === "ruined-rect") return buildRuinedMask(room, rng);
+  if (room.shape === "broken" || room.shape === "ruined-rect")
+    return buildRuinedMask(room, rng);
   if (room.shape === "alcove") return buildAlcoveMask(room, rng);
   if (room.shape === "archive") return buildArchiveMask(room, rng);
   if (room.shape === "apse") return buildApseMask(room);
   if (room.shape === "circle") return buildCircleMask(room);
-  if (room.shape === "oval" || room.shape === "shaft" || room.shape === "ritual") return buildOvalMask(room);
-  if (room.shape === "irregular" || room.shape === "cave") return buildCaveMask(room, rng);
+  if (
+    room.shape === "oval" ||
+    room.shape === "shaft" ||
+    room.shape === "ritual"
+  )
+    return buildOvalMask(room);
+  if (room.shape === "irregular" || room.shape === "cave")
+    return buildCaveMask(room, rng);
   return buildRectMask(room);
 }
 
@@ -515,23 +644,50 @@ export function applyMaskModifier(baseCells, room, rng, modifier) {
 
 export function buildRoomMask(room, rng) {
   const type = room.shapeOptions?.roomType || "none";
-  let cells = type === "apse" ? buildApseMask(room) : type === "ruined" ? buildRuinedMask(room, rng) : buildBaseRoomMask(room, rng);
-  if (type === "alcove" && room.shape !== "alcove") cells = applyMaskModifier(cells, room, rng, "alcove");
-  if (type === "archive" && room.shape !== "archive") cells = applyMaskModifier(cells, room, rng, "archive");
-  if (room.shapeOptions?.notch && !["notched", "ruined-rect", "broken"].includes(room.shape)) cells = applyMaskModifier(cells, room, rng, "notch");
-  if (room.shapeOptions?.ruined && type !== "ruined" && !["ruined-rect", "broken"].includes(room.shape)) cells = applyMaskModifier(cells, room, rng, "ruined");
+  let cells =
+    type === "apse"
+      ? buildApseMask(room)
+      : type === "ruined"
+        ? buildRuinedMask(room, rng)
+        : buildBaseRoomMask(room, rng);
+  if (type === "alcove" && room.shape !== "alcove")
+    cells = applyMaskModifier(cells, room, rng, "alcove");
+  if (type === "archive" && room.shape !== "archive")
+    cells = applyMaskModifier(cells, room, rng, "archive");
+  if (
+    room.shapeOptions?.notch &&
+    !["notched", "ruined-rect", "broken"].includes(room.shape)
+  )
+    cells = applyMaskModifier(cells, room, rng, "notch");
+  if (
+    room.shapeOptions?.ruined &&
+    type !== "ruined" &&
+    !["ruined-rect", "broken"].includes(room.shape)
+  )
+    cells = applyMaskModifier(cells, room, rng, "ruined");
   return ensureRoomMaskViable(cells, room);
 }
 
 export function getFloorCellCentroid(floorCells, gridSize, fallbackPoint) {
-  if (!Array.isArray(floorCells) || floorCells.length === 0) return fallbackPoint;
+  if (!Array.isArray(floorCells) || floorCells.length === 0)
+    return fallbackPoint;
   return {
-    x: floorCells.reduce((sum, cell) => sum + cell.x + 0.5, 0) / floorCells.length * gridSize,
-    y: floorCells.reduce((sum, cell) => sum + cell.y + 0.5, 0) / floorCells.length * gridSize,
+    x:
+      (floorCells.reduce((sum, cell) => sum + cell.x + 0.5, 0) /
+        floorCells.length) *
+      gridSize,
+    y:
+      (floorCells.reduce((sum, cell) => sum + cell.y + 0.5, 0) /
+        floorCells.length) *
+      gridSize,
   };
 }
 
-export function buildAllRoomMasks(regions, seed, gridSize = DEFAULT_CONFIG.gridSize) {
+export function buildAllRoomMasks(
+  regions,
+  seed,
+  gridSize = DEFAULT_CONFIG.gridSize,
+) {
   return regions.map((room) => {
     const rng = createSeededRng(hashStringToSeed(seed, room.id, "room-mask"));
     const floorCells = Array.from(buildRoomMask(room, rng)).map(parseCellKey);
@@ -562,7 +718,10 @@ export function getCircularAnchorData(region, cell, normal) {
   if (region.shape !== "circle") return null;
   const cx = region.cellRect.x + region.cellRect.w / 2;
   const cy = region.cellRect.y + region.cellRect.h / 2;
-  const radius = Math.max(1.8, Math.min(region.cellRect.w, region.cellRect.h) / 2);
+  const radius = Math.max(
+    1.8,
+    Math.min(region.cellRect.w, region.cellRect.h) / 2,
+  );
   const aim = {
     x: cell.x + 0.5 + normal.x * 0.72 - cx,
     y: cell.y + 0.5 + normal.y * 0.72 - cy,
@@ -579,15 +738,16 @@ export function getCircularAnchorData(region, cell, normal) {
 export function isCircleDoorEdgeInsidePerimeter(anchor) {
   if (!anchor?.circular) return false;
   const circle = anchor.circular;
-  const samples = anchor.side === "north" || anchor.side === "south"
-    ? [0.33, 0.5, 0.67].map((t) => ({
-      x: anchor.cell.x + t,
-      y: anchor.side === "north" ? anchor.cell.y : anchor.cell.y + 1,
-    }))
-    : [0.33, 0.5, 0.67].map((t) => ({
-      x: anchor.side === "west" ? anchor.cell.x : anchor.cell.x + 1,
-      y: anchor.cell.y + t,
-    }));
+  const samples =
+    anchor.side === "north" || anchor.side === "south"
+      ? [0.33, 0.5, 0.67].map((t) => ({
+          x: anchor.cell.x + t,
+          y: anchor.side === "north" ? anchor.cell.y : anchor.cell.y + 1,
+        }))
+      : [0.33, 0.5, 0.67].map((t) => ({
+          x: anchor.side === "west" ? anchor.cell.x : anchor.cell.x + 1,
+          y: anchor.cell.y + t,
+        }));
   const insideCount = samples.filter((point) => {
     const dx = point.x - circle.cx;
     const dy = point.y - circle.cy;
@@ -596,16 +756,30 @@ export function isCircleDoorEdgeInsidePerimeter(anchor) {
   return insideCount >= 2;
 }
 
-export function createCircleDoorRoomExtensionAnchor(region, anchor, gridW, gridH, reservedRoomCells = null) {
+export function createCircleDoorRoomExtensionAnchor(
+  region,
+  anchor,
+  gridW,
+  gridH,
+  reservedRoomCells = null,
+) {
   if (!anchor || region.shape !== "circle") return anchor;
   const portalRoomCell = { x: anchor.outsideCell.x, y: anchor.outsideCell.y };
   const outsideCell = {
     x: portalRoomCell.x + anchor.normal.x,
     y: portalRoomCell.y + anchor.normal.y,
   };
-  if (outsideCell.x < 1 || outsideCell.y < 1 || outsideCell.x >= gridW - 1 || outsideCell.y >= gridH - 1) return anchor;
-  if (reservedRoomCells?.has(cellKey(portalRoomCell.x, portalRoomCell.y))) return anchor;
-  if (reservedRoomCells?.has(cellKey(outsideCell.x, outsideCell.y))) return anchor;
+  if (
+    outsideCell.x < 1 ||
+    outsideCell.y < 1 ||
+    outsideCell.x >= gridW - 1 ||
+    outsideCell.y >= gridH - 1
+  )
+    return anchor;
+  if (reservedRoomCells?.has(cellKey(portalRoomCell.x, portalRoomCell.y)))
+    return anchor;
+  if (reservedRoomCells?.has(cellKey(outsideCell.x, outsideCell.y)))
+    return anchor;
   return {
     ...anchor,
     cell: portalRoomCell,
@@ -627,12 +801,16 @@ export function addCircleDoorRoomExtensionCellToSet(anchor, cells) {
 export function applyCircleDoorRoomExtensions(regions, corridors) {
   const extensionsByRegion = new Map();
   const addExtension = (regionId, anchor) => {
-    if (!regionId || !anchor?.expandedCircleDoor || !anchor.portalRoomCell) return;
-    if (!extensionsByRegion.has(regionId)) extensionsByRegion.set(regionId, new Map());
-    extensionsByRegion.get(regionId).set(cellKey(anchor.portalRoomCell.x, anchor.portalRoomCell.y), {
-      x: anchor.portalRoomCell.x,
-      y: anchor.portalRoomCell.y,
-    });
+    if (!regionId || !anchor?.expandedCircleDoor || !anchor.portalRoomCell)
+      return;
+    if (!extensionsByRegion.has(regionId))
+      extensionsByRegion.set(regionId, new Map());
+    extensionsByRegion
+      .get(regionId)
+      .set(cellKey(anchor.portalRoomCell.x, anchor.portalRoomCell.y), {
+        x: anchor.portalRoomCell.x,
+        y: anchor.portalRoomCell.y,
+      });
   };
 
   corridors.forEach((corridor) => {
@@ -647,13 +825,19 @@ export function applyCircleDoorRoomExtensions(regions, corridors) {
     if (!extensions || region.shape !== "circle") return region;
 
     const previousExtensions = new Map(
-      (Array.isArray(region.circleExtensionCells) ? region.circleExtensionCells : [])
-        .map((cell) => [cellKey(cell.x, cell.y), { x: cell.x, y: cell.y }])
+      (Array.isArray(region.circleExtensionCells)
+        ? region.circleExtensionCells
+        : []
+      ).map((cell) => [cellKey(cell.x, cell.y), { x: cell.x, y: cell.y }]),
     );
     extensions.forEach((cell, key) => previousExtensions.set(key, cell));
 
-    const existingFloor = new Set(region.floorCells.map((cell) => cellKey(cell.x, cell.y)));
-    const addedFloorCells = Array.from(previousExtensions.values()).filter((cell) => !existingFloor.has(cellKey(cell.x, cell.y)));
+    const existingFloor = new Set(
+      region.floorCells.map((cell) => cellKey(cell.x, cell.y)),
+    );
+    const addedFloorCells = Array.from(previousExtensions.values()).filter(
+      (cell) => !existingFloor.has(cellKey(cell.x, cell.y)),
+    );
 
     return {
       ...region,
@@ -664,7 +848,12 @@ export function applyCircleDoorRoomExtensions(regions, corridors) {
 }
 
 export function getCircleExtensionCellKeys(region) {
-  return new Set((Array.isArray(region.circleExtensionCells) ? region.circleExtensionCells : []).map((cell) => cellKey(cell.x, cell.y)));
+  return new Set(
+    (Array.isArray(region.circleExtensionCells)
+      ? region.circleExtensionCells
+      : []
+    ).map((cell) => cellKey(cell.x, cell.y)),
+  );
 }
 
 export function getCellNeighbors(cell) {
@@ -711,16 +900,20 @@ export function mergeDungeonSurfaces(regions, corridors) {
   const floor = new Set();
   const roomFloor = new Set();
   const corridorFloor = new Set();
-  regions.forEach((region) => region.floorCells.forEach((cell) => {
-    const key = cellKey(cell.x, cell.y);
-    floor.add(key);
-    roomFloor.add(key);
-  }));
-  corridors.forEach((corridor) => corridor.floorCells.forEach((cell) => {
-    const key = cellKey(cell.x, cell.y);
-    floor.add(key);
-    if (!roomFloor.has(key)) corridorFloor.add(key);
-  }));
+  regions.forEach((region) =>
+    region.floorCells.forEach((cell) => {
+      const key = cellKey(cell.x, cell.y);
+      floor.add(key);
+      roomFloor.add(key);
+    }),
+  );
+  corridors.forEach((corridor) =>
+    corridor.floorCells.forEach((cell) => {
+      const key = cellKey(cell.x, cell.y);
+      floor.add(key);
+      if (!roomFloor.has(key)) corridorFloor.add(key);
+    }),
+  );
   return {
     floorCells: Array.from(floor).map(parseCellKey),
     roomFloorCells: Array.from(roomFloor).map(parseCellKey),
@@ -736,10 +929,38 @@ export function computeBoundarySegments(floorCells, gridSize) {
     const y = cell.y * gridSize;
     const g = gridSize;
     [
-      { side: "north", neighbor: cellKey(cell.x, cell.y - 1), x1: x, y1: y, x2: x + g, y2: y },
-      { side: "east", neighbor: cellKey(cell.x + 1, cell.y), x1: x + g, y1: y, x2: x + g, y2: y + g },
-      { side: "south", neighbor: cellKey(cell.x, cell.y + 1), x1: x + g, y1: y + g, x2: x, y2: y + g },
-      { side: "west", neighbor: cellKey(cell.x - 1, cell.y), x1: x, y1: y + g, x2: x, y2: y },
+      {
+        side: "north",
+        neighbor: cellKey(cell.x, cell.y - 1),
+        x1: x,
+        y1: y,
+        x2: x + g,
+        y2: y,
+      },
+      {
+        side: "east",
+        neighbor: cellKey(cell.x + 1, cell.y),
+        x1: x + g,
+        y1: y,
+        x2: x + g,
+        y2: y + g,
+      },
+      {
+        side: "south",
+        neighbor: cellKey(cell.x, cell.y + 1),
+        x1: x + g,
+        y1: y + g,
+        x2: x,
+        y2: y + g,
+      },
+      {
+        side: "west",
+        neighbor: cellKey(cell.x - 1, cell.y),
+        x1: x,
+        y1: y + g,
+        x2: x,
+        y2: y,
+      },
     ].forEach((segment) => {
       if (!floor.has(segment.neighbor)) segments.push(segment);
     });
@@ -781,11 +1002,22 @@ export function mergeCollinearWallSegments(segments) {
       if (part.a <= current.b) {
         current.b = Math.max(current.b, part.b);
       } else {
-        merged.push({ x1: current.a, y1: current.y, x2: current.b, y2: current.y });
+        merged.push({
+          x1: current.a,
+          y1: current.y,
+          x2: current.b,
+          y2: current.y,
+        });
         current = { ...part };
       }
     });
-    if (current) merged.push({ x1: current.a, y1: current.y, x2: current.b, y2: current.y });
+    if (current)
+      merged.push({
+        x1: current.a,
+        y1: current.y,
+        x2: current.b,
+        y2: current.y,
+      });
   });
 
   vertical.forEach((parts) => {
@@ -799,11 +1031,22 @@ export function mergeCollinearWallSegments(segments) {
       if (part.a <= current.b) {
         current.b = Math.max(current.b, part.b);
       } else {
-        merged.push({ x1: current.x, y1: current.a, x2: current.x, y2: current.b });
+        merged.push({
+          x1: current.x,
+          y1: current.a,
+          x2: current.x,
+          y2: current.b,
+        });
         current = { ...part };
       }
     });
-    if (current) merged.push({ x1: current.x, y1: current.a, x2: current.x, y2: current.b });
+    if (current)
+      merged.push({
+        x1: current.x,
+        y1: current.a,
+        x2: current.x,
+        y2: current.b,
+      });
   });
 
   return merged;
@@ -819,15 +1062,25 @@ export function getSharedEdgeSegment(cell, neighbor, gridSize) {
   const x = cell.x * gridSize;
   const y = cell.y * gridSize;
   const g = gridSize;
-  if (neighbor.x === cell.x + 1 && neighbor.y === cell.y) return { x1: x + g, y1: y, x2: x + g, y2: y + g };
-  if (neighbor.x === cell.x - 1 && neighbor.y === cell.y) return { x1: x, y1: y + g, x2: x, y2: y };
-  if (neighbor.x === cell.x && neighbor.y === cell.y + 1) return { x1: x + g, y1: y + g, x2: x, y2: y + g };
-  if (neighbor.x === cell.x && neighbor.y === cell.y - 1) return { x1: x, y1: y, x2: x + g, y2: y };
+  if (neighbor.x === cell.x + 1 && neighbor.y === cell.y)
+    return { x1: x + g, y1: y, x2: x + g, y2: y + g };
+  if (neighbor.x === cell.x - 1 && neighbor.y === cell.y)
+    return { x1: x, y1: y + g, x2: x, y2: y };
+  if (neighbor.x === cell.x && neighbor.y === cell.y + 1)
+    return { x1: x + g, y1: y + g, x2: x, y2: y + g };
+  if (neighbor.x === cell.x && neighbor.y === cell.y - 1)
+    return { x1: x, y1: y, x2: x + g, y2: y };
   return null;
 }
 
-export function computeRoomCorridorWallSegments(roomFloorCells, corridorFloorCells, gridSize) {
-  const corridorSet = new Set(corridorFloorCells.map((cell) => cellKey(cell.x, cell.y)));
+export function computeRoomCorridorWallSegments(
+  roomFloorCells,
+  corridorFloorCells,
+  gridSize,
+) {
+  const corridorSet = new Set(
+    corridorFloorCells.map((cell) => cellKey(cell.x, cell.y)),
+  );
   const seen = new Set();
   const segments = [];
 
@@ -854,7 +1107,9 @@ export function computeRoomCorridorWallSegments(roomFloorCells, corridorFloorCel
 export function computeRoomRoomWallSegments(regions, gridSize) {
   const ownerByCell = new Map();
   regions.forEach((region) => {
-    region.floorCells.forEach((cell) => ownerByCell.set(cellKey(cell.x, cell.y), region.id));
+    region.floorCells.forEach((cell) =>
+      ownerByCell.set(cellKey(cell.x, cell.y), region.id),
+    );
   });
   const seen = new Set();
   const segments = [];
@@ -882,16 +1137,35 @@ export function computeRoomRoomWallSegments(regions, gridSize) {
 
 export function buildDungeonMask(regions, corridors, gridSize) {
   const dungeonMask = mergeDungeonSurfaces(regions, corridors);
-  const doorSegments = dedupeDoorSegments(corridors.flatMap((corridor) => corridor.doors));
-  const externalWallSegments = computeBoundarySegments(dungeonMask.floorCells, gridSize);
-  const corridorSeparationWallSegments = computeRoomCorridorWallSegments(dungeonMask.roomFloorCells, dungeonMask.corridorFloorCells, gridSize);
-  const roomSeparationWallSegments = computeRoomRoomWallSegments(regions, gridSize);
-  const wallSegments = mergeCollinearWallSegments([...externalWallSegments, ...corridorSeparationWallSegments, ...roomSeparationWallSegments]);
+  const doorSegments = dedupeDoorSegments(
+    corridors.flatMap((corridor) => corridor.doors),
+  );
+  const externalWallSegments = computeBoundarySegments(
+    dungeonMask.floorCells,
+    gridSize,
+  );
+  const corridorSeparationWallSegments = computeRoomCorridorWallSegments(
+    dungeonMask.roomFloorCells,
+    dungeonMask.corridorFloorCells,
+    gridSize,
+  );
+  const roomSeparationWallSegments = computeRoomRoomWallSegments(
+    regions,
+    gridSize,
+  );
+  const wallSegments = mergeCollinearWallSegments([
+    ...externalWallSegments,
+    ...corridorSeparationWallSegments,
+    ...roomSeparationWallSegments,
+  ]);
   return {
     surfaceKind: "dungeon",
     ...dungeonMask,
     externalWallSegments,
-    internalWallSegments: mergeCollinearWallSegments([...corridorSeparationWallSegments, ...roomSeparationWallSegments]),
+    internalWallSegments: mergeCollinearWallSegments([
+      ...corridorSeparationWallSegments,
+      ...roomSeparationWallSegments,
+    ]),
     wallSegments,
     doorSegments,
     mapAccesses: [],
@@ -902,12 +1176,18 @@ export function getRegionSurfaceKind(region, generatedMap = null) {
   const contextKey = generatedMap?.config
     ? getContextKey(generatedMap.config.context || generatedMap.config.biome)
     : getContextKey(region?.placementProfile || "");
-  const explicit = region?.surfaceKind || region?.generationKind || region?.surface?.kind;
+  const explicit =
+    region?.surfaceKind || region?.generationKind || region?.surface?.kind;
   if (["cave", "hybrid", "organic-cave", "natural"].includes(explicit)) {
     return contextKey === "cave" || contextKey === "mine" ? "cave" : "dungeon";
   }
-  if (["structure", "dungeon", "structured", "room"].includes(explicit)) return "dungeon";
-  if ((region?.placementProfile === "cave" || region?.shape === "cave") && (contextKey === "cave" || contextKey === "mine")) return "cave";
+  if (["structure", "dungeon", "structured", "room"].includes(explicit))
+    return "dungeon";
+  if (
+    (region?.placementProfile === "cave" || region?.shape === "cave") &&
+    (contextKey === "cave" || contextKey === "mine")
+  )
+    return "cave";
   return contextKey === "cave" ? "cave" : "dungeon";
 }
 

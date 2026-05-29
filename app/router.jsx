@@ -4,7 +4,9 @@ import Crucible from "../features/crucible/index.js";
 import InspirationsPage from "../features/inspirations/index.js";
 import { createMapRequestFromDarkenLocationState } from "../features/darken-location/darken-location.map-request.js";
 
-const CruorMapGeneratorMvp = lazy(() => import("../features/darken-location/map-generator/index.js"));
+const CruorMapGeneratorMvp = lazy(
+  () => import("../features/darken-location/map-generator/index.js"),
+);
 
 export default function AppRouter() {
   const [activeSection, setActiveSection] = useState("darken");
@@ -14,17 +16,26 @@ export default function AppRouter() {
   const [mapRequestRevision, setMapRequestRevision] = useState(0);
   const darkenSnapshotProviderRef = useRef(null);
 
-  const createMapRequestFromSnapshot = useCallback((snapshot) => (
-    createMapRequestFromDarkenLocationState(snapshot)
-  ), []);
+  const createMapRequestFromSnapshot = useCallback(
+    (snapshot) => createMapRequestFromDarkenLocationState(snapshot),
+    [],
+  );
 
-  const initializeMapRequest = useCallback((snapshot) => {
-    setMapRequest((currentRequest) => currentRequest || createMapRequestFromSnapshot(snapshot));
-  }, [createMapRequestFromSnapshot]);
+  const initializeMapRequest = useCallback(
+    (snapshot) => {
+      setMapRequest(
+        (currentRequest) =>
+          currentRequest || createMapRequestFromSnapshot(snapshot),
+      );
+    },
+    [createMapRequestFromSnapshot],
+  );
 
   const refreshMapFromComposer = useCallback(() => {
     if (hasOpenedMapGenerator) {
-      const confirmed = window.confirm("Refresh the map from the current Composer regions? This will replace the current generated map.");
+      const confirmed = window.confirm(
+        "Refresh the map from the current Composer regions? This will replace the current generated map.",
+      );
       if (!confirmed) return;
     }
     const snapshot = darkenSnapshotProviderRef.current?.();
@@ -34,29 +45,39 @@ export default function AppRouter() {
     setActiveDarkenTab("map-generator");
   }, [createMapRequestFromSnapshot, hasOpenedMapGenerator]);
 
-  const openMapGenerator = useCallback((snapshot) => {
-    initializeMapRequest(snapshot);
-    setHasOpenedMapGenerator(true);
-    setActiveDarkenTab("map-generator");
-  }, [initializeMapRequest]);
+  const openMapGenerator = useCallback(
+    (snapshot) => {
+      initializeMapRequest(snapshot);
+      setHasOpenedMapGenerator(true);
+      setActiveDarkenTab("map-generator");
+    },
+    [initializeMapRequest],
+  );
 
   const setDarkenSnapshotProvider = useCallback((provider) => {
     darkenSnapshotProviderRef.current = provider;
   }, []);
 
-  const activateDarkenTab = useCallback((tabId) => {
-    if (tabId === "map-generator" && !hasOpenedMapGenerator) {
-      const snapshot = darkenSnapshotProviderRef.current?.();
-      initializeMapRequest(snapshot);
-      setHasOpenedMapGenerator(true);
-    }
+  const activateDarkenTab = useCallback(
+    (tabId) => {
+      if (tabId === "map-generator" && !hasOpenedMapGenerator) {
+        const snapshot = darkenSnapshotProviderRef.current?.();
+        initializeMapRequest(snapshot);
+        setHasOpenedMapGenerator(true);
+      }
 
-    setActiveDarkenTab(tabId);
-  }, [hasOpenedMapGenerator, initializeMapRequest]);
+      setActiveDarkenTab(tabId);
+    },
+    [hasOpenedMapGenerator, initializeMapRequest],
+  );
 
   const darkenContent = (
     <section
-      className={activeDarkenTab === "map-generator" ? "darken-workspace is-map-tab" : "darken-workspace"}
+      className={
+        activeDarkenTab === "map-generator"
+          ? "darken-workspace is-map-tab"
+          : "darken-workspace"
+      }
       aria-label="Darken a Location workspace"
     >
       <div className="darken-workspace__topbar">
@@ -84,7 +105,11 @@ export default function AppRouter() {
                 aria-label="Darken a Location views"
               >
                 <button
-                  className={activeDarkenTab === "composer" ? "darken-workspace__tab is-active" : "darken-workspace__tab"}
+                  className={
+                    activeDarkenTab === "composer"
+                      ? "darken-workspace__tab is-active"
+                      : "darken-workspace__tab"
+                  }
                   type="button"
                   role="tab"
                   aria-selected={activeDarkenTab === "composer"}
@@ -96,7 +121,11 @@ export default function AppRouter() {
                 </button>
 
                 <button
-                  className={activeDarkenTab === "map-generator" ? "darken-workspace__tab is-active" : "darken-workspace__tab"}
+                  className={
+                    activeDarkenTab === "map-generator"
+                      ? "darken-workspace__tab is-active"
+                      : "darken-workspace__tab"
+                  }
                   type="button"
                   role="tab"
                   aria-selected={activeDarkenTab === "map-generator"}
@@ -132,7 +161,9 @@ export default function AppRouter() {
           aria-labelledby="darkenMapGeneratorTab"
           hidden={activeDarkenTab !== "map-generator"}
         >
-          <Suspense fallback={<div className="status">Loading map generator...</div>}>
+          <Suspense
+            fallback={<div className="status">Loading map generator...</div>}
+          >
             <CruorMapGeneratorMvp
               key={mapRequestRevision}
               initialRequest={mapRequest}

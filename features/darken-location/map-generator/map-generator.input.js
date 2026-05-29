@@ -93,14 +93,51 @@ export const DEFAULT_CONFIG = {
 };
 
 export const GENERATED_REGION_TEMPLATES = [
-  { role: "Hazard Room", preferredShape: "rect", size: "Medium", tags: ["hazard"], sourceAnchors: ["Decomposition"] },
-  { role: "Connector", preferredShape: "hall", size: "Small", tags: ["connector"], sourceAnchors: ["The Mist"] },
-  { role: "Ambush / Nest", preferredShape: "irregular polygon", size: "Medium", tags: ["ambush", "nest"], sourceAnchors: ["Wolf Spiders"] },
-  { role: "Outcome / Reward", preferredShape: "ritual chamber", size: "Medium", tags: ["outcome", "reward"], sourceAnchors: ["Sedlec Ossuary"] },
-  { role: "Clue Room", preferredShape: "rect", size: "Small", tags: ["clue"], sourceAnchors: ["Wax Death Masks"] },
+  {
+    role: "Hazard Room",
+    preferredShape: "rect",
+    size: "Medium",
+    tags: ["hazard"],
+    sourceAnchors: ["Decomposition"],
+  },
+  {
+    role: "Connector",
+    preferredShape: "hall",
+    size: "Small",
+    tags: ["connector"],
+    sourceAnchors: ["The Mist"],
+  },
+  {
+    role: "Ambush / Nest",
+    preferredShape: "irregular polygon",
+    size: "Medium",
+    tags: ["ambush", "nest"],
+    sourceAnchors: ["Wolf Spiders"],
+  },
+  {
+    role: "Outcome / Reward",
+    preferredShape: "ritual chamber",
+    size: "Medium",
+    tags: ["outcome", "reward"],
+    sourceAnchors: ["Sedlec Ossuary"],
+  },
+  {
+    role: "Clue Room",
+    preferredShape: "rect",
+    size: "Small",
+    tags: ["clue"],
+    sourceAnchors: ["Wax Death Masks"],
+  },
 ];
 
-const SUPPORTED_CONTEXTS = new Set(["Crypt", "Chapel", "Cave", "Mine", "Noble House", "Ruins"]);
+const SUPPORTED_CONTEXTS = new Set([
+  "Crypt",
+  "Chapel",
+  "Cave",
+  "Mine",
+  "Noble House",
+  "Ruins",
+]);
 
 function normalizeArray(value) {
   return Array.isArray(value) ? value.filter(Boolean) : [];
@@ -108,13 +145,18 @@ function normalizeArray(value) {
 
 function normalizeRequestRegion(region, index) {
   if (!region || typeof region !== "object") return null;
-  const metadata = region.metadata && typeof region.metadata === "object" ? region.metadata : {};
+  const metadata =
+    region.metadata && typeof region.metadata === "object"
+      ? region.metadata
+      : {};
   const tags = [
     region.role,
     region.density,
-    ...(normalizeArray(metadata.contexts)),
-    ...(normalizeArray(metadata.horror)),
-  ].filter(Boolean).map((item) => String(item).toLowerCase());
+    ...normalizeArray(metadata.contexts),
+    ...normalizeArray(metadata.horror),
+  ]
+    .filter(Boolean)
+    .map((item) => String(item).toLowerCase());
   return {
     id: region.id || `region-${index + 1}`,
     name: region.label || region.name || `Location Region ${index + 1}`,
@@ -123,33 +165,49 @@ function normalizeRequestRegion(region, index) {
     size: region.size || "Medium",
     connectors: Number(region.connectors || (index === 0 ? 2 : 1)),
     tags,
-    sourceAnchors: normalizeArray(metadata.sourceAnchors || region.sourceAnchors),
+    sourceAnchors: normalizeArray(
+      metadata.sourceAnchors || region.sourceAnchors,
+    ),
     links: normalizeArray(region.links),
-    isEntrance: index === 0 || tags.some((tag) => tag.includes("entrance") || tag.includes("threshold")),
+    isEntrance:
+      index === 0 ||
+      tags.some((tag) => tag.includes("entrance") || tag.includes("threshold")),
     isExit: tags.some((tag) => tag.includes("exit") || tag.includes("outcome")),
-    secret: tags.some((tag) => tag.includes("secret")) || Boolean(metadata.secret),
+    secret:
+      tags.some((tag) => tag.includes("secret")) || Boolean(metadata.secret),
     sourceRegionId: region.sourceRegionId,
     requestMetadata: metadata,
   };
 }
 
-export function createConfigFromNormalizedMapRequest(initialRequest, baseConfig = DEFAULT_CONFIG) {
+export function createConfigFromNormalizedMapRequest(
+  initialRequest,
+  baseConfig = DEFAULT_CONFIG,
+) {
   if (!initialRequest || typeof initialRequest !== "object") return baseConfig;
   const requiredRegions = normalizeArray(initialRequest.requiredRegions);
   const regions = requiredRegions
     .map((region, index) => normalizeRequestRegion(region, index))
     .filter(Boolean);
   const requestedContext = initialRequest.mapType || initialRequest.context;
-  const context = SUPPORTED_CONTEXTS.has(requestedContext) ? requestedContext : baseConfig.context;
-  const roomCount = regions.length || normalizeRoomCount(initialRequest.roomCount, baseConfig.roomCount);
+  const context = SUPPORTED_CONTEXTS.has(requestedContext)
+    ? requestedContext
+    : baseConfig.context;
+  const roomCount =
+    regions.length ||
+    normalizeRoomCount(initialRequest.roomCount, baseConfig.roomCount);
   return {
     ...baseConfig,
     seed: initialRequest.seed || baseConfig.seed,
     context,
     biome: context,
     roomCount,
-    horror: normalizeArray(initialRequest.metadata?.horror).length ? normalizeArray(initialRequest.metadata.horror) : baseConfig.horror,
-    sourceAnchors: normalizeArray(initialRequest.metadata?.sourceAnchors).length ? normalizeArray(initialRequest.metadata.sourceAnchors) : baseConfig.sourceAnchors,
+    horror: normalizeArray(initialRequest.metadata?.horror).length
+      ? normalizeArray(initialRequest.metadata.horror)
+      : baseConfig.horror,
+    sourceAnchors: normalizeArray(initialRequest.metadata?.sourceAnchors).length
+      ? normalizeArray(initialRequest.metadata.sourceAnchors)
+      : baseConfig.sourceAnchors,
     regions: regions.length ? regions : baseConfig.regions,
     requiredRegions,
     normalizedMapRequest: initialRequest,
@@ -163,21 +221,29 @@ export function normalizeRoomCount(value, fallback) {
 }
 
 export function normalizeInput(config) {
-  const roomCount = normalizeRoomCount(config.roomCount, config.regions?.length || 1);
+  const roomCount = normalizeRoomCount(
+    config.roomCount,
+    config.regions?.length || 1,
+  );
   const baseRegions = Array.isArray(config.regions) ? config.regions : [];
   const regions = Array.from({ length: roomCount }, (_, index) => {
-    const template = GENERATED_REGION_TEMPLATES[index % GENERATED_REGION_TEMPLATES.length];
+    const template =
+      GENERATED_REGION_TEMPLATES[index % GENERATED_REGION_TEMPLATES.length];
     const source = baseRegions[index] || template || {};
     const tags = Array.isArray(source.tags) ? source.tags : [];
     return {
       id: source.id || `region-${index + 1}`,
       name: source.name || `Generated Region ${index + 1}`,
-      role: source.role || (index === 0 ? "Entrance / Threshold" : "Location Region"),
+      role:
+        source.role ||
+        (index === 0 ? "Entrance / Threshold" : "Location Region"),
       preferredShape: source.preferredShape || source.shape || "rect",
       size: source.size || "Medium",
       connectors: Number(source.connectors || (index === 0 ? 2 : 1)),
       tags,
-      sourceAnchors: Array.isArray(source.sourceAnchors) ? source.sourceAnchors : [],
+      sourceAnchors: Array.isArray(source.sourceAnchors)
+        ? source.sourceAnchors
+        : [],
       links: Array.isArray(source.links) ? source.links : [],
       isEntrance: Boolean(source.isEntrance || index === 0),
       isExit: Boolean(source.isExit),

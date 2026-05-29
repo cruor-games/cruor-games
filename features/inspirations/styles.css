@@ -44,10 +44,7 @@
 
 .inspirations-page__tools {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.35fr) minmax(
-      180px,
-      0.35fr
-    );
+  grid-template-columns: minmax(260px, 1fr) minmax(180px, 0.35fr) minmax(180px, 0.35fr);
   gap: 10px;
   max-width: 1440px;
   margin: 0 auto 20px;
@@ -209,8 +206,8 @@
 }
 
 .inspirations-page__modal {
-  width: min(880px, 100%);
-  max-height: min(780px, calc(100dvh - 48px));
+  width: min(1080px, 100%);
+  max-height: min(840px, calc(100dvh - 48px));
   overflow: auto;
   border: 1px solid rgba(95, 7, 22, 0.82);
   background:
@@ -243,7 +240,7 @@
 
 .inspirations-page__modal-body {
   display: grid;
-  grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1fr);
+  grid-template-columns: minmax(220px, 0.55fr) minmax(0, 1fr);
   gap: 16px;
   padding: 16px;
 }
@@ -282,6 +279,26 @@
   line-height: 1.55;
 }
 
+.inspirations-page__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.inspirations-page__section-head h3 {
+  margin: 0;
+}
+
+.inspirations-page__section-head strong {
+  color: #d0a2aa;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .inspirations-page__chips,
 .inspirations-page__linked {
   display: flex;
@@ -290,12 +307,61 @@
 }
 
 .inspirations-page__chips span,
-.inspirations-page__linked span {
+.inspirations-page__linked > span {
   border: 1px solid rgba(95, 7, 22, 0.54);
   background: rgba(51, 3, 12, 0.22);
   color: #d0a2aa;
   padding: 5px 8px;
   font-size: 11px;
+}
+
+.inspirations-page__component-groups {
+  display: grid;
+  gap: 10px;
+}
+
+.inspirations-page__component-group {
+  border: 1px solid rgba(95, 7, 22, 0.32);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 10px;
+}
+
+.inspirations-page__component-group h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  color: rgba(238, 238, 238, 0.9);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.inspirations-page__component-group h4 em {
+  color: #d0a2aa;
+  font-style: normal;
+}
+
+.inspirations-page__linked > span {
+  display: grid;
+  gap: 3px;
+  max-width: 100%;
+}
+
+.inspirations-page__linked > span strong {
+  color: rgba(238, 238, 238, 0.92);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.inspirations-page__linked > span small {
+  color: rgba(208, 162, 170, 0.84);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 980px) {

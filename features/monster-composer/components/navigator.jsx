@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Plus, SlidersHorizontal, X } from "lucide-react";
 
-import { MONSTER_SOURCES as SOURCES } from "../data/monster-sources.js";
+import { ALL_MONSTER_SOURCES as SOURCES } from "../data/monster-content-pack-feed.js";
 import { SLOTS } from "../monster-composer.workflow.js";
 import { getSelectedIdsForSlot } from "../model/selection.js";
 import {
@@ -26,6 +26,18 @@ function titleCase(value) {
     .join(" ");
 }
 
+function getContentPackId(entry) {
+  return entry?.contentPack?.id || "core-cruor";
+}
+
+function getContentPackTitle(entry) {
+  return entry?.contentPack?.title || "Core Monster Composer";
+}
+
+function getSourcePackTitle(source) {
+  return source?.contentPack?.title || "Core Monster Composer";
+}
+
 function EmptyState({ text }) {
   return <div className="empty">{text}</div>;
 }
@@ -36,6 +48,9 @@ export function ComponentNavigatorModal({
   activeSlot,
   navigatorSlotFilter,
   setNavigatorSlotFilter,
+  navigatorPackFilter = "all",
+  setNavigatorPackFilter,
+  contentPackOptions = [],
   setActiveSlot,
   onClose,
   visibleFeatures,
@@ -83,6 +98,26 @@ export function ComponentNavigatorModal({
     tacticalRoleId: computed.tacticalRole.id,
     monsterTierId: computed.monsterTier.id,
   });
+  const packOptions = [
+    { id: "all", title: "All Content Packs" },
+    ...contentPackOptions.filter((pack) => pack.id !== "all"),
+  ];
+  const currentSource = SOURCES.find((source) => source.id === sourceId) || null;
+  const sourceFilterOptions =
+    navigatorPackFilter === "all"
+      ? SOURCES
+      : SOURCES.filter((source) => getContentPackId(source) === navigatorPackFilter);
+
+  function selectContentPackFilter(packId) {
+    setNavigatorPackFilter?.(packId);
+    if (packId === "all") return;
+    if (getContentPackId(currentSource) === packId) return;
+
+    const nextSource = SOURCES.find((source) => getContentPackId(source) === packId);
+    if (!nextSource) return;
+    setSourceId(nextSource.id);
+    setActivePresetId("");
+  }
 
   return (
     <div
@@ -135,6 +170,7 @@ export function ComponentNavigatorModal({
               data-active-count={
                 navigatorSearch.trim() ||
                 sourceId !== "decomposition" ||
+                navigatorPackFilter !== "all" ||
                 (mode === "global" && navigatorSlotFilter !== "all")
                   ? 1
                   : 0
@@ -158,6 +194,7 @@ export function ComponentNavigatorModal({
                   onClick={() => {
                     setNavigatorSearch("");
                     setNavigatorSlotFilter(mode === "global" ? "all" : activeSlot);
+                    setNavigatorPackFilter?.("all");
                   }}
                 >
                   Clear
@@ -167,18 +204,35 @@ export function ComponentNavigatorModal({
                 <section className="navigator-filter-section">
                   <strong>Source Anchor</strong>
                   <div className="filter-chip-grid source-filter">
-                    {SOURCES.map((item) => (
+                    {sourceFilterOptions.map((item) => (
                       <button
                         key={item.id}
                         type="button"
-                        className={`navigator-filter-chip ${item.id === sourceId ? "active" : ""}`}
+                        className={`navigator-filter-chip navigator-filter-chip--stacked ${item.id === sourceId ? "active" : ""}`}
                         aria-pressed={item.id === sourceId}
                         onClick={() => {
                           setSourceId(item.id);
                           setActivePresetId("");
                         }}
                       >
-                        {item.label}
+                        <span className="navigator-filter-chip__main">{item.label}</span>
+                        <span className="navigator-filter-chip__meta">{getSourcePackTitle(item)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+                <section className="navigator-filter-section">
+                  <strong>Content Pack</strong>
+                  <div className="filter-chip-grid source-filter">
+                    {packOptions.map((pack) => (
+                      <button
+                        key={pack.id}
+                        type="button"
+                        className={`navigator-filter-chip ${pack.id === navigatorPackFilter ? "active" : ""}`}
+                        aria-pressed={pack.id === navigatorPackFilter}
+                        onClick={() => selectContentPackFilter(pack.id)}
+                      >
+                        {pack.title}
                       </button>
                     ))}
                   </div>
@@ -336,6 +390,7 @@ function SmartSlotPicks({
                 </button>
               </div>
               <h3>{feature.title}</h3>
+              <span className="component-pack-badge">{getContentPackTitle(feature)}</span>
               <p>{normalizeMonsterReferences(feature.summary, computed)}</p>
               <em>{formatFeatureImpactPreview(impact)}</em>
               {compatibility.kind !== "compatible" && <small>{compatibility.message}</small>}
@@ -364,6 +419,8 @@ function FeatureCard({
   buildFeatureImpactPreview,
 }) {
   const source = SOURCES.find((item) => item.id === feature.source);
+  const packTitle = getContentPackTitle(feature);
+  const sourcePackTitle = getSourcePackTitle(source);
   const rules = getFeatureCompatibility(feature);
   const mechanicProfile = getFeatureMechanicProfile(feature);
   const hasCompatibilityBadge = compatibility?.kind && compatibility.kind !== "compatible";
@@ -412,6 +469,7 @@ function FeatureCard({
       <div className="card-top">
         <div className="component-title-stack">
           <h3>{feature.title}</h3>
+          <span className="component-pack-badge">{packTitle}</span>
         </div>
         {hasCompatibilityBadge && (
           <span className={`compatibility-badge ${compatibility.kind}`}>{compatibility.label}</span>
@@ -434,6 +492,15 @@ function FeatureCard({
             <span className="meta-label">Source</span>
             <span className="meta-values">
               <span className="meta-value source-chip">{source?.label}</span>
+            </span>
+          </div>
+          <div className="meta-row">
+            <span className="meta-label">Content Pack</span>
+            <span className="meta-values">
+              <span className="meta-value pack-chip">{packTitle}</span>
+              {sourcePackTitle !== packTitle && (
+                <span className="meta-value">Source: {sourcePackTitle}</span>
+              )}
             </span>
           </div>
           <div className="meta-row">

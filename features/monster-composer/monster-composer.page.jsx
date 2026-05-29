@@ -329,6 +329,14 @@ function featureMatchesSourceAndSlot(feature, sourceId, slotId = null) {
   return sourceMatch && slotMatch;
 }
 
+function getContentPackId(entry) {
+  return entry?.contentPack?.id || "core-cruor";
+}
+
+function getContentPackTitle(entry) {
+  return entry?.contentPack?.title || "Core Monster Composer";
+}
+
 function getPresetById(presetId) {
   return MONSTER_FAMILY_PRESETS.find((preset) => preset.id === presetId) || null;
 }
@@ -1092,6 +1100,7 @@ export default function CruorMonsterComposerMvp() {
   const [activePresetId, setActivePresetId] = useState("");
   const [navigatorSearch, setNavigatorSearch] = useState("");
   const [navigatorFiltersOpen, setNavigatorFiltersOpen] = useState(false);
+  const [navigatorPackFilter, setNavigatorPackFilter] = useState("all");
   const [componentNavigatorOpen, setComponentNavigatorOpen] = useState(false);
   const [componentNavigatorMode, setComponentNavigatorMode] = useState("slot");
   const [navigatorSlotFilter, setNavigatorSlotFilter] = useState("all");
@@ -1125,6 +1134,16 @@ export default function CruorMonsterComposerMvp() {
   const currentNavigatorSlot =
     componentNavigatorMode === "global" ? navigatorSlotFilter : activeSlot;
 
+  const contentPackOptions = useMemo(() => {
+    const packsById = new Map();
+    FEATURES.forEach((feature) => {
+      const id = getContentPackId(feature);
+      if (!id || packsById.has(id)) return;
+      packsById.set(id, { id, title: getContentPackTitle(feature) });
+    });
+    return [...packsById.values()].sort((a, b) => a.title.localeCompare(b.title));
+  }, []);
+
   const selectedFeatures = useMemo(() => getFeaturesFromSelection(selected), [selected]);
 
   const availableFeatures = useMemo(() => {
@@ -1134,10 +1153,12 @@ export default function CruorMonsterComposerMvp() {
       status: getCompatibilityStatus(feature, selectedFeatures, typeId, category),
     }))
       .filter(({ feature, status }) => {
+        const packMatch =
+          navigatorPackFilter === "all" || getContentPackId(feature) === navigatorPackFilter;
         const frameMatch = customMode
           ? featureMatchesSourceAndSlot(feature, sourceId, slotFilter)
           : featureMatchesFrame(feature, sourceId, typeId, roleId, slotFilter);
-        return frameMatch && canShowFeatureForMode(status, composerMode);
+        return packMatch && frameMatch && canShowFeatureForMode(status, composerMode);
       })
       .sort((a, b) => {
         const aDecision = getFeatureDecisionProfile(a.feature, {
@@ -1177,6 +1198,7 @@ export default function CruorMonsterComposerMvp() {
     sourceId,
     typeId,
     roleId,
+    navigatorPackFilter,
     currentNavigatorSlot,
     selectedFeatures,
     selected,
@@ -1539,6 +1561,7 @@ export default function CruorMonsterComposerMvp() {
     setNavigatorSlotFilter("body");
     setNavigatorSearch("");
     setNavigatorFiltersOpen(false);
+    setNavigatorPackFilter("all");
     setActiveSlot("body");
     setViewMode("composer");
   }
@@ -1554,6 +1577,7 @@ export default function CruorMonsterComposerMvp() {
     setNavigatorSlotFilter("body");
     setNavigatorSearch("");
     setNavigatorFiltersOpen(false);
+    setNavigatorPackFilter("all");
     setActiveSlot("body");
     setViewMode("composer");
   }
@@ -1737,12 +1761,14 @@ export default function CruorMonsterComposerMvp() {
     if (!query) return availableFeatures;
     return availableFeatures.filter((feature) => {
       const sourceLabel = SOURCES.find((item) => item.id === feature.source)?.label || "";
+      const packLabel = getContentPackTitle(feature);
       const haystack = [
         feature.title,
         feature.summary,
         feature.mechanics,
         feature.counterplay,
         sourceLabel,
+        packLabel,
         feature.slot,
         getSectionLabel(getFeatureSection(feature)),
         ...asArray(feature.tags),
@@ -2504,6 +2530,9 @@ export default function CruorMonsterComposerMvp() {
           activeSlot={activeSlot}
           navigatorSlotFilter={navigatorSlotFilter}
           setNavigatorSlotFilter={setNavigatorSlotFilter}
+          navigatorPackFilter={navigatorPackFilter}
+          setNavigatorPackFilter={setNavigatorPackFilter}
+          contentPackOptions={contentPackOptions}
           setActiveSlot={setActiveSlot}
           onClose={() => setComponentNavigatorOpen(false)}
           visibleFeatures={visibleFeatures}

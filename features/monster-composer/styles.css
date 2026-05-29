@@ -5735,3 +5735,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Step 46C: Content Pack UX for Component Navigator. */
+.monster-shell .navigator-filter-chip--stacked {
+  display: grid;
+  gap: 2px;
+  align-content: center;
+  min-height: 38px;
+  padding-block: 5px;
+  text-align: left;
+}
+
+.monster-shell .navigator-filter-chip__main {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monster-shell .navigator-filter-chip__meta {
+  overflow: hidden;
+  color: rgba(208, 162, 170, .62);
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.monster-shell .component-pack-badge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(95, 7, 22, .5);
+  background: rgba(51, 3, 12, .22);
+  color: #d0a2aa;
+  padding: 3px 6px;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.monster-shell .smart-pick-card .component-pack-badge {
+  margin: -2px 0 2px;
+}
+
+.monster-shell .meta-value.pack-chip {
+  border-color: rgba(190, 64, 82, .52);
+  background: rgba(95, 7, 22, .24);
+  color: #fff0f2;
+}

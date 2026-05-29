@@ -5,6 +5,11 @@ import { MONSTER_SOURCES } from "./monster-sources.js";
 const DEFAULT_PACK_TITLE = "Content Pack";
 const DEFAULT_GRAFT_SECTION = "trait";
 
+export const CORE_MONSTER_FEED_META = {
+  id: "core-cruor",
+  title: "Core Monster Composer",
+};
+
 function asArray(value) {
   if (!value) return [];
   return Array.isArray(value) ? value.filter(Boolean) : [value].filter(Boolean);
@@ -103,6 +108,12 @@ export function buildMonsterSourcesFromSourceAnchors(sourceAnchors = [], content
     .filter((source) => source.id && source.label);
 }
 
+function withContentPackMeta(entry, contentPack = CORE_MONSTER_FEED_META) {
+  if (!entry) return entry;
+  if (entry.contentPack?.id) return entry;
+  return { ...entry, contentPack };
+}
+
 export function mergeMonsterSources(baseSources = [], contentPackSources = []) {
   const seen = new Set();
   return [...baseSources, ...contentPackSources].filter((source) => {
@@ -126,6 +137,14 @@ export const JACK_THE_RIPPER_MONSTER_FEED_META = {
   title: "Jack the Ripper Horror Pack",
 };
 
+export const CORE_MONSTER_SOURCES = MONSTER_SOURCES.map((source) =>
+  withContentPackMeta(source, CORE_MONSTER_FEED_META)
+);
+
+export const CORE_MONSTER_GRAFTS = MONSTER_GRAFTS.map((graft) =>
+  withContentPackMeta(graft, CORE_MONSTER_FEED_META)
+);
+
 export const CONTENT_PACK_MONSTER_SOURCES = buildMonsterSourcesFromSourceAnchors(
   JACK_THE_RIPPER_SOURCE_ANCHORS,
   JACK_THE_RIPPER_MONSTER_FEED_META,
@@ -137,18 +156,20 @@ export const CONTENT_PACK_MONSTER_GRAFTS = buildMonsterGraftsFromSharedComponent
 );
 
 export const ALL_MONSTER_SOURCES = mergeMonsterSources(
-  MONSTER_SOURCES,
+  CORE_MONSTER_SOURCES,
   CONTENT_PACK_MONSTER_SOURCES,
 );
 
 export const ALL_MONSTER_GRAFTS = mergeMonsterGrafts(
-  MONSTER_GRAFTS,
+  CORE_MONSTER_GRAFTS,
   CONTENT_PACK_MONSTER_GRAFTS,
 );
 
 export const MONSTER_CONTENT_PACK_FEED_SUMMARY = Object.freeze({
-  sources: CONTENT_PACK_MONSTER_SOURCES.length,
-  grafts: CONTENT_PACK_MONSTER_GRAFTS.length,
+  coreSources: CORE_MONSTER_SOURCES.length,
+  coreGrafts: CORE_MONSTER_GRAFTS.length,
+  contentPackSources: CONTENT_PACK_MONSTER_SOURCES.length,
+  contentPackGrafts: CONTENT_PACK_MONSTER_GRAFTS.length,
   totalSources: ALL_MONSTER_SOURCES.length,
   totalGrafts: ALL_MONSTER_GRAFTS.length,
 });

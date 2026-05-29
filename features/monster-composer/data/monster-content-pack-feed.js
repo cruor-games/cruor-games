@@ -1,0 +1,154 @@
+import { JACK_THE_RIPPER_CONTENT_PACK_ID, JACK_THE_RIPPER_MONSTER_COMPONENTS, JACK_THE_RIPPER_SOURCE_ANCHORS } from "../../../shared/content/content-packs/jack-the-ripper-pack.js";
+import { MONSTER_GRAFTS } from "./monster-grafts.js";
+import { MONSTER_SOURCES } from "./monster-sources.js";
+
+const DEFAULT_PACK_TITLE = "Content Pack";
+const DEFAULT_GRAFT_SECTION = "trait";
+
+function asArray(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value.filter(Boolean) : [value].filter(Boolean);
+}
+
+function normalizeStringArray(value) {
+  return asArray(value)
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+}
+
+function uniqueArray(values) {
+  return [...new Set(normalizeStringArray(values))];
+}
+
+function getPrimarySlot(component) {
+  return component?.monster?.slot || component?.slots?.[0] || "";
+}
+
+function getPrimarySourceAnchor(component) {
+  return component?.sourceAnchors?.[0] || "";
+}
+
+function getContentPackMeta(contentPack = {}) {
+  return {
+    id: contentPack.id || contentPack.packId || "content-pack",
+    title: contentPack.title || contentPack.label || DEFAULT_PACK_TITLE,
+  };
+}
+
+export function sharedComponentToMonsterGraft(component, contentPack = {}) {
+  const pack = getContentPackMeta(contentPack);
+  const monster = component?.monster || {};
+  const sourceAnchors = normalizeStringArray(component?.sourceAnchors);
+  const slot = monster.slot || getPrimarySlot(component);
+
+  return {
+    id: monster.graftId || component.id,
+    title: component.title || component.label || monster.graftId || component.id,
+    slot,
+    section: monster.section || DEFAULT_GRAFT_SECTION,
+    source: sourceAnchors[0] || getPrimarySourceAnchor(component),
+    sourceAnchors,
+    sourceTypes: normalizeStringArray(component.sourceTypes),
+    themes: normalizeStringArray(component.themes),
+    motifs: normalizeStringArray(component.motifs),
+    contexts: normalizeStringArray(component.contexts),
+    horror: normalizeStringArray(component.horror),
+    typeBias: normalizeStringArray(monster.typeBias),
+    roleBias: normalizeStringArray(monster.roleBias),
+    cost: Number(monster.cost || 0),
+    complexity: Number(monster.complexity || 0),
+    stats: { ...(monster.stats || {}) },
+    summary: component.summary || "",
+    mechanics: component.mechanics || component.tableText || "",
+    counterplay: component.counterplay || "",
+    contentPack: pack,
+    registry: {
+      componentId: component.id,
+      contentType: component.contentType || "monster-graft",
+    },
+  };
+}
+
+export function sourceAnchorToMonsterSource(sourceAnchor, contentPack = {}) {
+  const pack = getContentPackMeta(contentPack);
+  const tags = uniqueArray([
+    ...(sourceAnchor.sourceTypes || []),
+    ...(sourceAnchor.horror || []),
+    ...(sourceAnchor.themes || []),
+  ]).slice(0, 6);
+
+  return {
+    id: sourceAnchor.id,
+    label: sourceAnchor.label || sourceAnchor.title || sourceAnchor.id,
+    tags,
+    summary: sourceAnchor.summary || "",
+    contentPack: pack,
+    registry: {
+      sourceAnchorId: sourceAnchor.id,
+      contentType: "source-anchor",
+    },
+  };
+}
+
+export function buildMonsterGraftsFromSharedComponents(components = [], contentPack = {}) {
+  return asArray(components)
+    .filter((component) => component?.contentType === "monster-graft")
+    .map((component) => sharedComponentToMonsterGraft(component, contentPack))
+    .filter((graft) => graft.id && graft.slot && graft.source);
+}
+
+export function buildMonsterSourcesFromSourceAnchors(sourceAnchors = [], contentPack = {}) {
+  return asArray(sourceAnchors)
+    .map((sourceAnchor) => sourceAnchorToMonsterSource(sourceAnchor, contentPack))
+    .filter((source) => source.id && source.label);
+}
+
+export function mergeMonsterSources(baseSources = [], contentPackSources = []) {
+  const seen = new Set();
+  return [...baseSources, ...contentPackSources].filter((source) => {
+    if (!source?.id || seen.has(source.id)) return false;
+    seen.add(source.id);
+    return true;
+  });
+}
+
+export function mergeMonsterGrafts(baseGrafts = [], contentPackGrafts = []) {
+  const seen = new Set();
+  return [...baseGrafts, ...contentPackGrafts].filter((graft) => {
+    if (!graft?.id || seen.has(graft.id)) return false;
+    seen.add(graft.id);
+    return true;
+  });
+}
+
+export const JACK_THE_RIPPER_MONSTER_FEED_META = {
+  id: JACK_THE_RIPPER_CONTENT_PACK_ID,
+  title: "Jack the Ripper Horror Pack",
+};
+
+export const CONTENT_PACK_MONSTER_SOURCES = buildMonsterSourcesFromSourceAnchors(
+  JACK_THE_RIPPER_SOURCE_ANCHORS,
+  JACK_THE_RIPPER_MONSTER_FEED_META,
+);
+
+export const CONTENT_PACK_MONSTER_GRAFTS = buildMonsterGraftsFromSharedComponents(
+  JACK_THE_RIPPER_MONSTER_COMPONENTS,
+  JACK_THE_RIPPER_MONSTER_FEED_META,
+);
+
+export const ALL_MONSTER_SOURCES = mergeMonsterSources(
+  MONSTER_SOURCES,
+  CONTENT_PACK_MONSTER_SOURCES,
+);
+
+export const ALL_MONSTER_GRAFTS = mergeMonsterGrafts(
+  MONSTER_GRAFTS,
+  CONTENT_PACK_MONSTER_GRAFTS,
+);
+
+export const MONSTER_CONTENT_PACK_FEED_SUMMARY = Object.freeze({
+  sources: CONTENT_PACK_MONSTER_SOURCES.length,
+  grafts: CONTENT_PACK_MONSTER_GRAFTS.length,
+  totalSources: ALL_MONSTER_SOURCES.length,
+  totalGrafts: ALL_MONSTER_GRAFTS.length,
+});

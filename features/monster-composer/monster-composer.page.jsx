@@ -24,6 +24,9 @@ import {
   TACTICAL_ROLES,
   MONSTER_TIERS,
   TEMPO_PROFILES,
+  getDefaultCreatureCategory,
+  isCreatureCategoryUnavailable,
+  isCreatureTypeUnavailable,
 } from "./monster-composer.taxonomies.js";
 
 import {
@@ -227,12 +230,10 @@ function buildAbilityProfile(typeId, category, roleId, selectedFeatures, prof) {
   const categoryAdjustments = {
     Zombie: { dex: -2, con: 2 },
     Skeleton: { dex: 2, con: -2 },
-    Ghoul: { dex: 2, str: 1 },
-    Wraith: { str: -2, dex: 4, cha: 2 },
+    Spirit: { str: -2, dex: 4, cha: 2 },
     Spider: { str: -2, dex: 2 },
     Wolf: { str: 2, wis: 1 },
-    "Rat Swarm": { str: -4, dex: 3 },
-    "Carrion Bird": { dex: 3, wis: 1 },
+    Bird: { dex: 3, wis: 1 },
     "Flesh Mass": { dex: -2, con: 4 },
     "Eye Horror": { dex: 1, int: 2, wis: 2 },
     Parasite: { dex: 3, con: -1 },
@@ -4008,9 +4009,10 @@ export default function CruorMonsterComposerMvp() {
   ]);
 
   function selectType(nextTypeId) {
+    if (isCreatureTypeUnavailable(nextTypeId)) return;
     const nextType = CREATURE_TYPES.find((type) => type.id === nextTypeId) || CREATURE_TYPES[0];
-    setTypeId(nextTypeId);
-    setCategory(nextType.categories[0]);
+    setTypeId(nextType.id);
+    setCategory(getDefaultCreatureCategory(nextType));
     setSelected({});
     setActivePresetId("");
   }
@@ -4021,7 +4023,7 @@ export default function CruorMonsterComposerMvp() {
       CREATURE_TYPES.find((type) => type.id === preset.typeId) || CREATURE_TYPES[0];
     const nextCategory = presetType.categories.includes(preset.category)
       ? preset.category
-      : presetType.categories[0];
+      : getDefaultCreatureCategory(presetType);
     const nextSelection = normalizePresetSelection(preset);
     setTypeId(preset.typeId);
     setCategory(nextCategory);
@@ -4566,11 +4568,14 @@ export default function CruorMonsterComposerMvp() {
                 {CREATURE_TYPES.map((type) => {
                   const Icon = type.icon;
                   const active = type.id === typeId;
+                  const unavailable = isCreatureTypeUnavailable(type.id);
                   return (
                     <button
                       key={type.id}
                       type="button"
-                      className={`game-type-card ${active ? "active" : ""}`}
+                      disabled={unavailable}
+                      aria-disabled={unavailable}
+                      className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
                       onClick={() => selectType(type.id)}
                     >
                       <span className="game-type-card__icon">
@@ -4578,9 +4583,11 @@ export default function CruorMonsterComposerMvp() {
                       </span>
                       <span className="game-type-card__text">
                         <strong>{type.label}</strong>
-                        <small>{type.categories.length} variants</small>
+                        <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
                       </span>
-                      <span className="game-type-card__mark">{active ? "Active" : "Select"}</span>
+                      <span className="game-type-card__mark">
+                        {active ? "Active" : unavailable ? "Later" : "Select"}
+                      </span>
                     </button>
                   );
                 })}
@@ -4596,21 +4603,27 @@ export default function CruorMonsterComposerMvp() {
                   role="radiogroup"
                   aria-label="Creature category"
                 >
-                  {creatureType.categories.map((item) => (
-                    <button
-                      key={item}
-                      type="button"
-                      role="radio"
-                      aria-checked={item === category}
-                      className={`game-category-chip ${item === category ? "active" : ""}`}
-                      onClick={() => {
-                        setCategory(item);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  {creatureType.categories.map((item) => {
+                    const unavailable = isCreatureCategoryUnavailable(typeId, item);
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        role="radio"
+                        disabled={unavailable}
+                        aria-disabled={unavailable}
+                        aria-checked={item === category}
+                        className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                        onClick={() => {
+                          if (unavailable) return;
+                          setCategory(item);
+                          setActivePresetId("");
+                        }}
+                      >
+                        {item}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </PanelGroup>

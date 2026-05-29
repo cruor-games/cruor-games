@@ -5,14 +5,14 @@ export const CREATURE_TYPES = [
     id: "undead",
     label: "Undead",
     icon: Skull,
-    categories: ["Zombie", "Skeleton", "Ghoul", "Wraith"],
+    categories: ["Zombie", "Skeleton", "Spirit"],
     defaults: { ac: 12, hp: 22, dpr: 7, speed: "30 ft.", senses: "darkvision 60 ft." },
   },
   {
     id: "beast",
     label: "Beast",
     icon: Bug,
-    categories: ["Spider", "Wolf", "Rat Swarm", "Carrion Bird"],
+    categories: ["Spider", "Wolf", "Bird"],
     defaults: { ac: 13, hp: 18, dpr: 6, speed: "40 ft.", senses: "passive Perception 12" },
   },
   {
@@ -253,3 +253,26 @@ export const TEMPO_PROFILES = [
     pressureMod: 3,
   },
 ];
+
+export const UNAVAILABLE_CREATURE_TYPE_IDS = ["aberration"];
+
+export const UNAVAILABLE_CREATURE_CATEGORIES = {
+  beast: ["Wolf", "Bird"],
+};
+
+export function isCreatureTypeUnavailable(typeId) {
+  return UNAVAILABLE_CREATURE_TYPE_IDS.includes(typeId);
+}
+
+export function isCreatureCategoryUnavailable(typeId, category) {
+  return (UNAVAILABLE_CREATURE_CATEGORIES[typeId] || []).includes(category);
+}
+
+export function getAvailableCreatureCategories(type) {
+  if (!type) return [];
+  return type.categories.filter((category) => !isCreatureCategoryUnavailable(type.id, category));
+}
+
+export function getDefaultCreatureCategory(type) {
+  return getAvailableCreatureCategories(type)[0] || type?.categories?.[0] || "Zombie";
+}

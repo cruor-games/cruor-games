@@ -801,6 +801,47 @@
   box-shadow: 0 0 22px rgba(122, 26, 40, .18), inset 0 1px 0 rgba(255, 238, 242, .05);
 }
 
+
+.monster-shell .game-type-card.is-disabled,
+.monster-shell .game-type-card:disabled,
+.monster-shell .game-category-chip.is-disabled,
+.monster-shell .game-category-chip:disabled {
+  cursor: not-allowed;
+  border-color: rgba(100, 92, 96, .26);
+  background: rgba(18, 17, 18, .42);
+  color: rgba(160, 148, 152, .46);
+  box-shadow: none;
+  filter: grayscale(.88);
+  opacity: .46;
+}
+
+.monster-shell .game-type-card.is-disabled:hover,
+.monster-shell .game-type-card:disabled:hover,
+.monster-shell .game-category-chip.is-disabled:hover,
+.monster-shell .game-category-chip:disabled:hover {
+  border-color: rgba(100, 92, 96, .26);
+  background: rgba(18, 17, 18, .42);
+  color: rgba(160, 148, 152, .46);
+  box-shadow: none;
+  transform: none;
+}
+
+.monster-shell .game-type-card.is-disabled .game-type-card__icon,
+.monster-shell .game-type-card:disabled .game-type-card__icon {
+  border-color: rgba(120, 112, 116, .24);
+  background: rgba(12, 12, 12, .34);
+  color: rgba(180, 170, 174, .38);
+}
+
+.monster-shell .game-type-card.is-disabled .game-type-card__text strong,
+.monster-shell .game-type-card:disabled .game-type-card__text strong,
+.monster-shell .game-type-card.is-disabled .game-type-card__text small,
+.monster-shell .game-type-card:disabled .game-type-card__text small,
+.monster-shell .game-type-card.is-disabled .game-type-card__mark,
+.monster-shell .game-type-card:disabled .game-type-card__mark {
+  color: rgba(178, 166, 170, .5);
+}
+
 .monster-shell .game-role-card {
   gap: 8px;
 }

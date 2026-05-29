@@ -40,6 +40,13 @@ export {
   EXISTING_INSPIRATIONS_CONTENT_PACK,
   EXISTING_INSPIRATIONS_CONTENT_PACK_ID,
 } from "./content-packs/existing-inspirations-pack.js";
+export {
+  JACK_THE_RIPPER_CONTENT_PACK,
+  JACK_THE_RIPPER_CONTENT_PACK_ID,
+  JACK_THE_RIPPER_INSPIRATIONS,
+  JACK_THE_RIPPER_MONSTER_COMPONENTS,
+  JACK_THE_RIPPER_SOURCE_ANCHORS,
+} from "./content-packs/jack-the-ripper-pack.js";
 export { SHARED_TAXONOMIES } from "./taxonomies.js";
 export { SHARED_MONSTER_SLOTS, SHARED_WORKFLOWS } from "./workflows.js";
 export {

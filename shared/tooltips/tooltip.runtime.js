@@ -103,8 +103,8 @@ function positionTooltipTowardBoundaryCenter({
 function placeTooltip(state, options = {}) {
   if (!state.tooltip) return;
   const source = options.source || state.source;
-  let x = OFFSET;
-  let y = OFFSET;
+  let x;
+  let y;
 
   if (source === "pointer" && state.trigger) {
     const boundary = getTooltipBoundary(state.trigger);

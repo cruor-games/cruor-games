@@ -147,16 +147,15 @@ export function axialHexToPixel(hex, size, origin) {
 export function roundAxialHex(q, r) {
   let x = q;
   let z = r;
-  let y = -x - z;
+  const y = -x - z;
   let rx = Math.round(x);
-  let ry = Math.round(y);
+  const ry = Math.round(y);
   let rz = Math.round(z);
   const xDiff = Math.abs(rx - x);
   const yDiff = Math.abs(ry - y);
   const zDiff = Math.abs(rz - z);
   if (xDiff > yDiff && xDiff > zDiff) rx = -ry - rz;
-  else if (yDiff > zDiff) ry = -rx - rz;
-  else rz = -rx - ry;
+  else if (yDiff <= zDiff) rz = -rx - ry;
   return { q: rx, r: rz };
 }
 

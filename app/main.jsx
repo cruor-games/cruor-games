@@ -10,8 +10,17 @@ import { startTooltipRuntime } from "../shared/tooltips/tooltip.runtime.js";
 
 startTooltipRuntime();
 
-createRoot(document.getElementById("root")).render(
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error("Cruor Games root element was not found.");
+}
+
+const root = rootElement.__cruorReactRoot || createRoot(rootElement);
+rootElement.__cruorReactRoot = root;
+
+root.render(
   <React.StrictMode>
     <AppRouter />
-  </React.StrictMode>,
+  </React.StrictMode>
 );

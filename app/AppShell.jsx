@@ -38,20 +38,17 @@ export default function AppShell({
       </header>
 
       <main className="app-shell__workspace">
-        <section hidden={activeSection !== "darken"} aria-label="Darken a Location workspace">
-          {darkenContent}
-        </section>
+        {activeSection === "darken" ? (
+          <section aria-label="Darken a Location workspace">{darkenContent}</section>
+        ) : null}
 
-        <section
-          hidden={activeSection !== "monster-composer"}
-          aria-label="Monster Composer workspace"
-        >
-          {monsterComposerContent}
-        </section>
+        {activeSection === "monster-composer" ? (
+          <section aria-label="Monster Composer workspace">{monsterComposerContent}</section>
+        ) : null}
 
-        <section hidden={activeSection !== "inspirations"} aria-label="Inspirations">
-          {inspirationsContent}
-        </section>
+        {activeSection === "inspirations" ? (
+          <section aria-label="Inspirations">{inspirationsContent}</section>
+        ) : null}
       </main>
     </div>
   );

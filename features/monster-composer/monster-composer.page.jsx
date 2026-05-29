@@ -32,8 +32,10 @@ import {
   DEFAULT_SLOT_CAPS,
 } from "./monster-composer.workflow.js";
 
-import { MONSTER_SOURCES as SOURCES } from "./data/monster-sources.js";
-import { MONSTER_GRAFTS as FEATURES } from "./data/monster-grafts.js";
+import {
+  ALL_MONSTER_SOURCES as SOURCES,
+  ALL_MONSTER_GRAFTS as FEATURES,
+} from "./data/monster-content-pack-feed.js";
 
 import { MONSTER_FAMILY_PRESETS } from "./data/monster-presets.js";
 import {

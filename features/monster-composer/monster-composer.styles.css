@@ -1110,8 +1110,7 @@
   height: 72px;
 }
 
-.monster-shell .build-head,
-.monster-shell .slot-head {
+.monster-shell .build-head{
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1140,12 +1139,6 @@
   margin: 0;
   color: var(--muted);
   font-size: 13px;
-}
-
-.monster-shell .build-slots {
-
-
-  align-items: start;
 }
 
 .monster-shell .guided-flow-panel {
@@ -1517,195 +1510,6 @@
   border: 1px dashed rgba(95, 7, 22, .46);
   background: rgba(0, 0, 0, .18);
   padding: 11px;
-}
-
-.monster-shell .build-slot {
-  position: relative;
-  cursor: pointer;
-  border: 1px solid var(--line);
-  background-color: rgba(8, 6, 7, .46);
-  background-image:
-    linear-gradient(180deg, rgba(122, 26, 40, .05), transparent 62%),
-    radial-gradient(circle at 24px 22px, rgba(122, 26, 40, .08), transparent 130px),
-    linear-gradient(135deg, rgba(51, 3, 12, .24), transparent 70%);
-  background-blend-mode: screen, screen, normal;
-
-
-  overflow: hidden;
-  transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease, filter .12s ease;
-}
-
-.monster-shell .build-slot:hover {
-  background: linear-gradient(180deg, rgba(51, 3, 12, .24), transparent 150px), radial-gradient(circle at 26px 22px, rgba(122, 26, 40, .16), transparent 140px), rgba(51, 3, 12, .09);
-  transform: scale(1.003);
-}
-
-.monster-shell .build-slot.active {
-  border-color: rgba(122, 26, 40, .95);
-  background:
-    linear-gradient(180deg, rgba(51, 3, 12, .36), transparent 160px),
-    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, .2), transparent 150px),
-    rgba(51, 3, 12, .17);
-  box-shadow: 0 0 0 1px rgba(122, 26, 40, .4), 0 0 46px rgba(51, 3, 12, .6), inset 0 0 44px rgba(122, 26, 40, .17), inset 0 1px 0 rgba(122, 26, 40, .08);
-}
-
-.monster-shell .build-slot.needs-attention:not(.active)::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: conic-gradient(from var(--empty-slot-border-angle, 0deg), rgba(122, 26, 40, .2) 0deg, rgba(122, 26, 40, .2) 222deg, rgba(222, 146, 159, .4) 246deg, rgba(174, 50, 68, .62) 263deg, rgba(222, 146, 159, .32) 281deg, rgba(122, 26, 40, .2) 308deg, rgba(122, 26, 40, .2) 360deg);
-  opacity: .45;
-  animation: emptySlotBorderOrbit 8.3s linear infinite;
-}
-
-.monster-shell .build-slot.needs-attention:not(.active)::after {
-  content: "";
-  position: absolute;
-  inset: 1px;
-  z-index: 0;
-  pointer-events: none;
-  background-color: #09090a;
-  background-image: linear-gradient(180deg, rgba(180, 174, 176, .045), transparent 62%), radial-gradient(circle at 24px 22px, rgba(150, 142, 146, .06), transparent 130px), linear-gradient(135deg, rgba(42, 39, 41, .14), transparent 70%);
-  filter: saturate(.56);
-}
-
-.monster-shell .build-slot > * {
-  position: relative;
-  z-index: 1;
-}
-
-@property --empty-slot-border-angle {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
-}
-
-@keyframes emptySlotBorderOrbit {
-  0% { --empty-slot-border-angle: 0deg; }
-  100% { --empty-slot-border-angle: 360deg; }
-}
-
-.monster-shell .slot-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-
-
-  font-weight: 900;
-
-  line-height: 1.15;
-  text-transform: uppercase;
-}
-
-.monster-shell .slot-icon {
-
-
-  filter: drop-shadow(0 0 5px rgba(122, 26, 40, .24));
-}
-
-.monster-shell .build-slot.active .slot-name,
-.monster-shell .build-slot.active .slot-icon,
-.monster-shell .slot-item-title {
-  color: #d0a2aa;
-  text-shadow: 0 0 13px rgba(122, 26, 40, .58), 0 0 2px rgba(255, 255, 255, .14);
-}
-
-.monster-shell .slot-head-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.monster-shell .count {
-
-  border: 1px solid rgba(122, 26, 40, .18);
-
-
-  padding: 2px 7px;
-
-
-  text-align: center;
-}
-
-.monster-shell .slot-menu-btn {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  min-width: 26px;
-  min-height: 26px;
-  border: 0;
-  background: transparent;
-  color: var(--faint);
-  opacity: 0;
-  transform: translateY(-1px);
-  transition: opacity .12s ease, color .12s ease, filter .12s ease;
-}
-
-.monster-shell .build-slot.has-items:hover .slot-menu-btn,
-.monster-shell .build-slot.has-items:focus-within .slot-menu-btn {
-  opacity: 1;
-}
-
-.monster-shell .slot-empty {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-
-
-}
-
-.monster-shell .slot-stack {
-  display: grid;
-
-
-}
-
-.monster-shell .slot-item {
-  position: relative;
-  border: 0;
-  background: transparent;
-
-  box-shadow: none;
-}
-
-.monster-shell .slot-item-remove {
-  position: absolute;
-
-  right: 0;
-  display: grid;
-  place-items: center;
-
-
-  border: 1px solid rgba(95, 7, 22, .52);
-
-  color: #8f7278;
-  opacity: 0;
-  transition: opacity .12s ease, color .12s ease, border-color .12s ease, background .12s ease;
-}
-
-.monster-shell .slot-item:hover .slot-item-remove,
-.monster-shell .slot-item:focus-within .slot-item-remove {
-  opacity: 1;
-}
-
-.monster-shell .slot-item-remove:hover {
-  border-color: rgba(190, 64, 82, .72);
-  background: rgba(95, 7, 22, .26);
-  color: #fff0f2;
-}
-
-.monster-shell .slot-item-remove svg {
-  width: 13px;
-  height: 13px;
-}
-
-.monster-shell .slot-item-text {
-  margin: 0;
-
-
 }
 
 .monster-shell .match-row.always-visible,
@@ -4177,8 +3981,7 @@
 }
 
 .monster-shell .monster-silhouette-node.is-guided:not(.is-active),
-.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active),
-.monster-shell .build-slot.is-guided:not(.active) {
+.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active){
   animation: guidedSlotPulse 1.8s ease-in-out infinite;
 }
 
@@ -4298,46 +4101,6 @@
 .monster-shell .monster-silhouette-slot-card:hover .monster-silhouette-slot-card__body em,
 .monster-shell .monster-silhouette-slot-card.is-active .monster-silhouette-slot-card__body em {
   -webkit-line-clamp: 2;
-}
-
-.monster-shell .build-slots {
-  display: none;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.monster-shell .build-slot.needs-attention:not(.active)::before,
-.monster-shell .build-slot.needs-attention:not(.active)::after {
-  display: none;
-}
-
-.monster-shell .slot-icon {
-  width: 15px;
-  min-width: 15px;
-  height: 15px;
-
-}
-
-.monster-shell .slot-item-text {
-  padding-left: 0;
-  text-indent: 0;
-
-
-}
-
-.monster-shell .slot-item-text .slot-item-title {
-  display: block;
-  margin-bottom: 2px;
-  color: #d0a2aa;
-}
-
-.monster-shell .slot-item .match-row {
-  display: none;
-}
-
-.monster-shell .build-slot.active .slot-item .match-row,
-.monster-shell .build-slot:hover .slot-item .match-row {
-  display: flex;
 }
 
 .monster-shell .graft-inspector > summary,
@@ -5252,8 +5015,7 @@
     position: static;
   }
 
-  .monster-shell .build-slots,
-.monster-shell .monster-anatomy-composer,
+  .monster-shell .monster-anatomy-composer,
 .monster-shell .graft-inspector__rules,
 .monster-shell .monster-output-grid,
 .monster-shell .compiled-meta-grid,
@@ -5261,7 +5023,7 @@
 .monster-shell .balance-meta-grid,
 .monster-shell .export-meta-grid,
 .monster-shell .run-stat-strip,
-.monster-shell .cruor-stat-block__abilities {
+.monster-shell .cruor-stat-block__abilities{
     grid-template-columns: 1fr;
   }
 }
@@ -5326,10 +5088,6 @@
     display: grid;
   }
 
-  .monster-shell[data-composer-started="false"] .build-slots {
-    display: none;
-  }
-
   .monster-shell .monster-start-screen {
     min-height: 430px;
     padding: 18px;
@@ -5345,11 +5103,6 @@
 
   .monster-shell[data-composer-started="true"] .monster-anatomy-composer {
     display: none;
-  }
-
-  .monster-shell[data-composer-started="true"] .build-slots {
-    display: grid;
-    grid-template-columns: 1fr;
   }
 
   .monster-shell .monster-silhouette-slot-card,
@@ -5727,7 +5480,6 @@
 }
 
 .monster-shell .brief-choice-card,
-.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -5739,7 +5491,7 @@
 .monster-shell .graft-inspector,
 .monster-shell .graft-inspector__item,
 .monster-shell .guided-flow-panel,
-.monster-shell .guided-flow-next {
+.monster-shell .guided-flow-next{
   border-color: var(--monster-shared-card-border);
   background-color: var(--monster-shared-card-bg);
   background-image: var(--monster-shared-card-image);
@@ -5751,8 +5503,6 @@
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
-.monster-shell .build-slot:hover,
-.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -5761,7 +5511,7 @@
 .monster-shell .game-role-card:hover,
 .monster-shell .game-role-card.active,
 .monster-shell .guided-slot-chip.is-next,
-.monster-shell .guided-slot-chip:hover {
+.monster-shell .guided-slot-chip:hover{
   border-color: rgba(122, 26, 40, 0.95);
   background:
     linear-gradient(180deg, rgba(51, 3, 12, 0.36), transparent 160px),
@@ -5786,10 +5536,6 @@
 
 .monster-shell .component-card {
   border-width: 2px;
-}
-
-.monster-shell .build-slot {
-  border-width: 1px;
 }
 
 .monster-shell .navigator-filter-chip,
@@ -5847,133 +5593,6 @@
     0 0 0 1px rgba(190, 64, 82, 0.1),
     0 0 30px rgba(122, 26, 40, 0.22),
     inset 0 1px 0 rgba(255, 238, 242, 0.055);
-}
-
-/* Build slots */
-.monster-shell .build-slots.monster-slots {
-  gap: 12px;
-  align-items: stretch;
-}
-
-.monster-shell .build-slot {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 10px;
-  min-height: 112px;
-  border-color: var(--monster-card-border-soft);
-  background: var(--monster-card-bg-soft);
-  box-shadow: var(--monster-card-shadow-soft);
-  color: rgba(238, 238, 238, 0.66);
-  padding: 13px;
-}
-
-.monster-shell .build-slot:hover,
-.monster-shell .build-slot.active {
-  transform: translateY(-1px);
-  border-color: var(--monster-card-border-active);
-  background: var(--monster-card-bg-active);
-  box-shadow: var(--monster-card-shadow-active);
-}
-
-.monster-shell .build-slot.is-guided:not(.active) {
-  border-color: rgba(190, 64, 82, 0.46);
-  box-shadow:
-    0 0 0 1px rgba(190, 64, 82, 0.08),
-    0 0 24px rgba(122, 26, 40, 0.2),
-    inset 0 1px 0 rgba(255, 238, 242, 0.04);
-}
-
-.monster-shell .build-slot.has-items {
-  min-height: 124px;
-}
-
-.monster-shell .slot-head {
-  align-items: center;
-  gap: 10px;
-}
-
-.monster-shell .slot-name {
-  color: rgba(238, 238, 238, 0.76);
-  font-size: 10.5px;
-  letter-spacing: 0.095em;
-}
-
-.monster-shell .build-slot.active .slot-name,
-.monster-shell .build-slot.active .slot-icon,
-.monster-shell .build-slot:hover .slot-name,
-.monster-shell .build-slot:hover .slot-icon {
-  color: #fff0f2;
-  text-shadow: 0 0 12px rgba(122, 26, 40, 0.42);
-}
-
-.monster-shell .slot-icon {
-  color: #8f7278;
-}
-
-.monster-shell .count {
-  display: inline-grid;
-  place-items: center;
-  min-width: 24px;
-  min-height: 22px;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.18);
-  color: #d0a2aa;
-  font-size: 10px;
-  font-weight: 950;
-}
-
-.monster-shell .slot-empty {
-  align-self: start;
-  margin-top: 0;
-  color: rgba(238, 238, 238, 0.44);
-  font-size: 12px;
-  line-height: 1.38;
-}
-
-.monster-shell .slot-stack {
-  gap: 8px;
-  margin-top: 0;
-}
-
-.monster-shell .slot-item {
-  display: grid;
-  gap: 3px;
-  min-width: 0;
-  border-top: 1px solid rgba(255, 238, 242, 0.055);
-  padding: 8px 30px 0 0;
-}
-
-.monster-shell .slot-item:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-
-.monster-shell .slot-item-text {
-  color: rgba(238, 238, 238, 0.58);
-  font-size: 12px;
-  line-height: 1.38;
-}
-
-.monster-shell .slot-item-title {
-  display: block;
-  margin-bottom: 2px;
-  color: #d0a2aa;
-  font-size: 12px;
-  font-weight: 950;
-  line-height: 1.18;
-}
-
-.monster-shell .slot-item-remove {
-  top: 5px;
-  width: 24px;
-  min-width: 24px;
-  min-height: 24px;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.2);
-}
-
-.monster-shell .slot-item:first-child .slot-item-remove {
-  top: -2px;
 }
 
 /* Component cards */
@@ -6213,9 +5832,6 @@
 
 /* Responsive safety for dense slot/card layouts */
 @media (max-width: 980px) {
-  .monster-shell .build-slots.monster-slots {
-    grid-template-columns: 1fr;
-  }
 
   .monster-shell .guided-flow-next {
     grid-template-columns: 1fr;
@@ -6265,7 +5881,6 @@
 }
 
 .monster-shell .brief-choice-card,
-.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -6281,7 +5896,7 @@
 .monster-shell .monster-silhouette-slot-card,
 .monster-shell .monster-start-card,
 .monster-shell .template-choice-card__button,
-.monster-shell .balance-card {
+.monster-shell .balance-card{
   border-color: var(--cruor-ui-card-border-color);
   background: var(--cruor-ui-card-bg);
   box-shadow: var(--cruor-ui-card-shadow);
@@ -6289,8 +5904,6 @@
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
-.monster-shell .build-slot:hover,
-.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -6305,7 +5918,7 @@
 .monster-shell .monster-silhouette-slot-card.is-guided,
 .monster-shell .monster-start-card:hover,
 .monster-shell .template-choice-card__button:hover,
-.monster-shell .template-choice-card.active .template-choice-card__button {
+.monster-shell .template-choice-card.active .template-choice-card__button{
   border-color: var(--cruor-ui-card-border-color-active);
   background: var(--cruor-ui-card-bg-active);
   box-shadow: var(--cruor-ui-card-shadow-active);

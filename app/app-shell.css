@@ -195,16 +195,6 @@
   padding: clamp(22px, 4vw, 42px);
 }
 
-.app-shell__home-eyebrow {
-  margin: 0 0 10px;
-  color: #d0a2aa;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
 .app-shell__home-panel h1 {
   max-width: 840px;
   margin: 0;
@@ -272,14 +262,6 @@
     0 0 28px rgba(122, 26, 40, 0.26),
     inset 0 1px 0 rgba(255, 238, 242, 0.06);
   outline: none;
-}
-
-.app-shell__home-action span {
-  color: #d0a2aa;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .app-shell__home-action strong {
@@ -1053,9 +1035,7 @@
 
 /* Step 5.3 — CrucibleTopbar icon-only controls.
    Generator and view controls now use Font Awesome icons with aria labels and tooltips. */
-.darken-topbar__eyebrow,
-.crucible-topbar__eyebrow,
-.crucible-topbar__control-label {
+.darken-topbar__eyebrow{
   display: none !important;
 }
 

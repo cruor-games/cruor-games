@@ -3160,6 +3160,43 @@ h1 {
   font-size: 12px;
   font-weight: 750;
 }
+
+/* Step 3.1 — Darken Composer explicit mode gates.
+   Hide only elements marked by mountCrucible with data-crucible-* / data-ui-mode-* attributes.
+   Do not target structural classes directly. */
+[data-ui-mode="simple"] [data-crucible-advanced-only],
+[data-ui-mode="simple"] [data-ui-mode-advanced-only],
+[data-cruor-ui-mode="simple"] [data-crucible-advanced-only],
+[data-cruor-ui-mode="simple"] [data-ui-mode-advanced-only],
+[data-ui-mode="simple"] [data-crucible-debug-only],
+[data-ui-mode="simple"] [data-ui-mode-debug-only],
+[data-cruor-ui-mode="simple"] [data-crucible-debug-only],
+[data-cruor-ui-mode="simple"] [data-ui-mode-debug-only],
+[data-ui-mode="advanced"] [data-crucible-debug-only],
+[data-ui-mode="advanced"] [data-ui-mode-debug-only],
+[data-cruor-ui-mode="advanced"] [data-crucible-debug-only],
+[data-cruor-ui-mode="advanced"] [data-ui-mode-debug-only] {
+  display: none !important;
+}
+
+[data-ui-mode="debug"] [data-crucible-advanced-only],
+[data-ui-mode="debug"] [data-ui-mode-advanced-only],
+[data-ui-mode="debug"] [data-crucible-debug-only],
+[data-ui-mode="debug"] [data-ui-mode-debug-only],
+[data-cruor-ui-mode="debug"] [data-crucible-advanced-only],
+[data-cruor-ui-mode="debug"] [data-ui-mode-advanced-only],
+[data-cruor-ui-mode="debug"] [data-crucible-debug-only],
+[data-cruor-ui-mode="debug"] [data-ui-mode-debug-only] {
+  display: revert;
+}
+
+[data-ui-mode="debug"] [data-crucible-debug-only],
+[data-cruor-ui-mode="debug"] [data-crucible-debug-only] {
+  outline: var(--cruor-debug-outline, 1px dashed rgba(190, 64, 82, 0.42));
+  outline-offset: 2px;
+}
+
+
 [hidden] {
   display: none !important;
 }

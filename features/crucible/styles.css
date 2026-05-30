@@ -395,11 +395,20 @@ h1 {
   border: 0;
 }
 
+/* Step 3.3 — Navigator width safety.
+   Keep the Component Navigator usable even when a saved --navigator-width is too small. */
 .workbench {
+  --crucible-navigator-min-width: 320px;
+  --crucible-navigator-safe-width: clamp(
+    var(--crucible-navigator-min-width),
+    var(--navigator-width, 380px),
+    520px
+  );
+
   display: grid;
   grid-template-columns: minmax(360px, 1fr) var(
       --workbench-handle-width
-    ) minmax(300px, var(--navigator-width));
+    ) minmax(var(--crucible-navigator-min-width), var(--crucible-navigator-safe-width));
   gap: 0;
   align-items: stretch;
   max-width: var(--cruor-workspace-max, var(--darken-workspace-max, 1540px));
@@ -1454,6 +1463,9 @@ h1 {
 .navigator {
   position: sticky;
   top: 92px;
+  width: var(--crucible-navigator-safe-width, var(--navigator-width, 380px));
+  min-width: var(--crucible-navigator-min-width, 320px);
+  max-width: 520px;
   height: calc(100dvh - 116px);
   overflow: auto;
   margin-left: 9px;

@@ -9,7 +9,6 @@ function applyCrucibleUiModeMarkers(rootElement) {
     "#savedBuildsBtn",
     "#clearBuildBtn",
     "#readModeToggle",
-    "#workbenchResizer",
     "#tagFilterBtn",
     "#exportBtn",
     "#saveBtn",

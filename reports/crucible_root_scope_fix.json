@@ -1,0 +1,14 @@
+{
+  "cause": "crucible.styles.css selectors are scoped under .monster-shell, but features/crucible/index.js rendered a root div without className.",
+  "changed_files": [
+    "features/crucible/index.js"
+  ],
+  "not_changed": [
+    "features/crucible/crucible.styles.css",
+    "features/crucible/styles.css",
+    "shared/styles/components.css",
+    "features/monster-composer/monster-composer.styles.css",
+    "app/app-shell.css"
+  ],
+  "fix": "Add className: 'monster-shell' to the Crucible mount root."
+}

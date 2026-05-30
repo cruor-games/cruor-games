@@ -1,0 +1,36 @@
+{
+  "scope": "features/crucible/crucible.styles.css only",
+  "source_broken_file": "/mnt/data/crucible.styles.css",
+  "source_restored_from": "/mnt/data/styles.css",
+  "generated_styles_css": false,
+  "changed_jsx": false,
+  "broken_file_audit": {
+    "bytes": 160357,
+    "monster_shell_count": 1259,
+    "region_card_count": 0,
+    "sensory_subslot_count": 0,
+    "build_slot_count": 41
+  },
+  "fixed_file_audit": {
+    "bytes": 72114,
+    "monster_shell_count": 0,
+    "region_card_count": 10,
+    "sensory_subslot_count": 24,
+    "build_slot_count": 28,
+    "border_color_contexts_audited": 3,
+    "bad_border_color_contexts": []
+  },
+  "checks": {
+    "output path is features/crucible/crucible.styles.css": true,
+    "no features/crucible/styles.css generated": true,
+    "no jsx changed": true,
+    "restored darken app root styles": true,
+    "restored region-card styles": true,
+    "restored sensory-subslot styles": true,
+    "restored build-slot styles": true,
+    "removed monster-shell contamination": true,
+    "bad exact border token patterns removed": true,
+    "no border-color var resolves to border shorthand": true,
+    "css braces balanced": true
+  }
+}

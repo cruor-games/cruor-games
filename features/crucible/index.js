@@ -16,6 +16,7 @@ export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady, uiMode =
 
   return React.createElement("div", {
     ref: rootRef,
+    className: "monster-shell",
     "data-cruor-ui-mode": uiMode,
   });
 }

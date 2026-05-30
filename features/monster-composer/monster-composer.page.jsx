@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import "./styles.css";
+import "./monster-composer.styles.css";
 import {
   Skull,
   Shield,

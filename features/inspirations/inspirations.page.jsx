@@ -4,7 +4,7 @@ import {
   STATIC_CONTENT_REGISTRY,
   getSourceAnchorId,
 } from "../../shared/content/index.js";
-import "./styles.css";
+import "./inspirations.styles.css";
 
 const ANY_PACK = "Any Pack";
 const MONSTER_COMPONENT_DISPLAY_LIMIT = 18;

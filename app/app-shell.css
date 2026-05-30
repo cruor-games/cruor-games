@@ -1,25 +1,22 @@
-/* Step 1.8 — AppShell compatibility layer for Cruor UI Kit.
-   Legacy AppShell and Darken topbar selectors remain in place while shared
-   .cruor-* primitives are adopted progressively in markup later. */
 .app-shell {
-  --app-shell-bar-height: var(--cruor-shell-bar-height, 62px);
-  --darken-workspace-topbar-height: var(--cruor-command-bar-height, 190px);
-  --darken-workspace-panel-gap: var(--cruor-space-lg, 1rem);
-  --darken-workspace-max: var(--cruor-workspace-max, 1540px);
-  --darken-control-height: var(--cruor-control-height-sm, 38px);
+  --app-shell-bar-height: 62px;
+  --darken-workspace-topbar-height: 190px;
+  --darken-workspace-panel-gap: 1rem;
+  --darken-workspace-max: 1540px;
+  --darken-control-height: 38px;
 
   min-height: 100dvh;
   background:
     radial-gradient(circle at 12% -8%, rgba(122, 26, 40, 0.2), transparent 34%),
     radial-gradient(circle at 92% 2%, rgba(95, 7, 22, 0.13), transparent 32%),
     linear-gradient(180deg, rgba(255, 238, 242, 0.018), transparent 15rem),
-    var(--cruor-color-bg, var(--bg));
+    var(--bg);
 }
 
 .app-shell__bar {
   position: sticky;
   top: 0;
-  z-index: var(--cruor-z-shell, 80);
+  z-index: 80;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -46,7 +43,7 @@
 }
 
 .app-shell__brand strong {
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   font-family: var(--display);
   font-size: clamp(20px, 2vw, 27px);
   font-weight: 900;
@@ -69,14 +66,92 @@
   gap: 8px;
 }
 
-.app-shell__nav-item {
+
+.app-shell__bar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cruor-space-md, 12px);
+  min-width: 0;
+}
+
+.app-shell__mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   min-height: var(--cruor-control-height-sm, 36px);
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.58));
+  border: 1px solid rgba(95, 7, 22, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.02), transparent),
+    rgba(0, 0, 0, 0.18);
+  padding: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.028);
+}
+
+.app-shell__mode-item {
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--cruor-color-faint, var(--faint));
+  padding: 0 9px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.app-shell__mode-item:hover,
+.app-shell__mode-item:focus-visible {
+  border-color: rgba(95, 7, 22, 0.68);
+  background: rgba(51, 3, 12, 0.24);
+  color: var(--cruor-color-text, var(--text));
+  outline: none;
+}
+
+.app-shell__mode-item.is-active {
+  border-color: rgba(190, 64, 82, 0.74);
+  background:
+    radial-gradient(circle at 50% 42%, rgba(122, 26, 40, 0.28), transparent 72%),
+    rgba(51, 3, 12, 0.42);
+  color: #f0d7dc;
+  box-shadow:
+    0 0 0 1px rgba(122, 26, 40, 0.16),
+    0 0 18px rgba(51, 3, 12, 0.36);
+}
+
+/* Mode layer contract:
+   Default UI renders in every mode.
+   Add data-ui-mode-advanced-only to optional controls.
+   Add data-ui-mode-debug-only to diagnostics, test panels, and raw output. */
+.app-shell[data-ui-mode="simple"] [data-ui-mode-advanced-only],
+.app-shell[data-ui-mode="simple"] [data-ui-mode-debug-only],
+.app-shell[data-ui-mode="advanced"] [data-ui-mode-debug-only] {
+  display: none !important;
+}
+
+.app-shell[data-ui-mode="debug"] [data-ui-mode-debug-only] {
+  outline: 1px dashed rgba(190, 64, 82, 0.42);
+  outline-offset: 2px;
+}
+
+.app-shell[data-ui-mode="debug"] {
+  --cruor-debug-outline: 1px dashed rgba(190, 64, 82, 0.42);
+}
+
+.app-shell__nav-item {
+  min-height: 36px;
+  border: 1px solid rgba(95, 7, 22, 0.58);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(255, 238, 242, 0.025), transparent),
     rgba(0, 0, 0, 0.22);
-  color: var(--cruor-button-text-muted, var(--cruor-color-muted, var(--muted)));
+  color: var(--muted);
   padding: 0 14px;
   font-size: 12px;
   font-weight: 900;
@@ -93,7 +168,7 @@
 .app-shell__nav-item:focus-visible {
   border-color: rgba(190, 64, 82, 0.76);
   background: rgba(51, 3, 12, 0.34);
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   box-shadow: 0 0 0 1px rgba(190, 64, 82, 0.12);
   outline: none;
 }
@@ -135,7 +210,7 @@
 
 .app-shell__placeholder-panel h1 {
   margin: 0 0 10px;
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   font-family: var(--display);
   font-size: clamp(34px, 5vw, 64px);
   line-height: 0.95;
@@ -144,7 +219,7 @@
 .app-shell__placeholder-panel p {
   max-width: 620px;
   margin: 0 0 10px;
-  color: var(--cruor-color-muted, var(--muted));
+  color: var(--muted);
   line-height: 1.55;
 }
 
@@ -155,7 +230,7 @@
 }
 
 .darken-workspace {
-  --darken-workspace-max: var(--cruor-workspace-max, 1540px);
+  --darken-workspace-max: 1540px;
 
   display: grid;
   gap: 0;
@@ -170,7 +245,7 @@
   top: var(--app-shell-bar-height);
   left: 0;
   right: 0;
-  z-index: var(--cruor-z-topbar, 70);
+  z-index: 70;
   box-sizing: border-box;
   width: 100%;
   height: var(--darken-workspace-topbar-height);
@@ -194,7 +269,7 @@
   height: 100%;
   margin: 0 auto;
   padding: 18px 20px;
-  border: var(--cruor-panel-border, 2px solid rgba(95, 7, 22, 0.64));
+  border: 2px solid rgba(95, 7, 22, 0.64);
   background:
     radial-gradient(circle at 12% 0%, rgba(122, 26, 40, 0.18), transparent 34%),
     linear-gradient(180deg, rgba(18, 5, 8, 0.985), rgba(8, 5, 6, 0.96)),
@@ -230,13 +305,13 @@
   gap: 10px;
   min-width: 0;
   margin: 0;
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   font-family: var(--display);
   line-height: 0.94;
 }
 
 .darken-topbar__title-prefix {
-  color: var(--cruor-button-text-muted, rgba(240, 215, 220, 0.72));
+  color: rgba(240, 215, 220, 0.72);
   font-size: clamp(22px, 2.2vw, 34px);
   font-weight: 850;
   letter-spacing: -0.035em;
@@ -292,12 +367,12 @@
   box-sizing: border-box;
   align-self: center;
   min-height: var(--darken-control-height);
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.74));
+  border: 1px solid rgba(95, 7, 22, 0.74);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(22, 6, 9, 0.92), rgba(8, 5, 6, 0.86)),
-    var(--cruor-button-bg, rgba(8, 5, 6, 0.84));
-  color: var(--cruor-button-text-muted, rgba(240, 215, 220, 0.72));
+    rgba(8, 5, 6, 0.84);
+  color: rgba(240, 215, 220, 0.72);
   padding: 0 14px;
   font-size: 11px;
   font-weight: 950;
@@ -322,7 +397,7 @@
   place-items: center;
   height: var(--darken-control-height);
   min-height: var(--darken-control-height);
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.74));
+  border: 1px solid rgba(95, 7, 22, 0.74);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(22, 6, 9, 0.92), rgba(8, 5, 6, 0.86)),
@@ -414,7 +489,7 @@
 #darkenMapGeneratorPanel {
   box-sizing: border-box;
   width: min(
-    var(--cruor-workspace-max, var(--darken-workspace-max, 1540px)),
+    var(--darken-workspace-max, 1540px),
     calc(100% - clamp(36px, 6vw, 60px))
   );
   margin-inline: auto;
@@ -446,7 +521,7 @@
 @media (max-width: 720px) {
   .app-shell {
     --app-shell-bar-height: 104px;
-    --darken-control-height: var(--cruor-control-height-sm, 36px);
+    --darken-control-height: 36px;
   }
 
   .app-shell__bar {
@@ -454,8 +529,23 @@
     display: grid;
   }
 
+  .app-shell__bar-actions {
+    align-items: flex-start;
+    display: grid;
+    justify-content: stretch;
+  }
+
   .app-shell__nav {
     justify-content: flex-start;
+  }
+
+  .app-shell__mode-switch {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .app-shell__mode-item {
+    flex: 1 0 auto;
   }
 
   .darken-workspace__topbar {

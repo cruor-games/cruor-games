@@ -11,6 +11,7 @@ const CruorMapGeneratorMvp = lazy(
 
 export default function AppRouter() {
   const [activeSection, setActiveSection] = useState("darken");
+  const [activeUiMode, setActiveUiMode] = useState("simple");
   const [activeDarkenTab, setActiveDarkenTab] = useState("composer");
   const [hasOpenedMapGenerator, setHasOpenedMapGenerator] = useState(false);
   const [mapRequest, setMapRequest] = useState(null);
@@ -144,6 +145,7 @@ export default function AppRouter() {
         hidden={activeDarkenTab !== "composer"}
       >
         <Crucible
+          uiMode={activeUiMode}
           onOpenMapGenerator={openMapGenerator}
           onSnapshotProviderReady={setDarkenSnapshotProvider}
         />
@@ -172,7 +174,9 @@ export default function AppRouter() {
   return (
     <AppShell
       activeSection={activeSection}
+      activeUiMode={activeUiMode}
       onSectionChange={setActiveSection}
+      onUiModeChange={setActiveUiMode}
       darkenContent={darkenContent}
       monsterComposerContent={<MonsterComposerPage />}
       inspirationsContent={<InspirationsPage />}

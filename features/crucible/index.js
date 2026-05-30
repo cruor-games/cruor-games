@@ -3,7 +3,7 @@ import { mountCrucible } from "./crucible.mount.js";
 
 export { mountCrucible };
 
-export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady } = {}) {
+export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady, uiMode = "simple" } = {}) {
   const rootRef = useRef(null);
 
   useEffect(() => {
@@ -11,10 +11,14 @@ export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady } = {}) {
     return mountCrucible(rootRef.current, {
       onOpenMapGenerator,
       onSnapshotProviderReady,
+      uiMode,
     });
-  }, [onOpenMapGenerator, onSnapshotProviderReady]);
+  }, [onOpenMapGenerator, onSnapshotProviderReady, uiMode]);
 
-  return React.createElement("div", { ref: rootRef });
+  return React.createElement("div", {
+    ref: rootRef,
+    "data-cruor-ui-mode": uiMode,
+  });
 }
 
 export default Crucible;

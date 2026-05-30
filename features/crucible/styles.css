@@ -1,3 +1,7 @@
+/* Step 2.2B HOTFIX.
+   Restores the last known-good Darken Composer / Crucible CSS from Step 1.5.
+   The Step 2.2 mode-gate rules were intentionally removed because they stripped
+   visible styling from the Darken a Location page. */
 /* Step 1.5: Cruor UI Kit token alignment.
    This pass keeps Crucible legacy selectors intact while routing shared surfaces,
    buttons, controls, overlays, and workspace sizing through the global --cruor-* tokens. */

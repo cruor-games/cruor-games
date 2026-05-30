@@ -1,6 +1,7 @@
 /* Step 1.6 · Cruor UI Kit migration.
    Light migration for features/inspirations/styles.css.
-   Keeps legacy selectors intact while routing shared surfaces, controls, cards, and modals through global Cruor tokens. */
+   Keeps legacy selectors intact while routing shared surfaces, controls, cards, and modals through global Cruor tokens.
+   Step 1.10: preserves legacy 42px Inspirations controls through dedicated tokens. */
 
 .inspirations-page {
   min-height: calc(100dvh - 65px);
@@ -61,7 +62,7 @@
 
 .inspirations-page__tools input,
 .inspirations-page__tools select {
-  min-height: var(--cruor-control-height-lg, 42px);
+  min-height: var(--cruor-control-height-inspirations, 42px);
   border: 1px solid var(--cruor-input-border, var(--cruor-color-line, var(--line)));
   border-radius: var(--cruor-radius-none, 0);
   background: var(--cruor-input-bg, linear-gradient(180deg, rgba(122, 26, 40, 0.04), transparent 64%), rgba(8, 7, 8, 0.92));

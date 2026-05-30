@@ -2,6 +2,18 @@ function cx(...parts) {
   return parts.filter(Boolean).join(" ");
 }
 
+function getIconClass(item, fallback = "fa-solid fa-circle") {
+  return item?.icon || item?.iconClass || fallback;
+}
+
+function getTooltipTitle(item) {
+  return item?.tooltip || item?.label || item?.shortLabel || "Open";
+}
+
+function getTooltipDescription(item) {
+  return item?.tooltipDescription || item?.summary || item?.description || "";
+}
+
 export default function CrucibleTopbar({
   eyebrow = "Crucible",
   titlePrefix = "I need to",
@@ -18,6 +30,8 @@ export default function CrucibleTopbar({
 }) {
   const activeGenerator = generators.find((generator) => generator.id === activeGeneratorId);
   const activeView = views.find((view) => view.id === activeViewId);
+  const currentGeneratorLabel = activeGenerator?.label || title || eyebrow || "Crucible";
+  const currentViewLabel = activeView?.label || activeViewLabel || "Workspace";
 
   return (
     <div
@@ -25,10 +39,11 @@ export default function CrucibleTopbar({
       data-active-generator={activeGeneratorId || ""}
       data-active-view={activeViewId || ""}
     >
-      <header className="darken-topbar crucible-topbar">
+      <header
+        className="darken-topbar crucible-topbar"
+        aria-label={`${currentGeneratorLabel}: ${currentViewLabel}`}
+      >
         <div className="darken-topbar__primary crucible-topbar__primary">
-          <p className="darken-topbar__eyebrow crucible-topbar__eyebrow">{eyebrow}</p>
-
           <div className="crucible-topbar__heading">
             <h1 className="darken-topbar__title crucible-topbar__title">
               <span className="darken-topbar__title-prefix">{titlePrefix}</span>
@@ -41,16 +56,14 @@ export default function CrucibleTopbar({
 
             <p className="crucible-topbar__state" aria-live="polite">
               <span>Generator</span>
-              <strong>{activeGenerator?.label || title || "Crucible"}</strong>
+              <strong>{currentGeneratorLabel}</strong>
               <span>View</span>
-              <strong>{activeView?.label || activeViewLabel || "Workspace"}</strong>
+              <strong>{currentViewLabel}</strong>
             </p>
           </div>
 
           <div className="darken-topbar__control-row crucible-topbar__control-row">
             <div className="crucible-topbar__control-group crucible-topbar__control-group--generators">
-              <span className="crucible-topbar__control-label">Generator</span>
-
               <div
                 className="mode-switch darken-topbar__mode-switch crucible-generator-switch crucible-topbar__generator-switch"
                 role="group"
@@ -59,6 +72,9 @@ export default function CrucibleTopbar({
               >
                 {generators.map((generator) => {
                   const isActive = activeGeneratorId === generator.id;
+                  const label = generator.label || generator.shortLabel || generator.id;
+                  const tooltipTitle = getTooltipTitle(generator);
+                  const tooltipDescription = getTooltipDescription(generator);
 
                   return (
                     <button
@@ -68,13 +84,15 @@ export default function CrucibleTopbar({
                         isActive && "active",
                       )}
                       type="button"
+                      aria-label={label}
                       aria-pressed={isActive}
+                      title={tooltipTitle}
+                      data-tooltip={tooltipTitle}
+                      data-tooltip-description={tooltipDescription}
                       data-crucible-generator={generator.id}
                       onClick={() => onGeneratorChange?.(generator.id)}
                     >
-                      <span className="crucible-generator-switch__label">
-                        {generator.shortLabel || generator.label}
-                      </span>
+                      <i className={getIconClass(generator, "fa-solid fa-flask-vial")} aria-hidden="true" />
                     </button>
                   );
                 })}
@@ -88,8 +106,6 @@ export default function CrucibleTopbar({
             ) : null}
 
             <div className="crucible-topbar__control-group crucible-topbar__control-group--views">
-              <span className="crucible-topbar__control-label">View</span>
-
               <div
                 className="darken-workspace__tabs crucible-workspace__tabs crucible-view-tabs"
                 role="tablist"
@@ -98,6 +114,9 @@ export default function CrucibleTopbar({
               >
                 {views.map((view) => {
                   const isActive = activeViewId === view.id;
+                  const label = view.label || view.id;
+                  const tooltipTitle = getTooltipTitle(view);
+                  const tooltipDescription = getTooltipDescription(view);
 
                   return (
                     <button
@@ -108,13 +127,17 @@ export default function CrucibleTopbar({
                       )}
                       type="button"
                       role="tab"
+                      aria-label={label}
                       aria-selected={isActive}
                       aria-controls={view.panelId}
                       id={`crucibleViewTab-${view.id}`}
+                      title={tooltipTitle}
+                      data-tooltip={tooltipTitle}
+                      data-tooltip-description={tooltipDescription}
                       data-crucible-view={view.id}
                       onClick={() => onViewChange?.(view.id)}
                     >
-                      {view.label}
+                      <i className={getIconClass(view, "fa-solid fa-circle-dot")} aria-hidden="true" />
                     </button>
                   );
                 })}

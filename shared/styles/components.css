@@ -719,3 +719,294 @@
     inset 0 1px 0 rgba(122, 26, 40, 0.055);
   padding: 5px;
 }
+
+/* Step 4.7 — Cross-tool surface primitives.
+   Additive primitives for aligning repeated panels, sidebars, and interactive cards. */
+.cruor-workspace-surface,
+.cruor-side-panel {
+  border: var(--cruor-panel-border, 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%));
+  border-top-color: color-mix(in srgb, var(--cruor-color-line-strong, var(--glass-line)) 78%, white 22%);
+  background-color: rgba(33, 27, 29, 0.88);
+  background-image:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.064), transparent 10rem),
+    radial-gradient(circle at 18% 0%, rgba(255, 238, 242, 0.046), transparent 24rem),
+    linear-gradient(120deg, rgba(122, 26, 40, 0.055), transparent 46%);
+  background-blend-mode: overlay, overlay, normal;
+  backdrop-filter: blur(20px) saturate(128%);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(255, 238, 242, 0.058),
+    0 0 58px rgba(255, 238, 242, 0.038),
+    inset 0 1px 0 var(--cruor-panel-highlight, var(--panel-white-line)),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.54);
+}
+
+.cruor-side-panel {
+  padding: var(--cruor-space-lg, 16px);
+}
+
+.cruor-interactive-card {
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--cruor-color-line, var(--line));
+  background-color: rgba(9, 6, 8, 0.56);
+  background-image:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.045), transparent 48%),
+    linear-gradient(90deg, rgba(51, 3, 12, 0.24), transparent 52%);
+  background-blend-mode: overlay, normal;
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    transform 0.12s ease,
+    color 0.12s ease;
+}
+
+.cruor-interactive-card:hover,
+.cruor-interactive-card.is-active,
+.cruor-interactive-card.active,
+.cruor-interactive-card[aria-selected="true"],
+.cruor-interactive-card[aria-pressed="true"] {
+  border-color: rgba(122, 26, 40, 0.95);
+  background:
+    linear-gradient(180deg, rgba(51, 3, 12, 0.36), transparent 160px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, 0.2), transparent 150px),
+    rgba(51, 3, 12, 0.17);
+  box-shadow:
+    0 0 0 1px rgba(122, 26, 40, 0.4),
+    0 0 46px rgba(51, 3, 12, 0.6),
+    inset 0 0 44px rgba(122, 26, 40, 0.17),
+    inset 0 1px 0 rgba(122, 26, 40, 0.08);
+}
+
+.cruor-interactive-card:hover {
+  transform: scale(1.006);
+}
+
+/* Step 4.8 — Slot/card alignment primitives.
+   Shared visual language for filled slots, anatomy cards, inspector cards, and flow panels. */
+.cruor-slot-card,
+.cruor-flow-panel,
+.cruor-inspector-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 238, 242, 0.09);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.12), transparent 13rem),
+    rgba(5, 5, 6, 0.62);
+  box-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+}
+
+.cruor-slot-card {
+  min-height: var(--cruor-slot-card-min-height, 102px);
+  padding: var(--cruor-slot-card-padding, 12px);
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    transform 0.12s ease,
+    color 0.12s ease;
+}
+
+.cruor-slot-card:hover,
+.cruor-slot-card.is-active,
+.cruor-slot-card.active,
+.cruor-slot-card[aria-selected="true"] {
+  border-color: rgba(190, 64, 82, 0.52);
+  background:
+    linear-gradient(180deg, rgba(95, 7, 22, 0.2), transparent 150px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, 0.16), transparent 140px),
+    rgba(12, 6, 8, 0.74);
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.1),
+    0 0 30px rgba(122, 26, 40, 0.22),
+    inset 0 1px 0 rgba(255, 238, 242, 0.055);
+}
+
+.cruor-slot-card.is-guided:not(.active),
+.cruor-slot-card[data-guided="true"]:not(.active) {
+  border-color: rgba(190, 64, 82, 0.46);
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.08),
+    0 0 24px rgba(122, 26, 40, 0.2),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+}
+
+.cruor-flow-panel,
+.cruor-inspector-card {
+  padding: var(--cruor-flow-panel-padding, 13px);
+}
+
+.cruor-micro-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background: rgba(255, 255, 255, 0.024);
+  color: rgba(238, 238, 238, 0.58);
+  padding: 0 8px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.095em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.cruor-micro-chip.is-active,
+.cruor-micro-chip[aria-pressed="true"] {
+  border-color: rgba(190, 64, 82, 0.48);
+  background: rgba(95, 7, 22, 0.22);
+  color: #fff0f2;
+}
+
+/* Step 4.9 — Shared UI Kit consolidation contract.
+   These tokens let feature-local legacy selectors converge without immediate JSX rewrites. */
+:root {
+  --cruor-ui-panel-border: var(--cruor-panel-border, 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%));
+  --cruor-ui-panel-border-top: color-mix(in srgb, var(--cruor-color-line-strong, var(--glass-line)) 78%, white 22%);
+  --cruor-ui-panel-bg: rgba(33, 27, 29, 0.88);
+  --cruor-ui-panel-image:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.064), transparent 10rem),
+    radial-gradient(circle at 18% 0%, rgba(255, 238, 242, 0.046), transparent 24rem),
+    linear-gradient(120deg, rgba(122, 26, 40, 0.055), transparent 46%);
+  --cruor-ui-panel-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(255, 238, 242, 0.058),
+    0 0 58px rgba(255, 238, 242, 0.038),
+    inset 0 1px 0 var(--cruor-panel-highlight, var(--panel-white-line)),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.54);
+
+  --cruor-ui-card-border: rgba(255, 238, 242, 0.09);
+  --cruor-ui-card-border-active: rgba(190, 64, 82, 0.52);
+  --cruor-ui-card-bg:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.12), transparent 13rem),
+    rgba(5, 5, 6, 0.62);
+  --cruor-ui-card-bg-active:
+    linear-gradient(180deg, rgba(95, 7, 22, 0.2), transparent 150px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, 0.16), transparent 140px),
+    rgba(12, 6, 8, 0.74);
+  --cruor-ui-card-shadow:
+    0 16px 42px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+  --cruor-ui-card-shadow-active:
+    0 0 0 1px rgba(190, 64, 82, 0.1),
+    0 0 30px rgba(122, 26, 40, 0.22),
+    inset 0 1px 0 rgba(255, 238, 242, 0.055);
+
+  --cruor-ui-control-border: rgba(255, 238, 242, 0.09);
+  --cruor-ui-control-border-active: rgba(190, 64, 82, 0.58);
+  --cruor-ui-control-bg: rgba(255, 255, 255, 0.022);
+  --cruor-ui-control-bg-active: rgba(95, 7, 22, 0.24);
+  --cruor-ui-control-text: rgba(238, 238, 238, 0.58);
+  --cruor-ui-control-text-active: #fff0f2;
+
+  --cruor-ui-chip-border: rgba(255, 238, 242, 0.075);
+  --cruor-ui-chip-bg: rgba(255, 255, 255, 0.024);
+  --cruor-ui-chip-text: rgba(238, 238, 238, 0.62);
+  --cruor-ui-chip-text-strong: #d0a2aa;
+}
+
+.cruor-ui-panel-surface {
+  border: var(--cruor-ui-panel-border);
+  border-top-color: var(--cruor-ui-panel-border-top);
+  background-color: var(--cruor-ui-panel-bg);
+  background-image: var(--cruor-ui-panel-image);
+  background-blend-mode: overlay, overlay, normal;
+  backdrop-filter: blur(20px) saturate(128%);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  box-shadow: var(--cruor-ui-panel-shadow);
+}
+
+.cruor-ui-card-surface {
+  border: 1px solid var(--cruor-ui-card-border);
+  background: var(--cruor-ui-card-bg);
+  box-shadow: var(--cruor-ui-card-shadow);
+}
+
+.cruor-ui-card-surface:hover,
+.cruor-ui-card-surface.is-active,
+.cruor-ui-card-surface.active,
+.cruor-ui-card-surface[aria-selected="true"],
+.cruor-ui-card-surface[aria-pressed="true"] {
+  border-color: var(--cruor-ui-card-border-active);
+  background: var(--cruor-ui-card-bg-active);
+  box-shadow: var(--cruor-ui-card-shadow-active);
+}
+
+.cruor-ui-control-surface {
+  border: 1px solid var(--cruor-ui-control-border);
+  background: var(--cruor-ui-control-bg);
+  color: var(--cruor-ui-control-text);
+}
+
+.cruor-ui-control-surface:hover,
+.cruor-ui-control-surface.is-active,
+.cruor-ui-control-surface.active,
+.cruor-ui-control-surface[aria-selected="true"],
+.cruor-ui-control-surface[aria-pressed="true"] {
+  border-color: var(--cruor-ui-control-border-active);
+  background: var(--cruor-ui-control-bg-active);
+  color: var(--cruor-ui-control-text-active);
+}
+
+.cruor-ui-chip-surface {
+  border: 1px solid var(--cruor-ui-chip-border);
+  background: var(--cruor-ui-chip-bg);
+  color: var(--cruor-ui-chip-text);
+}
+
+/* Step 4.11 — CSS duplicate cleanup.
+   No visual changes: shared primitives kept intact; duplicate cleanup is currently applied in feature CSS. */
+
+/* Step 4.12 — JSX utility adoption support.
+   These light layout aliases support newly adopted shared utility classes without replacing legacy selectors. */
+.cruor-product-shell,
+.cruor-workspace {
+  min-width: 0;
+}
+
+.cruor-slot-grid,
+.cruor-card-grid,
+.cruor-chip-row,
+.cruor-chip-stack {
+  min-width: 0;
+}
+
+.cruor-slot-grid,
+.cruor-card-grid {
+  display: grid;
+}
+
+.cruor-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cruor-space-xs, 6px);
+}
+
+.cruor-chip-stack {
+  display: grid;
+  gap: var(--cruor-space-xs, 6px);
+}
+
+.cruor-field {
+  min-width: 0;
+}
+
+.cruor-slot-item {
+  min-width: 0;
+}
+
+.cruor-search-wrap {
+  min-width: 0;
+}

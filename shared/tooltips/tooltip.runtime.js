@@ -4,7 +4,7 @@ import { renderTooltipPayload } from "./tooltip.renderers.js";
 const TOOLTIP_SELECTOR = "[data-key][data-tooltip]";
 const MAP_BOUNDARY_SELECTOR =
   ".map-viewport, .map-viewport-frame, .map-canvas-area";
-const OFFSET = 14;
+const OFFSET = 18;
 const BOUNDARY_INSET = 12;
 let runtime = null;
 

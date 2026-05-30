@@ -604,6 +604,51 @@
   min-width: 0;
 }
 
+
+/* Step 4.3 — Correct Crucible topbar semantics.
+   mode-switch = generator switch. darken-workspace__tabs = active tool view switch. */
+.crucible-generator-switch {
+  flex: 0 0 auto;
+}
+
+.darken-workspace__topbar .crucible-generator-switch .mode-btn,
+.crucible-generator-switch__btn {
+  width: auto;
+  min-width: 112px;
+  padding: 0 13px;
+}
+
+.crucible-generator-switch__label {
+  color: inherit;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.crucible-topbar__legacy-workflow-slot,
+.crucible-topbar__legacy-workflow-slot[hidden] {
+  display: none !important;
+}
+
+.crucible-workspace__tabs {
+  margin-left: auto;
+}
+
+@media (max-width: 720px) {
+  .darken-workspace__topbar .crucible-generator-switch .mode-btn,
+  .crucible-generator-switch__btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .crucible-generator-switch {
+    width: 100%;
+  }
+}
+
 .crucible-workspace > [role="tabpanel"][hidden] {
   display: none;
 }
@@ -758,5 +803,358 @@
   .darken-workspace__tab {
     min-width: 0;
     flex: 1 1 0;
+  }
+}
+
+/* Step 4.4 — AppShell visual polish.
+   Global shell = product navigation. Crucible topbar = active tool workflow. */
+.app-shell {
+  --app-shell-bar-height: 64px;
+}
+
+.app-shell__bar {
+  display: block;
+  height: var(--app-shell-bar-height);
+  padding: 0 clamp(16px, 3vw, 30px);
+  border-bottom: 1px solid rgba(190, 64, 82, 0.22);
+  background:
+    linear-gradient(180deg, rgba(14, 5, 8, 0.96), rgba(5, 4, 5, 0.9)),
+    var(--paper-texture);
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.42),
+    inset 0 -1px 0 rgba(255, 238, 242, 0.04);
+}
+
+.app-shell__bar-inner {
+  display: grid;
+  grid-template-columns: minmax(220px, auto) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(14px, 2vw, 24px);
+  width: min(var(--darken-workspace-max, 1540px), 100%);
+  height: 100%;
+  margin-inline: auto;
+}
+
+.app-shell__brand {
+  gap: 11px;
+}
+
+.app-shell__logo-mark {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  overflow: hidden;
+  border-color: rgba(190, 64, 82, 0.54);
+  background:
+    radial-gradient(circle at 50% 34%, rgba(240, 185, 194, 0.18), transparent 34%),
+    radial-gradient(circle at 50% 72%, rgba(122, 26, 40, 0.38), transparent 72%),
+    linear-gradient(180deg, rgba(255, 238, 242, 0.055), transparent),
+    rgba(18, 5, 8, 0.82);
+}
+
+.app-shell__logo-mark::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(255, 238, 242, 0.12);
+  pointer-events: none;
+}
+
+.app-shell__logo-letter {
+  position: relative;
+  z-index: 1;
+  transform: translateY(-1px);
+}
+
+.app-shell__brand-copy {
+  gap: 2px;
+}
+
+.app-shell__brand strong {
+  font-size: clamp(19px, 1.7vw, 24px);
+  letter-spacing: -0.035em;
+}
+
+.app-shell__eyebrow {
+  order: 2;
+  color: rgba(208, 162, 170, 0.7);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.app-shell__bar-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 16px);
+  min-width: 0;
+}
+
+.app-shell__nav {
+  justify-self: center;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  border: 1px solid rgba(95, 7, 22, 0.46);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.025), transparent),
+    rgba(0, 0, 0, 0.22);
+  padding: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 242, 0.035),
+    0 10px 26px rgba(0, 0, 0, 0.24);
+}
+
+.app-shell__nav-item {
+  min-height: 30px;
+  border-color: transparent;
+  background: transparent;
+  color: rgba(240, 215, 220, 0.58);
+  padding: 0 13px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+
+.app-shell__nav-item:hover,
+.app-shell__nav-item:focus-visible {
+  border-color: rgba(190, 64, 82, 0.32);
+  background: rgba(95, 7, 22, 0.18);
+  color: #fff0f2;
+  box-shadow: inset 0 0 0 1px rgba(190, 64, 82, 0.04);
+}
+
+.app-shell__nav-item.is-active {
+  border-color: rgba(190, 64, 82, 0.54);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(190, 64, 82, 0.18), transparent 70%),
+    rgba(95, 7, 22, 0.34);
+  color: #fff0f2;
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.1),
+    0 0 18px rgba(122, 26, 40, 0.2),
+    inset 0 1px 0 rgba(255, 238, 242, 0.055);
+}
+
+.app-shell__mode-cluster {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+}
+
+.app-shell__mode-label {
+  color: rgba(208, 162, 170, 0.62);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.app-shell__mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(95, 7, 22, 0.46);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.03);
+}
+
+.app-shell__mode-item {
+  min-height: 28px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(240, 215, 220, 0.52);
+  padding: 0 9px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.app-shell__mode-item:hover,
+.app-shell__mode-item:focus-visible {
+  border-color: rgba(190, 64, 82, 0.28);
+  background: rgba(95, 7, 22, 0.18);
+  color: #fff0f2;
+  outline: none;
+}
+
+.app-shell__mode-item.is-active {
+  border-color: rgba(190, 64, 82, 0.48);
+  background: rgba(95, 7, 22, 0.3);
+  color: #fff0f2;
+  box-shadow: 0 0 16px rgba(122, 26, 40, 0.18);
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    --app-shell-bar-height: 104px;
+  }
+
+  .app-shell__bar-inner {
+    grid-template-columns: 1fr;
+    align-content: center;
+    gap: 9px;
+  }
+
+  .app-shell__bar-actions {
+    grid-template-columns: 1fr auto;
+  }
+
+  .app-shell__nav {
+    justify-self: start;
+  }
+
+  .app-shell__mode-label {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    --app-shell-bar-height: 118px;
+  }
+
+  .app-shell__bar {
+    padding-inline: clamp(14px, 4vw, 22px);
+  }
+
+  .app-shell__brand {
+    width: auto;
+  }
+
+  .app-shell__logo-mark {
+    width: 32px;
+    height: 32px;
+    flex-basis: 32px;
+    font-size: 19px;
+  }
+
+  .app-shell__bar-actions {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .app-shell__nav,
+  .app-shell__mode-switch {
+    width: 100%;
+  }
+
+  .app-shell__nav-item,
+  .app-shell__mode-item {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .app-shell__mode-cluster {
+    width: 100%;
+  }
+}
+
+/* Step 4.13 — Topbar final consolidation.
+   Crucible topbar semantics:
+   - .crucible-generator-switch / .crucible-topbar__generator-switch changes generator.
+   - .crucible-view-tabs / .crucible-workspace__tabs changes the active generator view.
+   Legacy darken-* classes remain as compatibility hooks only. */
+.crucible-topbar-shell {
+  --crucible-topbar-group-label-height: 12px;
+}
+
+.crucible-topbar__control-row {
+  align-items: end;
+}
+
+.crucible-topbar__control-group {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crucible-topbar__control-group--generators {
+  justify-items: start;
+  flex: 0 0 auto;
+}
+
+.crucible-topbar__control-group--views {
+  justify-items: end;
+  margin-left: auto;
+  min-width: min(100%, 360px);
+}
+
+.crucible-topbar__control-label {
+  min-height: var(--crucible-topbar-group-label-height);
+  color: rgba(208, 162, 170, 0.62);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.crucible-topbar__generator-switch,
+.crucible-view-tabs {
+  min-width: 0;
+}
+
+.crucible-topbar__generator-btn,
+.crucible-view-tabs__btn {
+  white-space: nowrap;
+}
+
+.crucible-view-tabs {
+  justify-content: flex-end;
+}
+
+.crucible-topbar__state {
+  display: none;
+}
+
+.crucible-topbar-shell[data-active-generator="monster"] .crucible-view-tabs {
+  min-width: min(100%, 470px);
+}
+
+.crucible-topbar-shell[data-active-generator="darken"] .crucible-view-tabs {
+  min-width: min(100%, 240px);
+}
+
+@media (max-width: 1100px) {
+  .crucible-topbar__control-row {
+    align-items: stretch;
+  }
+
+  .crucible-topbar__control-group--views {
+    justify-items: stretch;
+    margin-left: 0;
+    min-width: 0;
+  }
+
+  .crucible-view-tabs {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .crucible-topbar__control-group {
+    width: 100%;
+  }
+
+  .crucible-topbar__generator-switch,
+  .crucible-view-tabs {
+    width: 100%;
+  }
+
+  .crucible-topbar__generator-btn,
+  .crucible-view-tabs__btn {
+    flex: 1 1 0;
+    min-width: 0;
   }
 }

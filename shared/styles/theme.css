@@ -410,3 +410,85 @@ textarea:focus {
     0 0 0 1px rgba(122, 26, 40, 0.18),
     0 0 20px rgba(51, 3, 12, 0.32);
 }
+
+/* Step 4.6 — Shared internal scrollbar expansion.
+   Keep internal scroll containers thin, squared, and transparent-track across Map workspaces. */
+.cruor-scroll-surface,
+.map-inspector-panel__scroll,
+.map-inspector-section,
+.map-tests-modal__dialog,
+.test-report__list,
+.room-key {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+.cruor-scroll-surface::-webkit-scrollbar,
+.map-inspector-panel__scroll::-webkit-scrollbar,
+.map-inspector-section::-webkit-scrollbar,
+.map-tests-modal__dialog::-webkit-scrollbar,
+.test-report__list::-webkit-scrollbar,
+.room-key::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.cruor-scroll-surface::-webkit-scrollbar-button,
+.map-inspector-panel__scroll::-webkit-scrollbar-button,
+.map-inspector-section::-webkit-scrollbar-button,
+.map-tests-modal__dialog::-webkit-scrollbar-button,
+.test-report__list::-webkit-scrollbar-button,
+.room-key::-webkit-scrollbar-button {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.cruor-scroll-surface::-webkit-scrollbar-track,
+.map-inspector-panel__scroll::-webkit-scrollbar-track,
+.map-inspector-section::-webkit-scrollbar-track,
+.map-tests-modal__dialog::-webkit-scrollbar-track,
+.test-report__list::-webkit-scrollbar-track,
+.room-key::-webkit-scrollbar-track {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.cruor-scroll-surface::-webkit-scrollbar-thumb,
+.map-inspector-panel__scroll::-webkit-scrollbar-thumb,
+.map-inspector-section::-webkit-scrollbar-thumb,
+.map-tests-modal__dialog::-webkit-scrollbar-thumb,
+.test-report__list::-webkit-scrollbar-thumb,
+.room-key::-webkit-scrollbar-thumb {
+  border: 0;
+  border-radius: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(170, 48, 66, 0.76),
+    rgba(70, 8, 20, 0.78)
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 238, 242, 0.055);
+}
+
+.cruor-scroll-surface::-webkit-scrollbar-thumb:hover,
+.map-inspector-panel__scroll::-webkit-scrollbar-thumb:hover,
+.map-inspector-section::-webkit-scrollbar-thumb:hover,
+.map-tests-modal__dialog::-webkit-scrollbar-thumb:hover,
+.test-report__list::-webkit-scrollbar-thumb:hover,
+.room-key::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(198, 68, 84, 0.86),
+    rgba(95, 7, 22, 0.9)
+  );
+}
+
+.cruor-scroll-surface::-webkit-scrollbar-corner,
+.map-inspector-panel__scroll::-webkit-scrollbar-corner,
+.map-inspector-section::-webkit-scrollbar-corner,
+.map-tests-modal__dialog::-webkit-scrollbar-corner,
+.test-report__list::-webkit-scrollbar-corner,
+.room-key::-webkit-scrollbar-corner {
+  background: transparent;
+}

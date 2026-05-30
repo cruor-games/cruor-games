@@ -10,41 +10,78 @@ const CruorMapGeneratorMvp = lazy(
   () => import("../features/darken-location/map-generator/index.js")
 );
 
-const CRUCIBLE_TOOLS = [
+const CRUCIBLE_GENERATORS = [
   {
     id: "darken",
-    label: "Darken",
+    label: "Darken a Location",
+    shortLabel: "Location",
     title: "Darken a Location",
     summary: "Build regions, hazards, clues, atmosphere, and a map-ready horror layer.",
-    panelId: "darkenComposerPanel",
   },
   {
     id: "monster",
-    label: "Monster",
+    label: "Build a Monster",
+    shortLabel: "Monster",
     title: "Build a Monster",
     summary: "Compose anatomy, pressure, mechanics, and table-ready creature behavior.",
-    panelId: "monsterComposerPanel",
-  },
-  {
-    id: "map",
-    label: "Map",
-    title: "Map a Location",
-    summary: "Turn Darken regions into an explorable map workspace.",
-    panelId: "darkenMapGeneratorPanel",
   },
 ];
+
+const CRUCIBLE_VIEWS = {
+  darken: [
+    {
+      id: "location",
+      label: "Location",
+      panelId: "darkenComposerPanel",
+    },
+    {
+      id: "map",
+      label: "Map",
+      panelId: "darkenMapGeneratorPanel",
+    },
+  ],
+  monster: [
+    {
+      id: "composer",
+      label: "Composer",
+      panelId: "monsterComposerPanel",
+    },
+    {
+      id: "balance",
+      label: "Balance",
+      panelId: "monsterComposerPanel",
+    },
+    {
+      id: "run",
+      label: "Run",
+      panelId: "monsterComposerPanel",
+    },
+    {
+      id: "export",
+      label: "Export",
+      panelId: "monsterComposerPanel",
+    },
+  ],
+};
 
 export default function AppRouter() {
   const [activeSection, setActiveSection] = useState("home");
   const [activeUiMode, setActiveUiMode] = useState("simple");
-  const [activeCrucibleTool, setActiveCrucibleTool] = useState("darken");
+  const [activeCrucibleGenerator, setActiveCrucibleGenerator] = useState("darken");
+  const [activeDarkenView, setActiveDarkenView] = useState("location");
+  const [activeMonsterView, setActiveMonsterView] = useState("composer");
   const [hasOpenedMapGenerator, setHasOpenedMapGenerator] = useState(false);
   const [mapRequest, setMapRequest] = useState(null);
   const [mapRequestRevision, setMapRequestRevision] = useState(0);
   const darkenSnapshotProviderRef = useRef(null);
 
-  const activeCrucibleToolMeta =
-    CRUCIBLE_TOOLS.find((tool) => tool.id === activeCrucibleTool) || CRUCIBLE_TOOLS[0];
+  const activeGeneratorMeta =
+    CRUCIBLE_GENERATORS.find((generator) => generator.id === activeCrucibleGenerator) ||
+    CRUCIBLE_GENERATORS[0];
+
+  const activeViews = CRUCIBLE_VIEWS[activeCrucibleGenerator] || [];
+  const activeViewId = activeCrucibleGenerator === "monster" ? activeMonsterView : activeDarkenView;
+  const activeViewMeta = activeViews.find((view) => view.id === activeViewId) || activeViews[0];
 
   const createMapRequestFromSnapshot = useCallback(
     (snapshot) => createMapRequestFromDarkenLocationState(snapshot),
@@ -58,25 +95,45 @@ export default function AppRouter() {
     [createMapRequestFromSnapshot]
   );
 
-  const openCrucibleTool = useCallback(
-    (toolId) => {
-      if (toolId === "map" && !hasOpenedMapGenerator) {
-        const snapshot = darkenSnapshotProviderRef.current?.();
-        initializeMapRequest(snapshot);
-        setHasOpenedMapGenerator(true);
-      }
+  const openDarkenMapView = useCallback(() => {
+    if (!hasOpenedMapGenerator) {
+      const snapshot = darkenSnapshotProviderRef.current?.();
+      initializeMapRequest(snapshot);
+      setHasOpenedMapGenerator(true);
+    }
 
-      setActiveCrucibleTool(toolId);
-    },
-    [hasOpenedMapGenerator, initializeMapRequest]
-  );
+    setActiveCrucibleGenerator("darken");
+    setActiveDarkenView("map");
+  }, [hasOpenedMapGenerator, initializeMapRequest]);
+
+  const openCrucibleGenerator = useCallback((generatorId) => {
+    if (!CRUCIBLE_GENERATORS.some((generator) => generator.id === generatorId)) return;
+    setActiveCrucibleGenerator(generatorId);
+  }, []);
 
   const openCrucibleFromHome = useCallback(
-    (toolId) => {
+    (generatorId) => {
       setActiveSection("crucible");
-      openCrucibleTool(toolId);
+      openCrucibleGenerator(generatorId);
     },
-    [openCrucibleTool]
+    [openCrucibleGenerator]
+  );
+
+  const handleCrucibleViewChange = useCallback(
+    (viewId) => {
+      if (activeCrucibleGenerator === "darken") {
+        if (viewId === "map") {
+          openDarkenMapView();
+          return;
+        }
+
+        setActiveDarkenView(viewId);
+        return;
+      }
+
+      setActiveMonsterView(viewId);
+    },
+    [activeCrucibleGenerator, openDarkenMapView]
   );
 
   const refreshMapFromComposer = useCallback(() => {
@@ -91,14 +148,16 @@ export default function AppRouter() {
     setMapRequest(createMapRequestFromSnapshot(snapshot));
     setMapRequestRevision((value) => value + 1);
     setHasOpenedMapGenerator(true);
-    setActiveCrucibleTool("map");
+    setActiveCrucibleGenerator("darken");
+    setActiveDarkenView("map");
   }, [createMapRequestFromSnapshot, hasOpenedMapGenerator]);
 
   const openMapGenerator = useCallback(
     (snapshot) => {
       initializeMapRequest(snapshot);
       setHasOpenedMapGenerator(true);
-      setActiveCrucibleTool("map");
+      setActiveCrucibleGenerator("darken");
+      setActiveDarkenView("map");
     },
     [initializeMapRequest]
   );
@@ -155,26 +214,31 @@ export default function AppRouter() {
   const crucibleContent = (
     <section
       className={
-        activeCrucibleTool === "map"
+        activeCrucibleGenerator === "darken" && activeDarkenView === "map"
           ? "darken-workspace crucible-workspace is-map-tab"
           : "darken-workspace crucible-workspace"
       }
       aria-label="Crucible workspace"
+      data-crucible-generator={activeCrucibleGenerator}
+      data-crucible-view={activeViewId}
     >
       <CrucibleTopbar
         eyebrow="Crucible"
         titlePrefix="I need to"
-        title={activeCrucibleToolMeta.title}
-        summary={activeCrucibleToolMeta.summary}
-        tools={CRUCIBLE_TOOLS}
-        activeToolId={activeCrucibleTool}
-        onToolChange={openCrucibleTool}
-        workflowSlot={
+        title={activeGeneratorMeta.title}
+        summary={activeGeneratorMeta.summary}
+        generators={CRUCIBLE_GENERATORS}
+        activeGeneratorId={activeCrucibleGenerator}
+        onGeneratorChange={openCrucibleGenerator}
+        views={activeViews}
+        activeViewId={activeViewId}
+        activeViewLabel={activeViewMeta?.label}
+        onViewChange={handleCrucibleViewChange}
+        legacyWorkflowSlot={
           <div
-            className="mode-switch darken-topbar__mode-switch"
             id="workflowButtons"
-            aria-label="Choose what you need to do"
-            hidden={activeCrucibleTool !== "darken"}
+            hidden
+            aria-hidden="true"
           />
         }
       />
@@ -182,8 +246,8 @@ export default function AppRouter() {
       <div
         id="darkenComposerPanel"
         role="tabpanel"
-        aria-labelledby="crucibleToolTab-darken"
-        hidden={activeCrucibleTool !== "darken"}
+        aria-labelledby="crucibleViewTab-location"
+        hidden={activeCrucibleGenerator !== "darken" || activeDarkenView !== "location"}
       >
         <Crucible
           uiMode={activeUiMode}
@@ -195,18 +259,22 @@ export default function AppRouter() {
       <section
         id="monsterComposerPanel"
         role="tabpanel"
-        aria-labelledby="crucibleToolTab-monster"
-        hidden={activeCrucibleTool !== "monster"}
+        aria-labelledby={`crucibleViewTab-${activeMonsterView}`}
+        hidden={activeCrucibleGenerator !== "monster"}
       >
-        <MonsterComposerPage />
+        <MonsterComposerPage
+          viewMode={activeMonsterView}
+          onViewModeChange={setActiveMonsterView}
+          showInternalTopbar={false}
+        />
       </section>
 
       <section
         id="darkenMapGeneratorPanel"
         className="map-generator-view"
         role="tabpanel"
-        aria-labelledby="crucibleToolTab-map"
-        hidden={activeCrucibleTool !== "map"}
+        aria-labelledby="crucibleViewTab-map"
+        hidden={activeCrucibleGenerator !== "darken" || activeDarkenView !== "map"}
       >
         {hasOpenedMapGenerator ? (
           <Suspense fallback={<div className="status">Loading map generator...</div>}>
@@ -224,7 +292,7 @@ export default function AppRouter() {
             <button
               className="app-shell__home-action crucible-workspace__empty-map-action"
               type="button"
-              onClick={() => openCrucibleTool("map")}
+              onClick={openDarkenMapView}
             >
               <span>Map</span>
               <strong>Open Map Workspace</strong>

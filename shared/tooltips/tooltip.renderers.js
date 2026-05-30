@@ -33,26 +33,70 @@ function getRoomIcon(payload) {
   return "fa-dungeon";
 }
 
+function normalizeTooltipText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function trimTooltipText(value, maxLength) {
+  const text = normalizeTooltipText(value);
+  if (text.length <= maxLength) return text;
+
+  const slice = text.slice(0, maxLength + 1);
+  const sentenceBreak = Math.max(
+    slice.lastIndexOf("."),
+    slice.lastIndexOf(";"),
+    slice.lastIndexOf(":"),
+    slice.lastIndexOf("—"),
+  );
+  const wordBreak = slice.lastIndexOf(" ");
+  const breakPoint =
+    sentenceBreak >= Math.floor(maxLength * 0.48)
+      ? sentenceBreak + 1
+      : wordBreak >= Math.floor(maxLength * 0.58)
+        ? wordBreak
+        : maxLength;
+
+  return `${slice.slice(0, breakPoint).trim()}…`;
+}
+
+function resolveGenericTooltipCopy(payload) {
+  const rawTitle = normalizeTooltipText(payload.title);
+  const rawBody = normalizeTooltipText(payload.text);
+  const sourceTitle = rawTitle || rawBody;
+
+  if (!sourceTitle) {
+    return { title: "", body: "" };
+  }
+
+  const title = trimTooltipText(sourceTitle, 68);
+  let body = rawBody && rawBody !== rawTitle ? rawBody : "";
+
+  if (!body && sourceTitle.length > title.length) {
+    body = sourceTitle.slice(title.replace(/…$/, "").length).trim();
+  }
+
+  body = trimTooltipText(body, 180);
+
+  if (body === title || body === `${title}…`) {
+    body = "";
+  }
+
+  return { title, body };
+}
+
 function renderGenericTooltip(payload) {
+  const { title, body } = resolveGenericTooltipCopy(payload);
   const tooltip = document.createElement("article");
   tooltip.className = "cruor-tooltip cruor-tooltip--generic";
   tooltip.setAttribute("role", "tooltip");
+
   const head = document.createElement("div");
   head.className = "cruor-tooltip__generic-head";
-  appendText(
-    head,
-    "h2",
-    "cruor-tooltip__title",
-    payload.title || payload.text || "",
-  );
+  appendText(head, "h2", "cruor-tooltip__title", title);
   appendText(head, "kbd", "cruor-tooltip__kbd", payload.kbd || "");
   tooltip.appendChild(head);
-  appendText(
-    tooltip,
-    "p",
-    "cruor-tooltip__body",
-    payload.text && payload.text !== payload.title ? payload.text : "",
-  );
+
+  appendText(tooltip, "p", "cruor-tooltip__body", body);
   return tooltip;
 }
 

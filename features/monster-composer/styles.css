@@ -148,11 +148,11 @@
 
 .monster-shell .darken-workspace__topbar {
   position: sticky;
-  top: var(--monster-shell-bar-height);
+
   z-index: var(--cruor-z-topbar, 70);
   box-sizing: border-box;
   width: 100%;
-  padding: 1rem 0;
+
   background: linear-gradient(180deg, rgba(10, 5, 7, .92), rgba(10, 5, 7, .74) 72%, rgba(10, 5, 7, 0));
   pointer-events: none;
 }
@@ -163,19 +163,16 @@
   align-items: center;
   width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
-  padding: 18px 20px;
+
   border: 2px solid rgba(95, 7, 22, .64);
-  background:
-    radial-gradient(circle at 12% 0%, rgba(122, 26, 40, .18), transparent 34%),
-    linear-gradient(180deg, rgba(18, 5, 8, .985), rgba(8, 5, 6, .96)),
-    var(--paper-texture);
-  box-shadow: 0 30px 40px rgba(0, 0, 0, 1), inset 0 1px 0 rgba(255, 238, 242, .045), inset 0 -1px 0 rgba(255, 238, 242, .026);
+
+
   backdrop-filter: blur(18px) saturate(124%);
 }
 
 .monster-shell .darken-topbar__primary {
   display: grid;
-  gap: 15px;
+
   min-width: 0;
 }
 
@@ -209,9 +206,8 @@
 
 .monster-shell .darken-topbar__need-value {
   color: #fff0f2;
-  font-size: clamp(31px, 3.2vw, 50px);
-  font-weight: 950;
-  letter-spacing: -.055em;
+
+
   text-shadow: 0 0 22px rgba(122, 26, 40, .34), 0 2px 0 rgba(0, 0, 0, .3);
 }
 
@@ -250,8 +246,8 @@
 }
 
 .monster-shell .darken-workspace__tab {
-  min-height: 38px;
-  min-width: 104px;
+
+
   padding: 0 16px;
   font-size: 11px;
   font-weight: 950;
@@ -268,12 +264,12 @@
 }
 
 .monster-shell .monster-current-frame {
-  min-height: 38px;
+
   display: inline-flex;
   align-items: center;
   border: 1px solid rgba(95, 7, 22, .58);
-  background: rgba(0, 0, 0, .22);
-  color: rgba(240, 215, 220, .72);
+
+
   padding: 0 12px;
   font-size: 11px;
   font-weight: 900;
@@ -397,38 +393,6 @@
   position: relative;
 }
 
-.monster-shell .tooltip-btn[data-tooltip]::before {
-  content: attr(data-tooltip);
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 10px);
-  z-index: 30;
-  width: max-content;
-  max-width: 260px;
-  border: 1px solid rgba(190, 64, 82, .46);
-  background: rgba(5, 5, 6, .94);
-  color: rgba(238, 238, 238, .82);
-  padding: 8px 9px;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .015em;
-  line-height: 1.35;
-  text-align: left;
-  text-transform: none;
-  white-space: normal;
-  box-shadow: 0 18px 42px rgba(0, 0, 0, .56), 0 0 24px rgba(122, 26, 40, .2), inset 0 1px 0 rgba(255, 238, 242, .05);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(4px);
-  transition: opacity .12s ease, transform .12s ease;
-}
-
-.monster-shell .tooltip-btn[data-tooltip]:hover::before,
-.monster-shell .tooltip-btn[data-tooltip]:focus-visible::before {
-  opacity: 1;
-  transform: translateY(0);
-}
-
 .monster-shell .tooltip-btn.is-disabled,
 .monster-shell .crucible-action-btn[aria-disabled="true"] {
   cursor: not-allowed;
@@ -476,8 +440,8 @@
 
 .monster-shell .monster-layout {
   display: grid;
-  grid-template-columns: minmax(540px, 1fr) minmax(320px, 390px);
-  gap: 14px;
+
+
   align-items: start;
   width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
@@ -712,11 +676,6 @@
     0 0 0 1px rgba(190, 64, 82, .16),
     0 0 28px rgba(122, 26, 40, .28),
     inset 3px 0 0 rgba(190, 64, 82, .78);
-}
-
-.monster-shell .game-type-card:hover,
-.monster-shell .game-role-card:hover {
-  transform: translateX(2px);
 }
 
 .monster-shell .game-type-card__icon {
@@ -978,7 +937,7 @@
 .monster-shell .navigator,
 .monster-shell .build-canvas {
   min-height: 0;
-  padding: 14px;
+
   border-color: color-mix(in srgb, rgba(95, 7, 22, .62) 74%, white 26%);
   background-color: rgba(33, 27, 29, .88);
   background-image:
@@ -1159,12 +1118,6 @@
   gap: 14px;
 }
 
-.monster-shell .monster-build-head {
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(95, 7, 22, .34);
-  padding-bottom: 14px;
-}
-
 .monster-shell .crucible-head-controls {
   display: grid;
   align-items: start;
@@ -1176,10 +1129,10 @@
 .monster-shell .monster-canvas-title {
   margin: 5px 0 4px;
   color: var(--text);
-  font-family: var(--display);
-  font-size: clamp(34px, 4vw, 48px);
+
+
   line-height: .96;
-  letter-spacing: -.04em;
+
 }
 
 .monster-shell .monster-canvas-subtitle {
@@ -1190,9 +1143,8 @@
 }
 
 .monster-shell .build-slots {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+
+
   align-items: start;
 }
 
@@ -1202,20 +1154,20 @@
   margin-bottom: 14px;
   border: 1px solid rgba(95, 7, 22, .54);
   background: rgba(0, 0, 0, .22);
-  padding: 13px;
+
   box-shadow: inset 0 1px 0 rgba(255, 238, 242, .04);
 }
 
 .monster-shell .guided-flow-next {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+
   align-items: center;
   gap: 12px;
   border: 1px solid rgba(190, 64, 82, .32);
   background:
     radial-gradient(circle at 0% 0%, rgba(190, 64, 82, .13), transparent 16rem),
     rgba(0, 0, 0, .18);
-  padding: 11px 12px;
+
   box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035);
 }
 
@@ -1236,8 +1188,8 @@
 }
 
 .monster-shell .guided-flow-next__copy strong {
-  color: #fff0f2;
-  font-size: 15px;
+
+
   font-weight: 950;
   line-height: 1.1;
   letter-spacing: -.025em;
@@ -1245,7 +1197,7 @@
 
 .monster-shell .guided-flow-next__copy p {
   margin: 0;
-  color: rgba(238, 238, 238, .52);
+
   font-size: 12px;
   line-height: 1.4;
 }
@@ -1253,7 +1205,7 @@
 .monster-shell .guided-flow-next button {
   min-height: 36px;
   border: 1px solid rgba(190, 64, 82, .6);
-  background: rgba(95, 7, 22, .28);
+
   color: #fff0f2;
   padding: 0 12px;
   font-size: 10px;
@@ -1303,9 +1255,8 @@
 
 .monster-shell .guided-slot-chip.is-next,
 .monster-shell .guided-slot-chip:hover {
-  border-color: rgba(190, 64, 82, .6);
-  background: rgba(95, 7, 22, .26);
-  color: #fff0f2;
+
+
   box-shadow: 0 0 18px rgba(122, 26, 40, .18);
 }
 
@@ -1373,14 +1324,10 @@
 .monster-shell .graft-inspector {
   display: grid;
   gap: 12px;
-  margin-top: 14px;
+
   border: 1px solid rgba(95, 7, 22, .52);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, .04), transparent 72%),
-    radial-gradient(circle at 0% 0%, rgba(122, 26, 40, .13), transparent 16rem),
-    rgba(0, 0, 0, .22);
-  padding: 13px;
-  box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035);
+
+
 }
 
 .monster-shell .graft-inspector__head,
@@ -1395,11 +1342,10 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 6px 0 0;
-  color: #fff0f2;
-  font-size: 18px;
+
+
   font-weight: 900;
-  line-height: 1.1;
+
   letter-spacing: -.025em;
 }
 
@@ -1413,7 +1359,7 @@
   display: grid;
   justify-items: end;
   gap: 4px;
-  min-width: 116px;
+
 }
 
 .monster-shell .graft-inspector__status span,
@@ -1428,7 +1374,7 @@
 
 .monster-shell .graft-inspector__status strong {
   border: 1px solid rgba(190, 64, 82, .42);
-  background: rgba(51, 3, 12, .24);
+
   color: #d0a2aa;
   padding: 3px 7px;
   font-size: 10px;
@@ -1445,10 +1391,10 @@
 
 .monster-shell .graft-inspector__item {
   display: grid;
-  gap: 12px;
+
   border: 1px solid rgba(95, 7, 22, .38);
   background: rgba(0, 0, 0, .16);
-  padding: 11px;
+
 }
 
 .monster-shell .graft-inspector__title-row {
@@ -1481,8 +1427,8 @@
 
 .monster-shell .graft-inspector__main h4 {
   margin: 0 0 5px;
-  color: #d0a2aa;
-  font-size: 15px;
+
+
   font-weight: 900;
 }
 
@@ -1490,9 +1436,8 @@
 .monster-shell .graft-inspector__rules p,
 .monster-shell .graft-inspector__empty p {
   margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.45;
+
+
 }
 
 .monster-shell .graft-inspector__chips {
@@ -1504,8 +1449,8 @@
 
 .monster-shell .graft-inspector__chips span {
   border: 1px solid rgba(95, 7, 22, .54);
-  background: rgba(51, 3, 12, .2);
-  color: #c8a2a8;
+
+
   padding: 3px 6px;
   font-size: 10px;
   font-weight: 850;
@@ -1584,8 +1529,8 @@
     radial-gradient(circle at 24px 22px, rgba(122, 26, 40, .08), transparent 130px),
     linear-gradient(135deg, rgba(51, 3, 12, .24), transparent 70%);
   background-blend-mode: screen, screen, normal;
-  padding: 17px 16px;
-  min-height: 138px;
+
+
   overflow: hidden;
   transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease, filter .12s ease;
 }
@@ -1646,19 +1591,17 @@
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  color: var(--accent-3);
-  font-size: 12.5px;
+
+
   font-weight: 900;
-  letter-spacing: .06em;
+
   line-height: 1.15;
   text-transform: uppercase;
 }
 
 .monster-shell .slot-icon {
-  width: 19px;
-  min-width: 19px;
-  height: 19px;
-  color: #8f2635;
+
+
   filter: drop-shadow(0 0 5px rgba(122, 26, 40, .24));
 }
 
@@ -1676,13 +1619,13 @@
 }
 
 .monster-shell .count {
-  min-width: 26px;
+
   border: 1px solid rgba(122, 26, 40, .18);
-  background: rgba(122, 26, 40, .12);
-  color: var(--faint);
+
+
   padding: 2px 7px;
-  font-size: 12px;
-  font-weight: 650;
+
+
   text-align: center;
 }
 
@@ -1710,37 +1653,34 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 10px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.4;
+
+
 }
 
 .monster-shell .slot-stack {
   display: grid;
-  gap: 10px;
-  margin-top: 12px;
+
+
 }
 
 .monster-shell .slot-item {
   position: relative;
   border: 0;
   background: transparent;
-  padding: 0 30px 0 0;
+
   box-shadow: none;
 }
 
 .monster-shell .slot-item-remove {
   position: absolute;
-  top: -2px;
+
   right: 0;
   display: grid;
   place-items: center;
-  width: 24px;
-  min-width: 24px;
-  min-height: 24px;
+
+
   border: 1px solid rgba(95, 7, 22, .52);
-  background: rgba(0, 0, 0, .18);
+
   color: #8f7278;
   opacity: 0;
   transition: opacity .12s ease, color .12s ease, border-color .12s ease, background .12s ease;
@@ -1764,11 +1704,8 @@
 
 .monster-shell .slot-item-text {
   margin: 0;
-  color: var(--muted);
-  padding-left: 1.25em;
-  font-size: 13px;
-  line-height: 1.45;
-  text-indent: -1.25em;
+
+
 }
 
 .monster-shell .match-row.always-visible,
@@ -1806,19 +1743,9 @@
   background-color: rgba(9, 6, 8, .56);
   background-image: linear-gradient(180deg, rgba(122, 26, 40, .045), transparent 48%), linear-gradient(90deg, rgba(51, 3, 12, .24), transparent 52%);
   background-blend-mode: overlay, normal;
-  padding: 12px;
+
   cursor: grab;
   transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease;
-}
-
-.monster-shell .component-card:hover,
-.monster-shell .component-card.in-build {
-  border-color: rgba(122, 26, 40, .95);
-  background:
-    linear-gradient(180deg, rgba(51, 3, 12, .36), transparent 160px),
-    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, .2), transparent 150px),
-    rgba(51, 3, 12, .17);
-  box-shadow: 0 0 0 1px rgba(122, 26, 40, .4), 0 0 46px rgba(51, 3, 12, .6), inset 0 0 44px rgba(122, 26, 40, .17), inset 0 1px 0 rgba(122, 26, 40, .08);
 }
 
 .monster-shell .component-card:hover {
@@ -1827,17 +1754,17 @@
 
 .monster-shell .component-toggle-btn {
   position: absolute;
-  top: 8px;
-  right: 8px;
+
+
   z-index: 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 5px;
-  min-width: 54px;
-  height: 26px;
+
+
   border: 1px solid rgba(122, 26, 40, .52);
-  background: rgba(0, 0, 0, .22);
+
   color: #c8a2a8;
   padding: 0 8px;
   font-size: 9px;
@@ -1857,10 +1784,10 @@
 
 .monster-shell .card-top {
   display: flex;
-  align-items: flex-start;
+
   justify-content: space-between;
-  gap: 10px;
-  padding-right: 64px;
+
+
 }
 
 .monster-shell .component-title-stack {
@@ -1978,9 +1905,8 @@
 .monster-shell .component-card h3 {
   margin: 0;
   font-family: var(--font);
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.22;
+
+
   letter-spacing: .01em;
 }
 
@@ -2079,7 +2005,7 @@
 
 .monster-shell .monster-source-tools {
   position: relative;
-  margin-bottom: 12px;
+
 }
 
 .monster-shell .monster-source-row {
@@ -2108,14 +2034,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 42px;
-  min-height: 38px;
+
+
   border: 1px solid var(--line);
-  background: rgba(51, 3, 12, .18);
-  color: var(--muted);
+
+
   padding: 0 9px;
-  font-size: 12px;
-  font-weight: 650;
+
+
   text-align: center;
 }
 
@@ -2159,28 +2085,21 @@
 }
 
 .monster-shell .navigator-filter-chip {
-  min-height: 26px;
-  text-align: left;
-}
 
-.monster-shell .navigator-filter-chip:hover,
-.monster-shell .navigator-filter-chip.active {
-  border-color: rgba(122, 26, 40, .82);
-  background: rgba(51, 3, 12, .46);
-  color: #f0d7dc;
+  text-align: left;
 }
 
 .monster-shell .monster-slot-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
+
+
   padding: 0 0 12px;
   border-bottom: 1px solid rgba(95, 7, 22, .34);
   margin-bottom: 12px;
 }
 
 .monster-shell .monster-component-list {
-  max-height: 740px;
+
   overflow: auto;
   padding-right: 3px;
 }
@@ -3261,7 +3180,7 @@
 .monster-shell .balance-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+
   align-items: stretch;
 }
 
@@ -3271,10 +3190,7 @@
   gap: 12px;
   min-height: 178px;
   border: 1px solid rgba(95, 7, 22, .48);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, .04), transparent 72%),
-    radial-gradient(circle at 0% 0%, rgba(122, 26, 40, .13), transparent 12rem),
-    rgba(0, 0, 0, .22);
+
   padding: 13px;
   box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035);
 }
@@ -3502,7 +3418,7 @@
 }
 
 .monster-shell .monster-layout {
-  grid-template-columns: minmax(0, 1fr);
+
   gap: 22px;
 }
 
@@ -3517,11 +3433,6 @@
   background-color: rgba(12, 10, 12, .74);
   background-image: linear-gradient(180deg, rgba(255, 255, 255, .025), transparent 160px);
   box-shadow: 0 18px 52px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .035);
-}
-
-.monster-shell .navigator,
-.monster-shell .build-canvas {
-  padding: 18px;
 }
 
 .monster-shell .monster-build-head {
@@ -4241,7 +4152,7 @@
   height: 32px;
   transform: translate(-50%, -50%);
   border: 1px solid rgba(255, 238, 242, .12);
-  background: rgba(5, 5, 6, .76);
+
   color: rgba(238, 238, 238, .55);
   padding: 0;
   box-shadow: 0 10px 24px rgba(0, 0, 0, .36);
@@ -4395,57 +4306,23 @@
   gap: 10px;
 }
 
-.monster-shell .build-slot {
-  min-height: 102px;
-  border-color: rgba(255, 238, 242, .075);
-  background: rgba(255, 255, 255, .022);
-  padding: 12px;
-}
-
-.monster-shell .build-slot:hover,
-.monster-shell .build-slot.active {
-  transform: none;
-  border-color: rgba(190, 64, 82, .48);
-  background: rgba(95, 7, 22, .13);
-  box-shadow: inset 0 0 0 1px rgba(190, 64, 82, .08);
-}
-
 .monster-shell .build-slot.needs-attention:not(.active)::before,
 .monster-shell .build-slot.needs-attention:not(.active)::after {
   display: none;
-}
-
-.monster-shell .slot-name {
-  color: rgba(238, 238, 238, .7);
-  font-size: 10px;
-  letter-spacing: .09em;
 }
 
 .monster-shell .slot-icon {
   width: 15px;
   min-width: 15px;
   height: 15px;
-  color: #8f7278;
-}
 
-.monster-shell .count {
-  border-color: rgba(255, 238, 242, .06);
-  background: transparent;
-  color: #8f7278;
-  font-size: 10px;
-}
-
-.monster-shell .slot-empty {
-  margin-top: 12px;
-  color: rgba(238, 238, 238, .38);
-  font-size: 12px;
 }
 
 .monster-shell .slot-item-text {
   padding-left: 0;
   text-indent: 0;
-  font-size: 12px;
-  line-height: 1.35;
+
+
 }
 
 .monster-shell .slot-item-text .slot-item-title {
@@ -4506,7 +4383,7 @@
 }
 
 .monster-shell .component-card {
-  border-width: 1px;
+
   border-color: rgba(255, 238, 242, .075);
   background: rgba(255, 255, 255, .022);
   padding: 12px;
@@ -4538,28 +4415,12 @@
   opacity: .45;
 }
 
-.monster-shell .component-card h3 {
-  font-size: 13px;
-  font-weight: 850;
-}
-
-.monster-shell .component-card .summary {
-  color: rgba(238, 238, 238, .56);
-  font-size: 11.5px;
-  line-height: 1.38;
-}
-
 .monster-shell .component-impact-line {
   margin: -2px 0 0;
   color: #8f7278;
   font-size: 10px;
   font-weight: 850;
   line-height: 1.3;
-}
-
-.monster-shell .component-toggle-btn {
-  border-color: rgba(255, 238, 242, .09);
-  background: rgba(0, 0, 0, .18);
 }
 
 .monster-shell .component-details {
@@ -4593,30 +4454,14 @@
   box-shadow: none;
 }
 
-.monster-shell .graft-inspector__head {
-  align-items: center;
-}
-
 .monster-shell .graft-inspector__head h3 {
   margin-top: 3px;
-  font-size: 15px;
-}
 
-.monster-shell .graft-inspector__status strong {
-  border-color: rgba(255, 238, 242, .075);
-  background: rgba(255, 255, 255, .025);
 }
 
 .monster-shell .graft-inspector__content,
 .monster-shell .graft-inspector__empty {
   margin-top: 12px;
-}
-
-.monster-shell .graft-inspector__item,
-.monster-shell .graft-inspector__rules article,
-.monster-shell .graft-inspector__empty {
-  border-color: rgba(255, 238, 242, .075);
-  background: rgba(0, 0, 0, .12);
 }
 
 .monster-shell .monster-component-list {
@@ -5295,19 +5140,14 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-content: start;
-  max-height: none;
+
   overflow: auto;
   padding: 2px 4px 2px 0;
-}
-
-.monster-shell .component-navigator-modal__list .component-card {
-  min-height: 132px;
 }
 
 .monster-shell .component-navigator-modal__list .empty {
   grid-column: 1 / -1;
 }
-
 
 
 /* Step 2.10 — Safe Monster Composer mode gates.
@@ -5655,25 +5495,9 @@
 }
 
 .monster-shell .component-navigator-modal__list .component-details {
-  display: block;
-  overflow: visible;
+
+
   min-width: 0;
-}
-
-.monster-shell .component-navigator-modal__list .component-details[open] .meta-list {
-  display: grid;
-  visibility: visible;
-  opacity: 1;
-  max-height: none;
-  overflow: visible;
-  transform: none;
-}
-
-.monster-shell .component-navigator-modal__list .component-details[open] .meta-row,
-.monster-shell .component-navigator-modal__list .component-details[open] .meta-values,
-.monster-shell .component-navigator-modal__list .component-details[open] .meta-value {
-  visibility: visible;
-  opacity: 1;
 }
 
 
@@ -5813,3 +5637,730 @@
   background: rgba(95, 7, 22, .24);
   color: #fff0f2;
 }
+
+/* Step 4.5 — Disable legacy Monster pseudo-tooltips.
+   Monster now relies on shared/tooltips instead of local ::before windows. */
+.monster-shell .tooltip-btn[data-tooltip]::before {
+  display: none !important;
+  content: none !important;
+}
+
+.monster-shell .tooltip-btn[data-tooltip]:hover::before,
+.monster-shell .tooltip-btn[data-tooltip]:focus-visible::before {
+  display: none !important;
+  opacity: 0 !important;
+  transform: none !important;
+}
+
+/* Step 4.7 — Monster panels/sidebar alignment pass 1.
+   Align repeated Monster surfaces with Darken Composer surfaces without JSX changes. */
+.monster-shell {
+  --monster-shared-panel-border: var(
+    --cruor-panel-border,
+    2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%)
+  );
+  --monster-shared-panel-top-border: color-mix(
+    in srgb,
+    var(--cruor-color-line-strong, var(--glass-line)) 78%,
+    white 22%
+  );
+  --monster-shared-panel-bg: rgba(33, 27, 29, 0.88);
+  --monster-shared-panel-image:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.064), transparent 10rem),
+    radial-gradient(circle at 18% 0%, rgba(255, 238, 242, 0.046), transparent 24rem),
+    linear-gradient(120deg, rgba(122, 26, 40, 0.055), transparent 46%);
+  --monster-shared-panel-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(255, 238, 242, 0.058),
+    0 0 58px rgba(255, 238, 242, 0.038),
+    inset 0 1px 0 var(--cruor-panel-highlight, var(--panel-white-line)),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.54);
+  --monster-shared-card-border: var(--cruor-color-line, var(--line));
+  --monster-shared-card-bg: rgba(9, 6, 8, 0.56);
+  --monster-shared-card-image:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.045), transparent 48%),
+    linear-gradient(90deg, rgba(51, 3, 12, 0.24), transparent 52%);
+}
+
+.monster-shell .panel,
+.monster-shell .navigator,
+.monster-shell .build-canvas,
+.monster-shell .table-view,
+.monster-shell .balance-workbench,
+.monster-shell .export-console,
+.monster-shell .game-frame-drawer,
+.monster-shell .run-mode-hero,
+.monster-shell .export-stat-preview {
+  border: var(--monster-shared-panel-border);
+  border-top-color: var(--monster-shared-panel-top-border);
+  background-color: var(--monster-shared-panel-bg);
+  background-image: var(--monster-shared-panel-image);
+  background-blend-mode: overlay, overlay, normal;
+  backdrop-filter: blur(20px) saturate(128%);
+  -webkit-backdrop-filter: blur(20px) saturate(128%);
+  box-shadow: var(--monster-shared-panel-shadow);
+}
+
+.monster-shell .navigator,
+.monster-shell .build-canvas {
+  padding: 16px;
+}
+
+.monster-shell .navigator-head,
+.monster-shell .monster-build-head,
+.monster-shell .export-console__head,
+.monster-shell .run-panel__head,
+.monster-shell .game-frame__hero,
+.monster-shell .balance-hero {
+  border-bottom-color: rgba(95, 7, 22, 0.42);
+}
+
+.monster-shell .navigator-head h2,
+.monster-shell .export-console__head h2,
+.monster-shell .balance-hero h2,
+.monster-shell .run-mode-hero h2,
+.monster-shell .monster-canvas-title {
+  color: #fff0f2;
+  text-shadow:
+    0 0 20px rgba(122, 26, 40, 0.3),
+    0 2px 0 rgba(0, 0, 0, 0.26);
+}
+
+.monster-shell .brief-choice-card,
+.monster-shell .build-slot,
+.monster-shell .component-card,
+.monster-shell .game-type-card,
+.monster-shell .game-role-card,
+.monster-shell .run-panel,
+.monster-shell .run-list article,
+.monster-shell .run-trigger-list article,
+.monster-shell .export-readiness-card,
+.monster-shell .export-run-sheet,
+.monster-shell .graft-inspector,
+.monster-shell .graft-inspector__item,
+.monster-shell .guided-flow-panel,
+.monster-shell .guided-flow-next {
+  border-color: var(--monster-shared-card-border);
+  background-color: var(--monster-shared-card-bg);
+  background-image: var(--monster-shared-card-image);
+  background-blend-mode: overlay, normal;
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
+}
+
+.monster-shell .brief-choice-card:hover,
+.monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
+.monster-shell .component-card:hover,
+.monster-shell .component-card.in-build,
+.monster-shell .component-card.expanded,
+.monster-shell .game-type-card:hover,
+.monster-shell .game-type-card.active,
+.monster-shell .game-role-card:hover,
+.monster-shell .game-role-card.active,
+.monster-shell .guided-slot-chip.is-next,
+.monster-shell .guided-slot-chip:hover {
+  border-color: rgba(122, 26, 40, 0.95);
+  background:
+    linear-gradient(180deg, rgba(51, 3, 12, 0.36), transparent 160px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, 0.2), transparent 150px),
+    rgba(51, 3, 12, 0.17);
+  box-shadow:
+    0 0 0 1px rgba(122, 26, 40, 0.4),
+    0 0 46px rgba(51, 3, 12, 0.6),
+    inset 0 0 44px rgba(122, 26, 40, 0.17),
+    inset 0 1px 0 rgba(122, 26, 40, 0.08);
+}
+
+.monster-shell .game-type-card:hover,
+.monster-shell .game-role-card:hover {
+  transform: scale(1.006);
+}
+
+.monster-shell .game-type-card:hover,
+.monster-shell .game-role-card:hover {
+  translate: 0;
+}
+
+.monster-shell .component-card {
+  border-width: 2px;
+}
+
+.monster-shell .build-slot {
+  border-width: 1px;
+}
+
+.monster-shell .navigator-filter-chip,
+.monster-shell .source-chip-btn,
+.monster-shell .meta-value,
+.monster-shell .match-chip,
+.monster-shell .game-category-chip,
+.monster-shell .game-threat-chip,
+.monster-shell .component-quick-meta span,
+.monster-shell .decision-badge,
+.monster-shell .compatibility-badge {
+  border-color: rgba(95, 7, 22, 0.56);
+  background: rgba(51, 3, 12, 0.2);
+  color: #c8a2a8;
+}
+
+.monster-shell .navigator-filter-chip:hover,
+.monster-shell .navigator-filter-chip.active,
+.monster-shell .source-chip-btn:hover,
+.monster-shell .game-category-chip:hover,
+.monster-shell .game-category-chip.active,
+.monster-shell .game-threat-chip:hover,
+.monster-shell .game-threat-chip.active {
+  border-color: rgba(122, 26, 40, 0.82);
+  background: rgba(51, 3, 12, 0.46);
+  color: #f0d7dc;
+}
+
+.monster-shell .monster-component-list,
+.monster-shell .monster-frame-drawer,
+.monster-shell .export-console,
+.monster-shell .table-overflow-wrapper,
+.monster-shell .export-textarea-shell textarea {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+/* Step 4.8 — Monster slots/cards alignment pass 2.
+   Tighten slot, card, flow, and inspector patterns after the panel/sidebar pass. */
+.monster-shell {
+  --monster-card-border-soft: rgba(255, 238, 242, 0.09);
+  --monster-card-border-active: rgba(190, 64, 82, 0.52);
+  --monster-card-bg-soft:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.12), transparent 13rem),
+    rgba(5, 5, 6, 0.62);
+  --monster-card-bg-active:
+    linear-gradient(180deg, rgba(95, 7, 22, 0.2), transparent 150px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, 0.16), transparent 140px),
+    rgba(12, 6, 8, 0.74);
+  --monster-card-shadow-soft:
+    0 16px 42px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+  --monster-card-shadow-active:
+    0 0 0 1px rgba(190, 64, 82, 0.1),
+    0 0 30px rgba(122, 26, 40, 0.22),
+    inset 0 1px 0 rgba(255, 238, 242, 0.055);
+}
+
+/* Build slots */
+.monster-shell .build-slots.monster-slots {
+  gap: 12px;
+  align-items: stretch;
+}
+
+.monster-shell .build-slot {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 112px;
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+  color: rgba(238, 238, 238, 0.66);
+  padding: 13px;
+}
+
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active {
+  transform: translateY(-1px);
+  border-color: var(--monster-card-border-active);
+  background: var(--monster-card-bg-active);
+  box-shadow: var(--monster-card-shadow-active);
+}
+
+.monster-shell .build-slot.is-guided:not(.active) {
+  border-color: rgba(190, 64, 82, 0.46);
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.08),
+    0 0 24px rgba(122, 26, 40, 0.2),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+}
+
+.monster-shell .build-slot.has-items {
+  min-height: 124px;
+}
+
+.monster-shell .slot-head {
+  align-items: center;
+  gap: 10px;
+}
+
+.monster-shell .slot-name {
+  color: rgba(238, 238, 238, 0.76);
+  font-size: 10.5px;
+  letter-spacing: 0.095em;
+}
+
+.monster-shell .build-slot.active .slot-name,
+.monster-shell .build-slot.active .slot-icon,
+.monster-shell .build-slot:hover .slot-name,
+.monster-shell .build-slot:hover .slot-icon {
+  color: #fff0f2;
+  text-shadow: 0 0 12px rgba(122, 26, 40, 0.42);
+}
+
+.monster-shell .slot-icon {
+  color: #8f7278;
+}
+
+.monster-shell .count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 22px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.monster-shell .slot-empty {
+  align-self: start;
+  margin-top: 0;
+  color: rgba(238, 238, 238, 0.44);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-stack {
+  gap: 8px;
+  margin-top: 0;
+}
+
+.monster-shell .slot-item {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 238, 242, 0.055);
+  padding: 8px 30px 0 0;
+}
+
+.monster-shell .slot-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.monster-shell .slot-item-text {
+  color: rgba(238, 238, 238, 0.58);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-item-title {
+  display: block;
+  margin-bottom: 2px;
+  color: #d0a2aa;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.18;
+}
+
+.monster-shell .slot-item-remove {
+  top: 5px;
+  width: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.monster-shell .slot-item:first-child .slot-item-remove {
+  top: -2px;
+}
+
+/* Component cards */
+.monster-shell .component-card {
+  gap: 8px;
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+  padding: 12px;
+}
+
+.monster-shell .component-card:hover,
+.monster-shell .component-card.in-build,
+.monster-shell .component-card.expanded {
+  transform: translateY(-1px);
+  border-color: var(--monster-card-border-active);
+  background: var(--monster-card-bg-active);
+  box-shadow: var(--monster-card-shadow-active);
+}
+
+.monster-shell .component-card.slot-full,
+.monster-shell .component-card:has(.component-toggle-btn:disabled) {
+  cursor: not-allowed;
+  opacity: 0.56;
+  filter: saturate(0.72);
+}
+
+.monster-shell .component-card.slot-full:hover,
+.monster-shell .component-card:has(.component-toggle-btn:disabled):hover {
+  transform: none;
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+}
+
+.monster-shell .card-top {
+  align-items: start;
+  gap: 9px;
+  padding-right: 64px;
+}
+
+.monster-shell .component-card h3 {
+  color: rgba(238, 238, 238, 0.9);
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+.monster-shell .component-card.in-build h3,
+.monster-shell .component-card:hover h3 {
+  color: #fff0f2;
+}
+
+.monster-shell .component-card .summary {
+  color: rgba(238, 238, 238, 0.58);
+  font-size: 11.5px;
+  line-height: 1.38;
+}
+
+.monster-shell .component-toggle-btn {
+  top: 9px;
+  right: 9px;
+  min-width: 52px;
+  height: 25px;
+  border-color: rgba(255, 238, 242, 0.09);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.monster-shell .component-toggle-btn:hover:not(:disabled),
+.monster-shell .component-card.in-build .component-toggle-btn {
+  border-color: rgba(190, 64, 82, 0.58);
+  background: rgba(95, 7, 22, 0.26);
+  color: #fff0f2;
+  box-shadow: 0 0 18px rgba(122, 26, 40, 0.18);
+}
+
+.monster-shell .component-decision-grid > span,
+.monster-shell .component-quick-meta span,
+.monster-shell .decision-badge,
+.monster-shell .compatibility-badge,
+.monster-shell .meta-value,
+.monster-shell .match-chip {
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(255, 255, 255, 0.024);
+  color: rgba(238, 238, 238, 0.62);
+}
+
+/* Guided flow */
+.monster-shell .guided-flow-panel,
+.monster-shell .guided-flow-panel.is-wizard,
+.monster-shell .guided-flow-next {
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+}
+
+.monster-shell .guided-flow-panel {
+  padding: 13px;
+}
+
+.monster-shell .guided-flow-next {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 12px;
+}
+
+.monster-shell .guided-flow-next__copy strong {
+  color: #fff0f2;
+  font-size: 14px;
+}
+
+.monster-shell .guided-flow-next__copy p {
+  color: rgba(238, 238, 238, 0.54);
+}
+
+.monster-shell .guided-flow-next button {
+  border-color: rgba(190, 64, 82, 0.54);
+  background: rgba(95, 7, 22, 0.22);
+}
+
+.monster-shell .guided-slot-chip,
+.monster-shell .guided-readiness-badge {
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(255, 255, 255, 0.024);
+  color: rgba(238, 238, 238, 0.52);
+}
+
+.monster-shell .guided-slot-chip.is-next,
+.monster-shell .guided-slot-chip:hover {
+  border-color: rgba(190, 64, 82, 0.52);
+  background: rgba(95, 7, 22, 0.22);
+  color: #fff0f2;
+}
+
+/* Graft inspector */
+.monster-shell .graft-inspector {
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+  padding: 12px;
+}
+
+.monster-shell .graft-inspector[open],
+.monster-shell .graft-inspector.has-feature {
+  border-color: rgba(190, 64, 82, 0.32);
+}
+
+.monster-shell .graft-inspector__head {
+  align-items: center;
+  gap: 12px;
+}
+
+.monster-shell .graft-inspector__head h3 {
+  margin: 0;
+  color: #fff0f2;
+  font-size: 15px;
+  line-height: 1.12;
+}
+
+.monster-shell .graft-inspector__status {
+  min-width: auto;
+}
+
+.monster-shell .graft-inspector__status strong {
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(255, 255, 255, 0.024);
+}
+
+.monster-shell .graft-inspector__content {
+  margin-top: 12px;
+}
+
+.monster-shell .graft-inspector__item,
+.monster-shell .graft-inspector__rules article,
+.monster-shell .graft-inspector__empty {
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.monster-shell .graft-inspector__item {
+  gap: 10px;
+  padding: 10px;
+}
+
+.monster-shell .graft-inspector__main h4 {
+  color: #d0a2aa;
+  font-size: 14px;
+  line-height: 1.14;
+}
+
+.monster-shell .graft-inspector__main p,
+.monster-shell .graft-inspector__rules p,
+.monster-shell .graft-inspector__empty p {
+  color: rgba(238, 238, 238, 0.58);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.monster-shell .graft-inspector__chips span {
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(255, 255, 255, 0.024);
+  color: #c8a2a8;
+}
+
+/* Anatomy / modal cards imported from subcomponents */
+.monster-shell .monster-silhouette-slot-card,
+.monster-shell .monster-start-card,
+.monster-shell .template-choice-card__button,
+.monster-shell .component-navigator-modal__panel,
+.monster-shell .template-picker-modal__panel {
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+}
+
+.monster-shell .monster-silhouette-slot-card:hover,
+.monster-shell .monster-silhouette-slot-card.is-active,
+.monster-shell .monster-silhouette-slot-card.is-guided,
+.monster-shell .monster-start-card:hover,
+.monster-shell .template-choice-card__button:hover,
+.monster-shell .template-choice-card.active .template-choice-card__button {
+  border-color: var(--monster-card-border-active);
+  background: var(--monster-card-bg-active);
+  box-shadow: var(--monster-card-shadow-active);
+}
+
+.monster-shell .monster-silhouette-node {
+  border-color: rgba(255, 238, 242, 0.09);
+  background: rgba(5, 5, 6, 0.74);
+}
+
+.monster-shell .monster-silhouette-node:hover,
+.monster-shell .monster-silhouette-node.is-active,
+.monster-shell .monster-silhouette-node.is-guided {
+  border-color: rgba(190, 64, 82, 0.56);
+  background: rgba(95, 7, 22, 0.34);
+}
+
+/* Responsive safety for dense slot/card layouts */
+@media (max-width: 980px) {
+  .monster-shell .build-slots.monster-slots {
+    grid-template-columns: 1fr;
+  }
+
+  .monster-shell .guided-flow-next {
+    grid-template-columns: 1fr;
+  }
+
+  .monster-shell .guided-flow-next button {
+    justify-self: start;
+  }
+}
+
+/* Step 4.9 — Shared UI Kit consolidation adoption.
+   Monster overrides now point to shared UI Kit tokens instead of local one-off values. */
+.monster-shell {
+  --monster-shared-panel-border: var(--cruor-ui-panel-border);
+  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);
+  --monster-shared-panel-bg: var(--cruor-ui-panel-bg);
+  --monster-shared-panel-image: var(--cruor-ui-panel-image);
+  --monster-shared-panel-shadow: var(--cruor-ui-panel-shadow);
+
+  --monster-shared-card-border: var(--cruor-ui-card-border);
+  --monster-shared-card-bg: var(--cruor-ui-card-bg);
+  --monster-card-border-soft: var(--cruor-ui-card-border);
+  --monster-card-border-active: var(--cruor-ui-card-border-active);
+  --monster-card-bg-soft: var(--cruor-ui-card-bg);
+  --monster-card-bg-active: var(--cruor-ui-card-bg-active);
+  --monster-card-shadow-soft: var(--cruor-ui-card-shadow);
+  --monster-card-shadow-active: var(--cruor-ui-card-shadow-active);
+}
+
+.monster-shell .panel,
+.monster-shell .navigator,
+.monster-shell .build-canvas,
+.monster-shell .table-view,
+.monster-shell .balance-workbench,
+.monster-shell .export-console,
+.monster-shell .game-frame-drawer,
+.monster-shell .run-mode-hero,
+.monster-shell .export-stat-preview,
+.monster-shell .template-picker-modal__panel,
+.monster-shell .component-navigator-modal__panel {
+  border: var(--cruor-ui-panel-border);
+  border-top-color: var(--cruor-ui-panel-border-top);
+  background-color: var(--cruor-ui-panel-bg);
+  background-image: var(--cruor-ui-panel-image);
+  background-blend-mode: overlay, overlay, normal;
+  box-shadow: var(--cruor-ui-panel-shadow);
+}
+
+.monster-shell .brief-choice-card,
+.monster-shell .build-slot,
+.monster-shell .component-card,
+.monster-shell .game-type-card,
+.monster-shell .game-role-card,
+.monster-shell .run-panel,
+.monster-shell .run-list article,
+.monster-shell .run-trigger-list article,
+.monster-shell .export-readiness-card,
+.monster-shell .export-run-sheet,
+.monster-shell .graft-inspector,
+.monster-shell .graft-inspector__item,
+.monster-shell .guided-flow-panel,
+.monster-shell .guided-flow-next,
+.monster-shell .monster-silhouette-slot-card,
+.monster-shell .monster-start-card,
+.monster-shell .template-choice-card__button,
+.monster-shell .balance-card {
+  border-color: var(--cruor-ui-card-border);
+  background: var(--cruor-ui-card-bg);
+  box-shadow: var(--cruor-ui-card-shadow);
+}
+
+.monster-shell .brief-choice-card:hover,
+.monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
+.monster-shell .component-card:hover,
+.monster-shell .component-card.in-build,
+.monster-shell .component-card.expanded,
+.monster-shell .game-type-card:hover,
+.monster-shell .game-type-card.active,
+.monster-shell .game-role-card:hover,
+.monster-shell .game-role-card.active,
+.monster-shell .guided-slot-chip.is-next,
+.monster-shell .guided-slot-chip:hover,
+.monster-shell .monster-silhouette-slot-card:hover,
+.monster-shell .monster-silhouette-slot-card.is-active,
+.monster-shell .monster-silhouette-slot-card.is-guided,
+.monster-shell .monster-start-card:hover,
+.monster-shell .template-choice-card__button:hover,
+.monster-shell .template-choice-card.active .template-choice-card__button {
+  border-color: var(--cruor-ui-card-border-active);
+  background: var(--cruor-ui-card-bg-active);
+  box-shadow: var(--cruor-ui-card-shadow-active);
+}
+
+.monster-shell .mode-btn,
+.monster-shell .icon-btn,
+.monster-shell .darken-workspace__tab,
+.monster-shell .crucible-action-btn,
+.monster-shell .component-toggle-btn,
+.monster-shell .navigator-filter-btn,
+.monster-shell .source-chip-btn,
+.monster-shell .tag-clear-btn,
+.monster-shell .run-mode-actions button,
+.monster-shell .export-review-btn {
+  border-color: var(--cruor-ui-control-border);
+  background: var(--cruor-ui-control-bg);
+  color: var(--cruor-ui-control-text);
+}
+
+.monster-shell .mode-btn:hover,
+.monster-shell .mode-btn.active,
+.monster-shell .icon-btn:hover,
+.monster-shell .icon-btn.active,
+.monster-shell .darken-workspace__tab:hover,
+.monster-shell .darken-workspace__tab.is-active,
+.monster-shell .crucible-action-btn:hover,
+.monster-shell .component-toggle-btn:hover:not(:disabled),
+.monster-shell .component-card.in-build .component-toggle-btn,
+.monster-shell .navigator-filter-btn:hover,
+.monster-shell .source-chip-btn:hover,
+.monster-shell .tag-clear-btn:hover,
+.monster-shell .run-mode-actions button:hover,
+.monster-shell .export-review-btn:hover {
+  border-color: var(--cruor-ui-control-border-active);
+  background: var(--cruor-ui-control-bg-active);
+  color: var(--cruor-ui-control-text-active);
+}
+
+.monster-shell .navigator-filter-chip,
+.monster-shell .source-chip-btn,
+.monster-shell .meta-value,
+.monster-shell .match-chip,
+.monster-shell .game-category-chip,
+.monster-shell .game-threat-chip,
+.monster-shell .component-quick-meta span,
+.monster-shell .decision-badge,
+.monster-shell .compatibility-badge,
+.monster-shell .guided-slot-chip,
+.monster-shell .guided-readiness-badge,
+.monster-shell .graft-inspector__chips span {
+  border-color: var(--cruor-ui-chip-border);
+  background: var(--cruor-ui-chip-bg);
+  color: var(--cruor-ui-chip-text);
+}
+
+/* Step 4.11 — CSS duplicate cleanup.
+   No visual changes: removed superseded duplicate declarations and dead legacy pseudo-tooltip blocks. */

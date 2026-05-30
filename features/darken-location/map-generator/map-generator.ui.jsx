@@ -1589,11 +1589,11 @@ export function MapViewport({
           />
         </ContextMenuPortal>
       </div>
-      <div className="map-canvas-bottombar">
+      <div className="map-canvas-bottombar cruor-ui-panel-surface">
         <div className="zoom-toolbar" aria-label="Map zoom controls">
           <button
             type="button"
-            className="map-tool-button zoom-button"
+            className="map-tool-button zoom-button cruor-ui-control-surface cruor-button cruor-button--sm"
             {...getGenericTooltipAttrs(
               "Zoom In",
               "Increase the map zoom.",
@@ -1606,7 +1606,7 @@ export function MapViewport({
           </button>
           <button
             type="button"
-            className="map-tool-button zoom-button"
+            className="map-tool-button zoom-button cruor-ui-control-surface cruor-button cruor-button--sm"
             {...getGenericTooltipAttrs(
               "Zoom Out",
               "Decrease the map zoom.",
@@ -1619,7 +1619,7 @@ export function MapViewport({
           </button>
           <button
             type="button"
-            className="map-tool-button zoom-button"
+            className="map-tool-button zoom-button cruor-ui-control-surface cruor-button cruor-button--sm"
             {...getGenericTooltipAttrs(
               "Fit Map",
               "Fit the whole map in view.",
@@ -1630,7 +1630,7 @@ export function MapViewport({
           >
             <i className="fa-solid fa-expand" aria-hidden="true" />
           </button>
-          <span className="zoom-scale">{Math.round(view.scale * 100)}%</span>
+          <span className="zoom-scale cruor-ui-chip-surface cruor-micro-chip">{Math.round(view.scale * 100)}%</span>
         </div>
         <div className="zoom-hint">
           Wheel zooms. Drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.
@@ -2679,12 +2679,12 @@ function MapActionContextMenu({
 
 function RoomKey({ generatedMap }) {
   return (
-    <div className="room-key">
+    <div className="room-key cruor-scroll-surface">
       {[...generatedMap.regions]
         .sort((a, b) => a.number - b.number)
         .map((region) => (
-          <div key={region.id} className="room-key__item">
-            <span className="room-key__number">{region.number}</span>
+          <div key={region.id} className="room-key__item cruor-ui-card-surface">
+            <span className="room-key__number cruor-ui-chip-surface">{region.number}</span>
             <div>
               <div className="room-key__name">{region.name}</div>
               <div className="room-key__meta">
@@ -2842,7 +2842,7 @@ function MapToolButton({
   return (
     <button
       type="button"
-      className={active ? "map-tool-button is-active" : "map-tool-button"}
+      className={active ? "map-tool-button cruor-ui-control-surface cruor-button cruor-button--icon is-active" : "map-tool-button cruor-ui-control-surface cruor-button cruor-button--icon"}
       data-ui-mode-advanced-only={visibility === "advanced" ? "" : undefined}
       data-ui-mode-debug-only={visibility === "debug" ? "" : undefined}
       data-map-advanced-only={visibility === "advanced" ? "" : undefined}
@@ -2862,23 +2862,23 @@ function TestReport({ testSuite }) {
   return (
     <div
       className={
-        testSuite.passed ? "test-report is-passing" : "test-report is-failing"
+        testSuite.passed ? "test-report cruor-ui-card-surface is-passing" : "test-report cruor-ui-card-surface is-failing"
       }
       data-ui-mode-debug-only=""
       data-map-debug-only=""
     >
-      <div className="test-report__summary">
+      <div className="test-report__summary cruor-ui-chip-surface">
         {testSuite.tests.filter((test) => test.passed).length}/
         {testSuite.tests.length} checks passing
       </div>
-      <div className="test-report__list">
+      <div className="test-report__list cruor-scroll-surface">
         {testSuite.tests.map((test) => (
           <div
             key={test.id}
             className={
               test.passed
-                ? "test-report__check is-passing"
-                : "test-report__check is-failing"
+                ? "test-report__check cruor-ui-card-surface is-passing"
+                : "test-report__check cruor-ui-card-surface is-failing"
             }
           >
             <span>{test.label}</span>
@@ -2912,7 +2912,7 @@ function MapTestsModal({ open, testSuite, onClose }) {
       onPointerDown={onClose}
     >
       <section
-        className="map-tests-modal__dialog"
+        className="map-tests-modal__dialog cruor-ui-panel-surface cruor-panel--modal"
         role="dialog"
         aria-modal="true"
         aria-labelledby="map-tests-modal-title"
@@ -2925,7 +2925,7 @@ function MapTestsModal({ open, testSuite, onClose }) {
           </div>
           <button
             type="button"
-            className="map-tool-button"
+            className="map-tool-button cruor-ui-control-surface cruor-button cruor-button--icon"
             {...getGenericTooltipAttrs(
               "Close Tests",
               "Close the structural test suite.",
@@ -3783,7 +3783,7 @@ export default function CruorMapGeneratorMvp({
         }
       >
         <aside
-          className="map-tool-rail map-tool-rail--left"
+          className="map-tool-rail map-tool-rail--left cruor-ui-panel-surface cruor-side-panel"
           aria-label="Map actions"
         >
           <MapToolButton
@@ -3901,7 +3901,7 @@ export default function CruorMapGeneratorMvp({
         </aside>
 
         <main className="map-canvas-area">
-          <div className="map-canvas-topbar">
+          <div className="map-canvas-topbar cruor-ui-panel-surface">
             <div>
               <p className="map-panel-eyebrow">Map Workspace</p>
               <div className="map-toolbar__title">
@@ -3922,7 +3922,7 @@ export default function CruorMapGeneratorMvp({
               <span>{generatedMap.corridors.length} connections</span>
               <button
                 type="button"
-                className="map-tool-button map-inspector-toggle"
+                className="map-tool-button map-inspector-toggle cruor-ui-control-surface cruor-button cruor-button--icon"
                 {...getGenericTooltipAttrs(
                   inspectorCollapsed ? "Open Inspector" : "Collapse Inspector",
                 )}
@@ -4006,13 +4006,13 @@ export default function CruorMapGeneratorMvp({
         </main>
 
         <aside
-          className="map-inspector-panel"
+          className="map-inspector-panel cruor-ui-panel-surface cruor-side-panel"
           aria-label="Map inspector"
           aria-hidden={inspectorCollapsed}
         >
-          <div className="map-inspector-panel__scroll">
+          <div className="map-inspector-panel__scroll cruor-scroll-surface">
             <section
-              className="map-inspector-section"
+              className="map-inspector-section cruor-ui-card-surface"
               data-ui-mode-advanced-only=""
               data-map-advanced-only=""
             >
@@ -4023,7 +4023,7 @@ export default function CruorMapGeneratorMvp({
                 </label>
                 <input
                   id="seed"
-                  className="control-input"
+                  className="control-input cruor-input"
                   value={seed}
                   onChange={(event) => {
                     setSeed(event.target.value);
@@ -4038,7 +4038,7 @@ export default function CruorMapGeneratorMvp({
                 </label>
                 <input
                   id="room-count"
-                  className="control-input"
+                  className="control-input cruor-input"
                   type="number"
                   min="1"
                   max="16"
@@ -4058,7 +4058,7 @@ export default function CruorMapGeneratorMvp({
                 </label>
                 <select
                   id="context"
-                  className="control-select"
+                  className="control-select cruor-select"
                   value={context}
                   onChange={(event) => {
                     setContext(event.target.value);
@@ -4080,7 +4080,7 @@ export default function CruorMapGeneratorMvp({
                 </label>
                 <select
                   id="grid-style"
-                  className="control-select"
+                  className="control-select cruor-select"
                   value={gridStyle}
                   onChange={(event) =>
                     setGridStyle(normalizeGridStyle(event.target.value))
@@ -4098,7 +4098,7 @@ export default function CruorMapGeneratorMvp({
                 </label>
                 <select
                   id="level-view"
-                  className="control-select"
+                  className="control-select cruor-select"
                   value={String(normalizeLevelView(levelView, availableLevels))}
                   onChange={(event) =>
                     setLevelView(
@@ -4115,7 +4115,7 @@ export default function CruorMapGeneratorMvp({
                 </select>
                 <button
                   type="button"
-                  className="mvp-button"
+                  className="mvp-button cruor-ui-control-surface cruor-button"
                   onClick={() => setFadeOtherLevels((value) => !value)}
                 >
                   {fadeOtherLevels ? "Fade Other Levels" : "Solo Active Level"}
@@ -4125,7 +4125,7 @@ export default function CruorMapGeneratorMvp({
 
             {initialRequest?.source === "darken-location" && (
               <section
-                className="map-inspector-section imported-map-request"
+                className="map-inspector-section imported-map-request cruor-ui-card-surface"
                 aria-label="Imported Darken a Location regions"
               >
                 <strong>
@@ -4146,49 +4146,49 @@ export default function CruorMapGeneratorMvp({
               </section>
             )}
 
-            <section className="map-inspector-section">
+            <section className="map-inspector-section cruor-ui-card-surface">
               <p className="map-panel-eyebrow">Stats</p>
               <div className="stats">
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">
                     {generatedMap.regions.length}
                   </div>
                   <div className="stat__label">Regions</div>
                 </div>
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">
                     {generatedMap.corridors.length}
                   </div>
                   <div className="stat__label">Connections</div>
                 </div>
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">
                     {generatedMap.dungeonMask.floorCells.length}
                   </div>
                   <div className="stat__label">Floor Cells</div>
                 </div>
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">
                     {generatedMap.dungeonMask.doorSegments.length}
                   </div>
                   <div className="stat__label">Doors</div>
                 </div>
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">
                     {generatedMap.dungeonMask.mapAccesses?.length || 0}
                   </div>
                   <div className="stat__label">Map Accesses</div>
                 </div>
-                <div className="stat">
+                <div className="stat cruor-ui-chip-surface cruor-stat">
                   <div className="stat__value">{availableLevels.length}</div>
                   <div className="stat__label">Levels</div>
                 </div>
               </div>
             </section>
 
-            {stateStatus && <div className="state-status">{stateStatus}</div>}
+            {stateStatus && <div className="state-status cruor-ui-card-surface">{stateStatus}</div>}
 
-            <section className="map-inspector-section">
+            <section className="map-inspector-section cruor-ui-card-surface">
               <p className="map-panel-eyebrow">Room Key</p>
               <RoomKey generatedMap={generatedMap} />
             </section>

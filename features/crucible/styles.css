@@ -3313,3 +3313,105 @@ h1 {
     padding-right: 12px;
   }
 }
+
+/* Step 4.9 — Shared UI Kit consolidation adoption.
+   Darken/Crucible keeps legacy selectors, but repeated surfaces now consume shared UI tokens. */
+.build-canvas,
+.navigator,
+.context-menu,
+.saved-panel,
+.saved-library-panel,
+.modal-panel,
+.source-browser-modal__panel,
+.help-panel,
+.brief-summary {
+  border: var(--cruor-ui-panel-border);
+  border-top-color: var(--cruor-ui-panel-border-top);
+  background-color: var(--cruor-ui-panel-bg);
+  background-image: var(--cruor-ui-panel-image);
+  background-blend-mode: overlay, overlay, normal;
+  box-shadow: var(--cruor-ui-panel-shadow);
+}
+
+.build-slot,
+.sensory-subslot,
+.region-card,
+.compiled-region,
+.saved-item,
+.source-card,
+.component-card,
+.component-list-item,
+.region-empty,
+.empty {
+  border-color: var(--cruor-ui-card-border);
+  background: var(--cruor-ui-card-bg);
+  box-shadow: var(--cruor-ui-card-shadow);
+}
+
+.build-slot:hover,
+.build-slot.active,
+.sensory-subslot:hover,
+.sensory-subslot.active,
+.region-card:hover,
+.saved-item:hover,
+.source-card:hover,
+.component-card:hover,
+.component-card.in-build,
+.component-list-item:hover {
+  border-color: var(--cruor-ui-card-border-active);
+  background: var(--cruor-ui-card-bg-active);
+  box-shadow: var(--cruor-ui-card-shadow-active);
+}
+
+.icon-btn,
+.mode-btn,
+.btn,
+.tab-btn,
+.crucible-action-btn,
+.navigator-filter-btn,
+.source-chip-btn,
+.tag-clear-btn,
+.read-mode-switch,
+.filter-combobox__btn,
+.intrusion-segment {
+  border-color: var(--cruor-ui-control-border);
+  background: var(--cruor-ui-control-bg);
+  color: var(--cruor-ui-control-text);
+}
+
+.icon-btn:hover,
+.icon-btn.active,
+.icon-btn.primary,
+.mode-btn:hover,
+.mode-btn.active,
+.btn:hover,
+.tab-btn:hover,
+.tab-btn.active,
+.crucible-action-btn:hover,
+.navigator-filter-btn:hover,
+.source-chip-btn:hover,
+.tag-clear-btn:hover,
+.filter-combobox__btn.active,
+.intrusion-segment:hover,
+.intrusion-segment.active {
+  border-color: var(--cruor-ui-control-border-active);
+  background: var(--cruor-ui-control-bg-active);
+  color: var(--cruor-ui-control-text-active);
+}
+
+.match-chip,
+.meta-value,
+.navigator-filter-chip,
+.count,
+.slot-item-kind,
+.region-card__meta,
+.source-pill,
+.source-tag,
+.compatibility-badge {
+  border-color: var(--cruor-ui-chip-border);
+  background: var(--cruor-ui-chip-bg);
+  color: var(--cruor-ui-chip-text);
+}
+
+/* Step 4.11 — CSS duplicate cleanup.
+   No visual changes: Crucible/Darken cascade kept intact after Step 4.9 token adoption. */

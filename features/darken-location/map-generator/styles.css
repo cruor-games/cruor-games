@@ -1181,3 +1181,111 @@
     position: static;
   }
 }
+
+/* Step 4.6 — Map inspector scrollbar normalization.
+   These containers intentionally inherit the shared internal scrollbar language from theme.css. */
+.cruor-map-workspace .map-inspector-panel__scroll,
+.cruor-map-workspace .map-inspector-section,
+.cruor-map-workspace .map-tests-modal__dialog,
+.cruor-map-workspace .test-report__list,
+.cruor-map-workspace .room-key,
+.cruor-map-mvp .test-report__list,
+.cruor-map-mvp .room-key {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+/* Step 4.9 — Shared UI Kit consolidation adoption.
+   Map Generator surfaces now consume shared UI Kit tokens while preserving existing layout. */
+.cruor-map-mvp .panel,
+.cruor-map-mvp .control-panel,
+.cruor-map-mvp .map-panel,
+.cruor-map-workspace .map-tool-rail,
+.cruor-map-workspace .map-canvas-topbar,
+.cruor-map-workspace .map-canvas-bottombar,
+.cruor-map-workspace .map-inspector-panel,
+.cruor-map-workspace .map-tests-modal__dialog,
+.room-context-menu,
+.room-context-submenu {
+  border: var(--cruor-ui-panel-border);
+  border-top-color: var(--cruor-ui-panel-border-top);
+  background-color: var(--cruor-ui-panel-bg);
+  background-image: var(--cruor-ui-panel-image);
+  background-blend-mode: overlay, overlay, normal;
+  box-shadow: var(--cruor-ui-panel-shadow);
+}
+
+.cruor-map-mvp .stat,
+.cruor-map-mvp .state-status,
+.cruor-map-mvp .test-report,
+.cruor-map-mvp .test-report__check,
+.cruor-map-mvp .imported-map-request,
+.cruor-map-mvp .room-key__item,
+.cruor-map-mvp .map-frame,
+.cruor-map-workspace .map-inspector-section,
+.cruor-map-workspace .map-inspector-card,
+.cruor-map-workspace .map-property-card,
+.cruor-map-workspace .map-layer-card,
+.cruor-map-workspace .map-empty-state {
+  border-color: var(--cruor-ui-card-border);
+  background: var(--cruor-ui-card-bg);
+  box-shadow: var(--cruor-ui-card-shadow);
+}
+
+.cruor-map-mvp .test-report:hover,
+.cruor-map-mvp .room-key__item:hover,
+.cruor-map-workspace .map-inspector-card:hover,
+.cruor-map-workspace .map-property-card:hover,
+.cruor-map-workspace .map-layer-card:hover {
+  border-color: var(--cruor-ui-card-border-active);
+  background: var(--cruor-ui-card-bg-active);
+  box-shadow: var(--cruor-ui-card-shadow-active);
+}
+
+.cruor-map-mvp .mvp-button,
+.cruor-map-mvp .zoom-scale,
+.cruor-map-mvp .control-input,
+.cruor-map-mvp .control-select,
+.room-context-menu button,
+.context-menu-toolbar button,
+.cruor-map-workspace .map-tool-btn,
+.cruor-map-workspace .map-icon-button,
+.cruor-map-workspace .map-inspector-button,
+.cruor-map-workspace .map-canvas-button {
+  border-color: var(--cruor-ui-control-border) !important;
+  background: var(--cruor-ui-control-bg) !important;
+  color: var(--cruor-ui-control-text) !important;
+}
+
+.cruor-map-mvp .mvp-button:hover,
+.cruor-map-mvp .mvp-button:focus-visible,
+.cruor-map-mvp .control-input:focus,
+.cruor-map-mvp .control-select:focus,
+.room-context-menu button:hover,
+.room-context-menu button:focus-visible,
+.room-context-menu button.is-active,
+.context-menu-toolbar button.is-active,
+.cruor-map-workspace .map-tool-btn:hover,
+.cruor-map-workspace .map-tool-btn.is-active,
+.cruor-map-workspace .map-icon-button:hover,
+.cruor-map-workspace .map-icon-button.is-active,
+.cruor-map-workspace .map-inspector-button:hover,
+.cruor-map-workspace .map-canvas-button:hover {
+  border-color: var(--cruor-ui-control-border-active) !important;
+  background: var(--cruor-ui-control-bg-active) !important;
+  color: var(--cruor-ui-control-text-active) !important;
+}
+
+.cruor-map-mvp .room-key__number,
+.cruor-map-workspace .map-chip,
+.cruor-map-workspace .map-pill,
+.cruor-map-workspace .map-inspector-meta,
+.cruor-map-workspace .map-layer-pill,
+.cruor-map-workspace .map-status-chip {
+  border-color: var(--cruor-ui-chip-border);
+  background: var(--cruor-ui-chip-bg);
+  color: var(--cruor-ui-chip-text);
+}
+
+/* Step 4.11 — CSS duplicate cleanup.
+   No visual changes: Map cascade kept intact after Step 4.6 and Step 4.9 adoption. */

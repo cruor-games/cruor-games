@@ -2265,6 +2265,8 @@ export default function CruorMonsterComposerMvp() {
                       type="button"
                       aria-label="Open Component Navigator"
                       aria-disabled={!composerStarted}
+                      data-ui-mode-advanced-only=""
+                      data-monster-advanced-only=""
                       data-tooltip={
                         composerStarted
                           ? "Browse compatible components independently from a specific anatomy slot."
@@ -2590,6 +2592,8 @@ function GraftInspector({
   return (
     <details
       className={`graft-inspector ${installed ? "has-feature" : "is-empty"}`}
+      data-ui-mode-advanced-only=""
+      data-monster-advanced-only=""
       aria-label="Selected graft inspector"
     >
       <summary className="graft-inspector__head">

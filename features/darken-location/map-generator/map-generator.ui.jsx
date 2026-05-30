@@ -2836,12 +2836,17 @@ function MapToolButton({
   kbd = "",
   active = false,
   disabled = false,
+  visibility = "",
   onClick,
 }) {
   return (
     <button
       type="button"
       className={active ? "map-tool-button is-active" : "map-tool-button"}
+      data-ui-mode-advanced-only={visibility === "advanced" ? "" : undefined}
+      data-ui-mode-debug-only={visibility === "debug" ? "" : undefined}
+      data-map-advanced-only={visibility === "advanced" ? "" : undefined}
+      data-map-debug-only={visibility === "debug" ? "" : undefined}
       {...getGenericTooltipAttrs(label, description, kbd)}
       aria-label={label}
       aria-pressed={active || undefined}
@@ -2859,6 +2864,8 @@ function TestReport({ testSuite }) {
       className={
         testSuite.passed ? "test-report is-passing" : "test-report is-failing"
       }
+      data-ui-mode-debug-only=""
+      data-map-debug-only=""
     >
       <div className="test-report__summary">
         {testSuite.tests.filter((test) => test.passed).length}/
@@ -2899,6 +2906,8 @@ function MapTestsModal({ open, testSuite, onClose }) {
   return (
     <div
       className="map-tests-modal"
+      data-ui-mode-debug-only=""
+      data-map-debug-only=""
       role="presentation"
       onPointerDown={onClose}
     >
@@ -3813,11 +3822,13 @@ export default function CruorMapGeneratorMvp({
           <MapToolButton
             icon="file-export"
             label="Export State"
+            visibility="advanced"
             onClick={exportState}
           />
           <MapToolButton
             icon="file-import"
             label="Import State"
+            visibility="advanced"
             onClick={requestImportState}
           />
           <span className="map-tool-rail__divider" aria-hidden="true" />
@@ -3842,6 +3853,7 @@ export default function CruorMapGeneratorMvp({
           <MapToolButton
             icon="pen-ruler"
             label="Toggle Editor"
+            visibility="advanced"
             active={showEditor}
             onClick={() => setShowEditor((value) => !value)}
           />
@@ -3854,12 +3866,14 @@ export default function CruorMapGeneratorMvp({
           <MapToolButton
             icon="boxes-stacked"
             label="Toggle Props"
+            visibility="advanced"
             active={showProps}
             onClick={() => setShowProps((value) => !value)}
           />
           <MapToolButton
             icon="eraser"
             label="Reset Edits"
+            visibility="advanced"
             onClick={() =>
               updateManualOverridesWithHistory(
                 resetManualOverrides(),
@@ -3871,6 +3885,7 @@ export default function CruorMapGeneratorMvp({
           <MapToolButton
             icon="clipboard-check"
             label="Structural Tests"
+            visibility="debug"
             description="Open the structural test suite."
             kbd="F2"
             active={testsModalOpen}
@@ -3996,7 +4011,11 @@ export default function CruorMapGeneratorMvp({
           aria-hidden={inspectorCollapsed}
         >
           <div className="map-inspector-panel__scroll">
-            <section className="map-inspector-section">
+            <section
+              className="map-inspector-section"
+              data-ui-mode-advanced-only=""
+              data-map-advanced-only=""
+            >
               <p className="map-panel-eyebrow">Map Setup</p>
               <div className="control-group">
                 <label className="control-label" htmlFor="seed">

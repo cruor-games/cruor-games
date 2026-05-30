@@ -2,4 +2,4 @@ export {
   default,
   CruorMapGeneratorMvp,
   MapViewport,
-} from "../map-generator.ui.jsx";
+} from "../map-generator.page.jsx";

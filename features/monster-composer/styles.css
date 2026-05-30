@@ -1,11 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import url(https://db.onlinewebfonts.com/c/84511926c1e0e99e983d71e22d6a5838?family=Lovato-Black);
 
+/* Step 1.4: Monster Composer now consumes Cruor UI Kit tokens where safe.
+   Legacy selectors remain in place to avoid JSX or cascade changes during migration. */
+
 .monster-shell {
-  --bg: #000;
-  --surface: #040405;
-  --surface-2: #080708;
-  --surface-3: #100306;
+  --bg: var(--cruor-color-bg, #000);
+  --surface: var(--cruor-color-surface, #040405);
+  --surface-2: var(--cruor-color-surface-2, #080708);
+  --surface-3: var(--cruor-color-surface-3, #100306);
   --surface-glass: rgba(26, 21, 23, .76);
   --glass-satin: rgba(31, 25, 27, .68);
   --glass-satin-strong: rgba(29, 23, 25, .84);
@@ -13,18 +16,23 @@
   --panel-white-line: rgba(255, 238, 242, .105);
   --panel-milk: rgba(255, 238, 242, .045);
   --paper-texture: url("https://www.transparenttextures.com/patterns/black-paper.png");
-  --text: #eeeeee;
-  --muted: #a7a7ad;
-  --faint: #666871;
-  --line: #231018;
-  --line-strong: #3c0712;
-  --accent: #33030c;
-  --accent-2: #5f0716;
-  --accent-3: #7a1a28;
-  --good: #8f9694;
-  --shadow: 0 24px 80px rgba(0, 0, 0, .55);
-  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --display: "Lovato-Black", Georgia, "Times New Roman", serif;
+  --text: var(--cruor-color-text, #eeeeee);
+  --muted: var(--cruor-color-muted, #a7a7ad);
+  --faint: var(--cruor-color-faint, #666871);
+  --line: var(--cruor-color-line, #231018);
+  --line-strong: var(--cruor-color-line-strong, #3c0712);
+  --accent: var(--cruor-color-accent, #33030c);
+  --accent-2: var(--cruor-color-accent-2, #5f0716);
+  --accent-3: var(--cruor-color-accent-3, #7a1a28);
+  --good: var(--cruor-color-good, #8f9694);
+  --shadow: var(--cruor-panel-shadow, 0 24px 80px rgba(0, 0, 0, .55));
+  --font: var(--cruor-font-body, Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+  --display: var(--cruor-font-display, "Lovato-Black", Georgia, "Times New Roman", serif);
+  --monster-workspace-max: var(--cruor-workspace-max, 1540px);
+  --monster-shell-bar-height: var(--cruor-shell-bar-height, 62px);
+  --monster-command-bar-height: var(--cruor-command-bar-height, 190px);
+  --monster-drawer-width: var(--cruor-drawer-width, 390px);
+  --monster-modal-width: var(--cruor-modal-width, 1080px);
 }
 
 .monster-shell, .monster-shell * { box-sizing: border-box; }
@@ -72,14 +80,12 @@
 .monster-shell select,
 .monster-shell input {
   width: 100%;
-  min-height: 40px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background:
-    linear-gradient(180deg, rgba(122, 26, 40, .04), transparent 64%),
-    rgba(5, 5, 6, .72);
-  color: var(--text);
-  padding: 0 11px;
+  min-height: var(--cruor-control-height-md, 40px);
+  border: var(--cruor-border-thin, 1px solid var(--line));
+  border-radius: var(--cruor-radius-none, 0);
+  background: var(--cruor-input-bg, linear-gradient(180deg, rgba(122, 26, 40, .04), transparent 64%), rgba(5, 5, 6, .72));
+  color: var(--cruor-color-text, var(--text));
+  padding: 0 var(--cruor-control-padding-x-md, 11px);
   outline: none;
   transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, color .12s ease;
 }
@@ -88,11 +94,9 @@
 .monster-shell input:hover,
 .monster-shell select:focus,
 .monster-shell input:focus {
-  border-color: rgba(122, 26, 40, .86);
-  background:
-    linear-gradient(180deg, rgba(122, 26, 40, .08), transparent 64%),
-    rgba(5, 5, 6, .82);
-  box-shadow: 0 0 0 1px rgba(122, 26, 40, .18), 0 0 20px rgba(51, 3, 12, .32);
+  border-color: var(--cruor-input-border-focus, rgba(122, 26, 40, .86));
+  background: var(--cruor-input-bg-focus, linear-gradient(180deg, rgba(122, 26, 40, .08), transparent 64%), rgba(5, 5, 6, .82));
+  box-shadow: var(--cruor-input-focus-shadow, 0 0 0 1px rgba(122, 26, 40, .18), 0 0 20px rgba(51, 3, 12, .32));
 }
 
 .monster-shell .eyebrow {
@@ -110,10 +114,10 @@
 .monster-shell .darken-workspace__tab,
 .monster-shell .mode-btn,
 .monster-shell .icon-btn {
-  border: 1px solid rgba(95, 7, 22, .58);
-  border-radius: 0;
-  background: linear-gradient(180deg, rgba(255, 238, 242, .025), transparent), rgba(0, 0, 0, .22);
-  color: var(--muted);
+  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, .58));
+  border-radius: var(--cruor-radius-none, 0);
+  background: linear-gradient(180deg, rgba(255, 238, 242, .025), transparent), var(--cruor-button-bg-active, rgba(0, 0, 0, .22));
+  color: var(--cruor-button-text-muted, var(--muted));
   box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035);
   transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease;
 }
@@ -125,7 +129,7 @@
 .monster-shell .icon-btn:hover,
 .monster-shell .icon-btn.active,
 .monster-shell .icon-btn.primary {
-  border-color: rgba(190, 64, 82, .78);
+  border-color: var(--cruor-button-border-hover, rgba(190, 64, 82, .78));
   background:
     radial-gradient(circle at 50% 24%, rgba(190, 64, 82, .18), transparent 68%),
     linear-gradient(180deg, rgba(30, 7, 11, .94), rgba(10, 5, 7, .88)),
@@ -137,14 +141,14 @@
 .monster-shell .monster-workspace {
   position: relative;
   z-index: 1;
-  min-height: calc(100dvh - 62px);
+  min-height: calc(100dvh - var(--monster-shell-bar-height));
   padding: 0 clamp(18px, 3vw, 30px) 34px;
 }
 
 .monster-shell .darken-workspace__topbar {
   position: sticky;
-  top: 62px;
-  z-index: 70;
+  top: var(--monster-shell-bar-height);
+  z-index: var(--cruor-z-topbar, 70);
   box-sizing: border-box;
   width: 100%;
   padding: 1rem 0;
@@ -156,7 +160,7 @@
   pointer-events: auto;
   display: grid;
   align-items: center;
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
   padding: 18px 20px;
   border: 2px solid rgba(95, 7, 22, .64);
@@ -278,20 +282,15 @@
 }
 
 .monster-shell .panel {
-  border: 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%);
-  background-color: var(--glass-satin);
+  border: var(--cruor-panel-border, 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%));
+  background-color: var(--cruor-panel-bg, var(--glass-satin));
   background-image:
     linear-gradient(180deg, var(--panel-milk), transparent 56%),
     linear-gradient(135deg, rgba(255, 238, 242, .034), transparent 34%),
     linear-gradient(135deg, rgba(51, 3, 12, .26), rgba(0, 0, 0, .04) 48%, rgba(0, 0, 0, .14));
   background-blend-mode: overlay, overlay, normal;
   backdrop-filter: blur(18px) saturate(125%);
-  box-shadow:
-    0 28px 90px rgba(0, 0, 0, .62),
-    0 0 0 1px rgba(255, 238, 242, .045),
-    0 0 48px rgba(255, 238, 242, .034),
-    inset 0 1px 0 var(--panel-white-line),
-    inset 0 -1px 0 rgba(0, 0, 0, .42);
+  box-shadow: var(--cruor-panel-shadow, 0 28px 90px rgba(0, 0, 0, .62));
 }
 
 .monster-shell .brief-summary {
@@ -299,7 +298,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto 18px;
   padding: 13px 14px;
 }
@@ -479,14 +478,14 @@
   grid-template-columns: minmax(540px, 1fr) minmax(320px, 390px);
   gap: 14px;
   align-items: start;
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
 }
 
 .monster-shell .monster-frame-scrim {
   position: fixed;
   inset: 0;
-  z-index: 108;
+  z-index: calc(var(--cruor-z-drawer, 400) - 2);
   display: none;
   border: 0;
   background: rgba(0, 0, 0, .18);
@@ -505,8 +504,8 @@
 .monster-shell .monster-frame-drawer {
   position: fixed;
   top: 82px;
-  left: max(18px, calc((100vw - 1540px) / 2 + 18px));
-  z-index: 112;
+  left: max(18px, calc((100vw - var(--monster-workspace-max)) / 2 + 18px));
+  z-index: var(--cruor-z-drawer, 400);
   width: min(430px, calc(100vw - 36px));
   max-height: calc(100dvh - 106px);
   overflow: auto;
@@ -2407,7 +2406,7 @@
 }
 
 .monster-shell .table-view {
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
   border: 1px solid rgba(95, 7, 22, .52);
   background: linear-gradient(180deg, rgba(51, 3, 12, .22), transparent 7rem), rgba(0, 0, 0, .24);
@@ -2415,7 +2414,7 @@
 }
 
 .monster-shell .run-mode-workbench {
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
   display: grid;
   gap: 14px;
@@ -2601,7 +2600,7 @@
 }
 
 .monster-shell .export-workbench {
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
 }
 
@@ -2621,7 +2620,7 @@
   gap: 13px;
   padding: 14px;
   position: sticky;
-  top: 190px;
+  top: var(--monster-command-bar-height);
 }
 
 .monster-shell .export-console__head {
@@ -3195,7 +3194,7 @@
 }
 
 .monster-shell .balance-workbench {
-  width: min(1540px, 100%);
+  width: min(var(--monster-workspace-max), 100%);
   margin: 0 auto;
   padding: 16px;
 }
@@ -3414,9 +3413,9 @@
 }
 
 .monster-shell .empty {
-  border: 1px dashed var(--line);
-  padding: 18px;
-  color: var(--faint);
+  border: 1px dashed var(--cruor-color-line, var(--line));
+  padding: var(--cruor-space-lg, 18px);
+  color: var(--cruor-color-faint, var(--faint));
   background: rgba(255, 255, 255, .025);
   font-size: 13px;
   line-height: 1.45;
@@ -4879,7 +4878,7 @@
 .monster-shell .template-picker-modal {
   position: fixed;
   inset: 0;
-  z-index: 135;
+  z-index: var(--cruor-z-modal, 420);
   display: grid;
   place-items: center;
   padding: 28px;
@@ -4902,7 +4901,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 16px;
-  width: min(1080px, calc(100vw - 56px));
+  width: min(var(--monster-modal-width), calc(100vw - 56px));
   max-height: calc(100dvh - 56px);
   overflow: hidden;
   padding: 18px;
@@ -5068,7 +5067,7 @@
 .monster-shell .component-navigator-modal {
   position: fixed;
   inset: 0;
-  z-index: 130;
+  z-index: var(--cruor-z-modal, 420);
   display: grid;
   place-items: center;
   padding: 28px;
@@ -5134,7 +5133,7 @@
 }
 
 .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
-  width: min(1080px, calc(100vw - 56px));
+  width: min(var(--monster-modal-width), calc(100vw - 56px));
 }
 
 .monster-shell .component-navigator-modal__slot-tabs {

@@ -30,6 +30,96 @@
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
   --navigator-width: 390px;
   --workbench-handle-width: 14px;
+
+  /* Cruor UI Kit tokens.
+     These aliases let new shared components migrate away from feature-local values
+     without breaking existing MVP selectors. */
+  --cruor-color-bg: var(--bg);
+  --cruor-color-surface: var(--surface);
+  --cruor-color-surface-2: var(--surface-2);
+  --cruor-color-surface-3: var(--surface-3);
+  --cruor-color-text: var(--text);
+  --cruor-color-muted: var(--muted);
+  --cruor-color-faint: var(--faint);
+  --cruor-color-line: var(--line);
+  --cruor-color-line-strong: var(--line-strong);
+  --cruor-color-accent: var(--accent);
+  --cruor-color-accent-2: var(--accent-2);
+  --cruor-color-accent-3: var(--accent-3);
+  --cruor-color-good: var(--good);
+
+  --cruor-space-2xs: 4px;
+  --cruor-space-xs: 6px;
+  --cruor-space-sm: 8px;
+  --cruor-space-md: 12px;
+  --cruor-space-lg: 16px;
+  --cruor-space-xl: 24px;
+  --cruor-space-2xl: 32px;
+
+  --cruor-control-height-xs: 32px;
+  --cruor-control-height-sm: 36px;
+  --cruor-control-height-md: 40px;
+  --cruor-control-height-lg: 44px;
+  --cruor-control-padding-x-sm: 10px;
+  --cruor-control-padding-x-md: 13px;
+  --cruor-control-padding-x-lg: 16px;
+
+  --cruor-radius-none: 0;
+  --cruor-border-thin: 1px solid var(--line);
+  --cruor-border-strong: 1px solid rgba(95, 7, 22, 0.74);
+  --cruor-border-panel: 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%);
+
+  --cruor-panel-bg: var(--glass-satin);
+  --cruor-panel-bg-strong: var(--glass-satin-strong);
+  --cruor-panel-border: var(--cruor-border-panel);
+  --cruor-panel-highlight: var(--panel-white-line);
+  --cruor-panel-glow: var(--panel-white-glow);
+  --cruor-panel-shadow:
+    0 28px 90px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 238, 242, 0.045),
+    0 0 48px rgba(255, 238, 242, 0.034),
+    inset 0 1px 0 var(--panel-white-line),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.42);
+
+  --cruor-button-bg: var(--surface-3);
+  --cruor-button-bg-hover: #1d050a;
+  --cruor-button-bg-active: rgba(51, 3, 12, 0.54);
+  --cruor-button-border: rgba(95, 7, 22, 0.58);
+  --cruor-button-border-hover: rgba(190, 64, 82, 0.78);
+  --cruor-button-text: var(--text);
+  --cruor-button-text-muted: var(--muted);
+
+  --cruor-input-bg:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.04), transparent 64%),
+    rgba(5, 5, 6, 0.46);
+  --cruor-input-bg-hover:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.06), transparent 64%),
+    rgba(5, 5, 6, 0.6);
+  --cruor-input-bg-focus:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.08), transparent 64%),
+    rgba(5, 5, 6, 0.72);
+  --cruor-input-border: var(--line);
+  --cruor-input-border-hover: rgba(95, 7, 22, 0.64);
+  --cruor-input-border-focus: rgba(122, 26, 40, 0.86);
+  --cruor-input-focus-shadow:
+    0 0 0 1px rgba(122, 26, 40, 0.18),
+    0 0 20px rgba(51, 3, 12, 0.32);
+
+  --cruor-workspace-max: 1540px;
+  --cruor-shell-bar-height: 62px;
+  --cruor-command-bar-height: 190px;
+  --cruor-drawer-width: 390px;
+  --cruor-modal-width: 1080px;
+
+  --cruor-z-base: 0;
+  --cruor-z-content: 1;
+  --cruor-z-shell: 80;
+  --cruor-z-topbar: 70;
+  --cruor-z-dropdown: 340;
+  --cruor-z-drawer: 400;
+  --cruor-z-modal: 420;
+  --cruor-z-tooltip: 600;
+
   --font:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;

@@ -1,3 +1,7 @@
+/* Step 1.6 · Cruor UI Kit migration.
+   Light migration for features/inspirations/styles.css.
+   Keeps legacy selectors intact while routing shared surfaces, controls, cards, and modals through global Cruor tokens. */
+
 .inspirations-page {
   min-height: calc(100dvh - 65px);
   padding: clamp(22px, 4vw, 46px) clamp(18px, 4vw, 40px) clamp(34px, 5vw, 58px);
@@ -8,7 +12,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 22px;
-  max-width: 1440px;
+  max-width: var(--cruor-workspace-max, 1440px);
   margin: 0 auto 20px;
   padding: 0 0 18px;
   border-bottom: 1px solid rgba(95, 7, 22, 0.38);
@@ -16,7 +20,7 @@
 
 .inspirations-page__head h1 {
   margin: 0 0 8px;
-  color: var(--text);
+  color: var(--cruor-color-text, var(--text));
   font-family: var(--display);
   font-size: clamp(44px, 6vw, 78px);
   line-height: 0.9;
@@ -27,7 +31,7 @@
 .inspirations-page__head p {
   max-width: 760px;
   margin: 0;
-  color: var(--muted);
+  color: var(--cruor-color-muted, var(--muted));
   line-height: 1.55;
 }
 
@@ -46,10 +50,10 @@
   display: grid;
   grid-template-columns: minmax(260px, 1fr) repeat(3, minmax(170px, 0.3fr));
   gap: 10px;
-  max-width: 1440px;
+  max-width: var(--cruor-workspace-max, 1440px);
   margin: 0 auto 20px;
   padding: 10px;
-  border: 1px solid rgba(95, 7, 22, 0.28);
+  border: var(--cruor-border-thin, 1px solid rgba(95, 7, 22, 0.28));
   background:
     linear-gradient(180deg, rgba(122, 26, 40, 0.035), transparent),
     rgba(0, 0, 0, 0.18);
@@ -57,28 +61,26 @@
 
 .inspirations-page__tools input,
 .inspirations-page__tools select {
-  min-height: 42px;
-  border: 1px solid var(--line);
-  border-radius: 0;
-  background:
-    linear-gradient(180deg, rgba(122, 26, 40, 0.04), transparent 64%),
-    rgba(8, 7, 8, 0.92);
-  color: var(--text);
-  padding: 0 12px;
+  min-height: var(--cruor-control-height-lg, 42px);
+  border: 1px solid var(--cruor-input-border, var(--cruor-color-line, var(--line)));
+  border-radius: var(--cruor-radius-none, 0);
+  background: var(--cruor-input-bg, linear-gradient(180deg, rgba(122, 26, 40, 0.04), transparent 64%), rgba(8, 7, 8, 0.92));
+  color: var(--cruor-color-text, var(--text));
+  padding: 0 var(--cruor-control-padding-x-md, 12px);
   outline: none;
 }
 
 .inspirations-page__tools input:focus,
 .inspirations-page__tools select:focus {
-  border-color: rgba(122, 26, 40, 0.86);
-  box-shadow: 0 0 0 3px rgba(51, 3, 12, 0.22);
+  border-color: var(--cruor-input-border-focus, rgba(122, 26, 40, 0.86));
+  box-shadow: var(--cruor-input-focus-shadow, 0 0 0 3px rgba(51, 3, 12, 0.22));
 }
 
 .inspirations-page__grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
-  max-width: 1440px;
+  max-width: var(--cruor-workspace-max, 1440px);
   margin: 0 auto;
 }
 
@@ -87,12 +89,12 @@
   display: block;
   min-height: 260px;
   overflow: hidden;
-  border: 1px solid rgba(95, 7, 22, 0.6);
-  border-radius: 0;
+  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.6));
+  border-radius: var(--cruor-radius-none, 0);
   background:
     linear-gradient(180deg, rgba(255, 238, 242, 0.03), transparent 54%),
     rgba(0, 0, 0, 0.24);
-  color: var(--text);
+  color: var(--cruor-color-text, var(--text));
   padding: 0;
   text-align: left;
   cursor: pointer;
@@ -196,7 +198,7 @@
 .inspirations-page__backdrop {
   position: fixed;
   inset: 0;
-  z-index: 420;
+  z-index: var(--cruor-z-modal, 420);
   display: grid;
   place-items: center;
   padding: 24px;
@@ -206,16 +208,14 @@
 }
 
 .inspirations-page__modal {
-  width: min(1080px, 100%);
+  width: min(var(--cruor-modal-width, 1080px), 100%);
   max-height: min(840px, calc(100dvh - 48px));
   overflow: auto;
-  border: 1px solid rgba(95, 7, 22, 0.82);
+  border: var(--cruor-border-strong, 1px solid rgba(95, 7, 22, 0.82));
   background:
     linear-gradient(180deg, rgba(51, 3, 12, 0.24), transparent 8rem),
-    rgba(5, 5, 6, 0.98);
-  box-shadow:
-    0 32px 100px rgba(0, 0, 0, 0.72),
-    0 0 0 1px rgba(122, 26, 40, 0.16);
+    var(--cruor-panel-bg-strong, rgba(5, 5, 6, 0.98));
+  box-shadow: var(--cruor-panel-shadow, 0 32px 100px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(122, 26, 40, 0.16));
 }
 
 .inspirations-page__modal-head {
@@ -235,7 +235,7 @@
 
 .inspirations-page__modal-head p:last-child {
   margin: 0;
-  color: var(--muted);
+  color: var(--cruor-color-muted, var(--muted));
 }
 
 .inspirations-page__modal-body {
@@ -275,7 +275,7 @@
 
 .inspirations-page__detail-main p {
   margin: 0;
-  color: var(--muted);
+  color: var(--cruor-color-muted, var(--muted));
   line-height: 1.55;
 }
 

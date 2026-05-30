@@ -1,6 +1,478 @@
 /* Shared UI primitives extracted from the Crucible MVP.
    Feature-local duplicates remain during this first DOM migration pass to preserve cascade order. */
 
+/* Cruor UI Kit primitives.
+   Prefixed classes are additive and can be adopted feature-by-feature without
+   removing the legacy MVP selectors below. */
+
+.cruor-panel {
+  border: var(--cruor-panel-border, 2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%));
+  border-top-color: color-mix(in srgb, var(--glass-line) 78%, white 22%);
+  background-color: var(--cruor-panel-bg, var(--glass-satin));
+  background-image:
+    linear-gradient(180deg, var(--panel-milk), transparent 56%),
+    linear-gradient(135deg, rgba(255, 238, 242, 0.034), transparent 34%),
+    linear-gradient(
+      135deg,
+      rgba(51, 3, 12, 0.26),
+      rgba(0, 0, 0, 0.04) 48%,
+      rgba(0, 0, 0, 0.14)
+    );
+  background-blend-mode: overlay, overlay, normal;
+  backdrop-filter: blur(18px) saturate(125%);
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  box-shadow: var(
+    --cruor-panel-shadow,
+    0 28px 90px rgba(0, 0, 0, 0.62),
+    0 0 0 1px rgba(255, 238, 242, 0.045),
+    0 0 48px rgba(255, 238, 242, 0.034),
+    inset 0 1px 0 var(--panel-white-line),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.42)
+  );
+}
+
+.cruor-panel--dense {
+  padding: var(--cruor-space-md, 12px);
+}
+
+.cruor-panel--glass {
+  background-color: var(--cruor-panel-bg, var(--glass-satin));
+}
+
+.cruor-panel--strong {
+  background-color: var(--cruor-panel-bg-strong, var(--glass-satin-strong));
+}
+
+.cruor-panel--modal {
+  width: min(var(--cruor-modal-width, 1080px), calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+}
+
+.cruor-panel--drawer {
+  width: min(var(--cruor-drawer-width, 390px), calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.cruor-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cruor-space-sm, 8px);
+  min-height: var(--cruor-control-height-md, 40px);
+  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.58));
+  border-radius: var(--cruor-radius-none, 0);
+  background: var(--cruor-button-bg, var(--surface-3));
+  color: var(--cruor-button-text, var(--text));
+  padding: 0 var(--cruor-control-padding-x-md, 13px);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 0.12s ease,
+    background 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.cruor-button:hover {
+  transform: translateY(-1px);
+  border-color: var(--cruor-button-border-hover, rgba(190, 64, 82, 0.78));
+  background: var(--cruor-button-bg-hover, #1d050a);
+  color: var(--cruor-button-text, var(--text));
+}
+
+.cruor-button:focus-visible {
+  outline: 2px solid rgba(190, 64, 82, 0.42);
+  outline-offset: 2px;
+}
+
+.cruor-button:disabled,
+.cruor-button[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.48;
+  transform: none;
+}
+
+.cruor-button--primary {
+  border-color: rgba(190, 64, 82, 0.84);
+  background:
+    linear-gradient(180deg, rgba(190, 64, 82, 0.16), rgba(51, 3, 12, 0.24)),
+    var(--cruor-button-bg-active, rgba(51, 3, 12, 0.54));
+  color: #f4d7dc;
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.18),
+    0 0 28px rgba(95, 7, 22, 0.28);
+}
+
+.cruor-button--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--cruor-button-text-muted, var(--muted));
+}
+
+.cruor-button--ghost:hover {
+  border-color: rgba(95, 7, 22, 0.54);
+  background: rgba(51, 3, 12, 0.18);
+  color: var(--cruor-button-text, var(--text));
+}
+
+.cruor-button--danger {
+  border-color: rgba(190, 64, 82, 0.78);
+  background:
+    linear-gradient(180deg, rgba(190, 64, 82, 0.11), transparent),
+    rgba(51, 3, 12, 0.34);
+  color: #f0b9c2;
+}
+
+.cruor-button--sm {
+  min-height: var(--cruor-control-height-sm, 36px);
+  padding: 0 var(--cruor-control-padding-x-sm, 10px);
+  font-size: 12px;
+}
+
+.cruor-button--lg {
+  min-height: var(--cruor-control-height-lg, 44px);
+  padding: 0 var(--cruor-control-padding-x-lg, 16px);
+  font-size: 14px;
+}
+
+.cruor-button--icon {
+  width: var(--cruor-control-height-md, 40px);
+  min-width: var(--cruor-control-height-md, 40px);
+  padding: 0;
+}
+
+.cruor-button--icon.cruor-button--sm {
+  width: var(--cruor-control-height-sm, 36px);
+  min-width: var(--cruor-control-height-sm, 36px);
+}
+
+.cruor-button--icon.cruor-button--lg {
+  width: var(--cruor-control-height-lg, 44px);
+  min-width: var(--cruor-control-height-lg, 44px);
+}
+
+.cruor-command-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cruor-space-lg, 16px);
+  width: 100%;
+  min-height: var(--cruor-command-bar-height, 190px);
+  border-bottom: 1px solid rgba(95, 7, 22, 0.38);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.045), transparent 68%),
+    rgba(0, 0, 0, 0.28);
+  padding: var(--cruor-space-lg, 16px) var(--cruor-space-xl, 24px);
+}
+
+.cruor-command-bar__main {
+  display: grid;
+  gap: var(--cruor-space-sm, 8px);
+  min-width: 0;
+}
+
+.cruor-command-bar__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--cruor-space-sm, 8px);
+  flex-wrap: wrap;
+}
+
+.cruor-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cruor-space-xs, 6px);
+  border: 1px solid rgba(95, 7, 22, 0.42);
+  background: rgba(5, 5, 6, 0.42);
+  padding: var(--cruor-space-xs, 6px);
+}
+
+.cruor-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cruor-control-height-sm, 36px);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  padding: 0 var(--cruor-control-padding-x-md, 13px);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.cruor-tab:hover {
+  border-color: rgba(95, 7, 22, 0.54);
+  background: rgba(51, 3, 12, 0.18);
+  color: var(--text);
+}
+
+.cruor-tab.active,
+.cruor-tab[aria-selected="true"] {
+  border-color: rgba(122, 26, 40, 0.86);
+  background: rgba(51, 3, 12, 0.38);
+  color: #d0a2aa;
+}
+
+.cruor-card {
+  border: 1px solid rgba(95, 7, 22, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.035), transparent 58%),
+    rgba(5, 5, 6, 0.36);
+  padding: var(--cruor-space-lg, 16px);
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.045);
+}
+
+.cruor-card--interactive {
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.cruor-card--interactive:hover {
+  transform: translateY(-1px);
+  border-color: rgba(122, 26, 40, 0.72);
+  background:
+    linear-gradient(180deg, rgba(122, 26, 40, 0.065), transparent 58%),
+    rgba(5, 5, 6, 0.48);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 242, 0.055),
+    0 18px 42px rgba(0, 0, 0, 0.3);
+}
+
+.cruor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cruor-z-modal, 420);
+  display: grid;
+  place-items: center;
+  padding: var(--cruor-space-xl, 24px);
+}
+
+.cruor-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.cruor-modal__panel {
+  position: relative;
+  z-index: 1;
+}
+
+.cruor-drawer {
+  position: fixed;
+  top: var(--cruor-shell-bar-height, 62px);
+  right: 0;
+  bottom: 0;
+  z-index: var(--cruor-z-drawer, 400);
+  width: min(var(--cruor-drawer-width, 390px), 100vw);
+  overflow: auto;
+}
+
+.cruor-drawer--left {
+  right: auto;
+  left: 0;
+}
+
+.cruor-input,
+.cruor-select,
+.cruor-search {
+  width: 100%;
+  min-height: var(--cruor-control-height-md, 40px);
+  border: 1px solid var(--cruor-input-border, var(--line));
+  border-radius: var(--cruor-radius-none, 0);
+  background: var(
+    --cruor-input-bg,
+    linear-gradient(180deg, rgba(122, 26, 40, 0.04), transparent 64%),
+    rgba(5, 5, 6, 0.46)
+  );
+  color: var(--text);
+  padding: 0 var(--cruor-control-padding-x-md, 13px);
+  outline: none;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease,
+    box-shadow 0.12s ease,
+    color 0.12s ease;
+}
+
+.cruor-select {
+  appearance: none;
+}
+
+.cruor-input:hover,
+.cruor-select:hover,
+.cruor-search:hover {
+  border-color: var(--cruor-input-border-hover, rgba(95, 7, 22, 0.64));
+  background: var(
+    --cruor-input-bg-hover,
+    linear-gradient(180deg, rgba(122, 26, 40, 0.06), transparent 64%),
+    rgba(5, 5, 6, 0.6)
+  );
+}
+
+.cruor-input:focus,
+.cruor-select:focus,
+.cruor-search:focus {
+  border-color: var(--cruor-input-border-focus, rgba(122, 26, 40, 0.86));
+  background: var(
+    --cruor-input-bg-focus,
+    linear-gradient(180deg, rgba(122, 26, 40, 0.08), transparent 64%),
+    rgba(5, 5, 6, 0.72)
+  );
+  box-shadow: var(
+    --cruor-input-focus-shadow,
+    0 0 0 1px rgba(122, 26, 40, 0.18),
+    0 0 20px rgba(51, 3, 12, 0.32)
+  );
+}
+
+.cruor-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--cruor-space-xs, 6px);
+  min-height: 28px;
+  border: 1px solid rgba(95, 7, 22, 0.46);
+  background: rgba(5, 5, 6, 0.34);
+  color: var(--muted);
+  padding: 0 9px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cruor-chip--active,
+.cruor-chip.active,
+.cruor-chip[aria-pressed="true"] {
+  border-color: rgba(122, 26, 40, 0.9);
+  background: rgba(51, 3, 12, 0.46);
+  color: #d0a2aa;
+}
+
+.cruor-meter {
+  display: grid;
+  gap: var(--cruor-space-xs, 6px);
+}
+
+.cruor-meter__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--cruor-space-sm, 8px);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cruor-meter__track {
+  height: 8px;
+  border: 1px solid rgba(95, 7, 22, 0.5);
+  background: rgba(5, 5, 6, 0.62);
+  overflow: hidden;
+}
+
+.cruor-meter__fill {
+  width: var(--cruor-meter-value, 0%);
+  height: 100%;
+  background: linear-gradient(90deg, rgba(95, 7, 22, 0.86), rgba(190, 64, 82, 0.82));
+  box-shadow: 0 0 18px rgba(122, 26, 40, 0.34);
+}
+
+.cruor-stat {
+  display: grid;
+  gap: var(--cruor-space-xs, 6px);
+  border: 1px solid rgba(95, 7, 22, 0.34);
+  background: rgba(5, 5, 6, 0.28);
+  padding: var(--cruor-space-md, 12px);
+}
+
+.cruor-stat__label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.cruor-stat__value {
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.cruor-empty-state {
+  display: grid;
+  gap: var(--cruor-space-sm, 8px);
+  border: 1px dashed var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--faint);
+  padding: var(--cruor-space-xl, 24px);
+  font-size: 13px;
+}
+
+.cruor-empty-state strong {
+  color: var(--text);
+}
+
+.cruor-details {
+  border: 1px solid rgba(95, 7, 22, 0.34);
+  background: rgba(5, 5, 6, 0.26);
+  padding: var(--cruor-space-md, 12px);
+}
+
+.cruor-details > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.cruor-meta-list {
+  display: grid;
+  gap: var(--cruor-space-xs, 6px);
+  margin: 0;
+}
+
+.cruor-meta-list__row {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.36fr) minmax(0, 1fr);
+  gap: var(--cruor-space-sm, 8px);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.cruor-meta-list__key {
+  color: var(--faint);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cruor-meta-list__value {
+  color: var(--text);
+}
+
+
 .icon-btn {
   display: inline-flex;
   align-items: center;

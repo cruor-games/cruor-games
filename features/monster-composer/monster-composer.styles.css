@@ -6364,3 +6364,420 @@
 
 /* Step 4.11 — CSS duplicate cleanup.
    No visual changes: removed superseded duplicate declarations and dead legacy pseudo-tooltip blocks. */
+
+/* Step 5.5 — Fullscreen Component Navigator.
+   The component navigator is now a real fullscreen workbench overlay above the Crucible topbar. */
+.monster-shell .component-navigator-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cruor-z-fullscreen-modal, 2400);
+  display: grid;
+  place-items: stretch;
+  padding: clamp(14px, 2vw, 28px);
+  isolation: isolate;
+}
+
+.monster-shell .component-navigator-modal__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(190, 64, 82, 0.18), transparent 34rem),
+    radial-gradient(circle at 18% 72%, rgba(95, 7, 22, 0.2), transparent 30rem),
+    rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(14px) saturate(112%);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+}
+
+.monster-shell .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "rail list"
+    "smart list";
+  gap: clamp(12px, 1.35vw, 18px);
+  width: min(1760px, 100%);
+  height: min(980px, calc(100dvh - clamp(28px, 4vw, 56px)));
+  max-height: none;
+  margin: auto;
+  overflow: hidden;
+  padding: clamp(14px, 1.6vw, 22px);
+  border: 1px solid rgba(240, 185, 194, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.14), transparent 26rem),
+    radial-gradient(circle at 82% 100%, rgba(95, 7, 22, 0.2), transparent 30rem),
+    linear-gradient(180deg, rgba(18, 12, 14, 0.99), rgba(7, 5, 6, 0.98));
+  box-shadow:
+    0 54px 150px rgba(0, 0, 0, 0.92),
+    0 0 0 1px rgba(255, 238, 242, 0.06),
+    0 0 96px rgba(122, 26, 40, 0.26),
+    inset 0 1px 0 rgba(255, 238, 242, 0.07);
+}
+
+.monster-shell .component-navigator-modal__head {
+  grid-area: head;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 238, 242, 0.075);
+  padding: 0 0 14px;
+}
+
+.monster-shell .component-navigator-modal__head-copy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.monster-shell .component-navigator-modal__head h2 {
+  margin: 0;
+  color: #fff0f2;
+  font-family: var(--display);
+  font-size: clamp(34px, 4vw, 68px);
+  font-weight: 950;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  text-shadow: 0 0 30px rgba(122, 26, 40, 0.42);
+}
+
+.monster-shell .component-navigator-modal__subtitle {
+  max-width: 760px;
+  margin: 0;
+  color: rgba(238, 238, 238, 0.54);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.42;
+}
+
+.monster-shell .component-navigator-modal__head > .icon-btn {
+  position: static;
+  flex: 0 0 auto;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-color: rgba(255, 238, 242, 0.11);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.monster-shell .component-navigator-modal__rail {
+  grid-area: rail;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 12rem),
+    rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  overflow: auto;
+}
+
+.monster-shell .component-navigator-modal__rail .navigator-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px 46px;
+  gap: 8px;
+  align-items: center;
+}
+
+.monster-shell .component-navigator-modal__rail .search-wrap input {
+  min-height: 38px;
+}
+
+.monster-shell .component-navigator-modal__rail .navigator-filter-btn,
+.monster-shell .component-navigator-modal__rail .navigator-count {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.monster-shell .component-navigator-modal__rail .navigator-count {
+  width: auto;
+  min-width: 46px;
+}
+
+.monster-shell .component-navigator-modal__rail .tag-filter-row.monster-source-grid-open {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 10px;
+}
+
+.monster-shell .component-navigator-modal__rail .navigator-filter-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.monster-shell .component-navigator-modal__rail .filter-chip-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.monster-shell .component-navigator-modal__rail .navigator-filter-chip {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 32px;
+  text-align: left;
+}
+
+.monster-shell .component-navigator-modal__slot-tabs {
+  grid-area: rail;
+  align-self: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 170px;
+  margin: 0;
+  border-top: 1px solid rgba(255, 238, 242, 0.07);
+  padding: 12px 12px 0;
+  overflow: auto;
+}
+
+.monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__rail {
+  padding-bottom: 184px;
+}
+
+.monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__slot-tabs {
+  display: none;
+}
+
+.monster-shell .component-navigator-modal .smart-slot-picks {
+  grid-area: smart;
+  min-height: 0;
+  border-color: rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(143, 150, 148, 0.035), transparent 12rem),
+    rgba(0, 0, 0, 0.16);
+  overflow: auto;
+}
+
+.monster-shell .component-navigator-modal[data-has-smart-picks="false"] {
+  --component-navigator-smart-min: 0px;
+}
+
+.monster-shell .component-navigator-modal__list {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.026), transparent 14rem),
+    rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+.monster-shell .component-navigator-modal__list .empty {
+  grid-column: 1 / -1;
+}
+
+.monster-shell .component-navigator-modal__list .component-card {
+  min-height: 0;
+  height: auto;
+  align-content: start;
+  overflow: visible;
+  border-width: 1px;
+  padding: 14px;
+}
+
+.monster-shell .component-navigator-modal__list .card-top {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.monster-shell .component-navigator-modal__list .component-title-stack {
+  padding-right: 72px;
+}
+
+.monster-shell .component-navigator-modal__list .component-card h3 {
+  color: #fff0f2;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.monster-shell .component-navigator-modal__list .summary {
+  color: rgba(238, 238, 238, 0.62);
+  font-size: 12.5px;
+  line-height: 1.44;
+}
+
+.monster-shell .component-navigator-modal__list .component-toggle-btn {
+  top: 12px;
+  right: 12px;
+  min-height: 27px;
+  border-color: rgba(190, 64, 82, 0.42);
+  background: rgba(95, 7, 22, 0.22);
+}
+
+.monster-shell .component-navigator-modal__list .component-details {
+  display: block;
+  overflow: visible;
+  margin-top: 8px;
+}
+
+.monster-shell .component-navigator-modal__list .component-details[open] .meta-list {
+  display: grid;
+  visibility: visible;
+  opacity: 1;
+  max-height: none;
+  overflow: visible;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .meta-row {
+  grid-template-columns: minmax(74px, 0.34fr) minmax(0, 1fr);
+}
+
+.monster-shell .component-navigator-modal__list .meta-value {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.monster-shell .smart-slot-picks__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.monster-shell .smart-pick-card {
+  min-height: 0;
+  padding: 10px;
+}
+
+.monster-shell .smart-pick-card h3 {
+  font-size: 12.5px;
+}
+
+.monster-shell .smart-pick-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+@media (min-width: 1380px) {
+  .monster-shell .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  }
+
+  .monster-shell .component-navigator-modal__list {
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  }
+}
+
+@media (max-width: 1040px) {
+  .monster-shell .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "rail"
+      "smart"
+      "list";
+  }
+
+  .monster-shell .component-navigator-modal__rail {
+    max-height: 260px;
+  }
+
+  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__rail {
+    padding-bottom: 12px;
+  }
+
+  .monster-shell .component-navigator-modal__slot-tabs {
+    grid-area: rail;
+    position: static;
+    align-self: auto;
+    max-height: none;
+    padding: 10px 0 0;
+  }
+
+  .monster-shell .component-navigator-modal__list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .monster-shell .component-navigator-modal {
+    padding: 10px;
+  }
+
+  .monster-shell .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    width: 100%;
+    height: calc(100dvh - 20px);
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .monster-shell .component-navigator-modal__head {
+    padding-bottom: 10px;
+  }
+
+  .monster-shell .component-navigator-modal__head h2 {
+    padding-right: 48px;
+    font-family: var(--font);
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.045em;
+  }
+
+  .monster-shell .component-navigator-modal__subtitle {
+    padding-right: 48px;
+    font-size: 12px;
+  }
+
+  .monster-shell .component-navigator-modal__head > .icon-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .monster-shell .component-navigator-modal__rail {
+    max-height: 238px;
+    padding: 10px;
+  }
+
+  .monster-shell .component-navigator-modal__rail .navigator-search-row {
+    grid-template-columns: minmax(0, 1fr) 38px 44px;
+  }
+
+  .monster-shell .component-navigator-modal__list {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .monster-shell .component-navigator-modal__list .component-title-stack {
+    padding-right: 64px;
+  }
+}

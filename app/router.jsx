@@ -17,6 +17,9 @@ const CRUCIBLE_GENERATORS = [
     shortLabel: "Location",
     title: "Darken a Location",
     summary: "Build regions, hazards, clues, atmosphere, and a map-ready horror layer.",
+    icon: "fa-solid fa-location-dot",
+    tooltip: "Darken a Location",
+    tooltipDescription: "Build regions, hazards, clues, atmosphere, and a map-ready horror layer.",
   },
   {
     id: "monster",
@@ -24,6 +27,9 @@ const CRUCIBLE_GENERATORS = [
     shortLabel: "Monster",
     title: "Build a Monster",
     summary: "Compose anatomy, pressure, mechanics, and table-ready creature behavior.",
+    icon: "fa-solid fa-skull",
+    tooltip: "Build a Monster",
+    tooltipDescription: "Compose anatomy, pressure, mechanics, and table-ready creature behavior.",
   },
 ];
 
@@ -33,11 +39,17 @@ const CRUCIBLE_VIEWS = {
       id: "location",
       label: "Location",
       panelId: "darkenComposerPanel",
+      icon: "fa-solid fa-layer-group",
+      tooltip: "Location Composer",
+      tooltipDescription: "Edit the Darken a Location build.",
     },
     {
       id: "map",
       label: "Map",
       panelId: "darkenMapGeneratorPanel",
+      icon: "fa-solid fa-map",
+      tooltip: "Map Workspace",
+      tooltipDescription: "Generate and edit the map from the current location build.",
     },
   ],
   monster: [
@@ -45,21 +57,33 @@ const CRUCIBLE_VIEWS = {
       id: "composer",
       label: "Composer",
       panelId: "monsterComposerPanel",
+      icon: "fa-solid fa-dna",
+      tooltip: "Monster Composer",
+      tooltipDescription: "Compose the creature anatomy, slots, and horror behavior.",
     },
     {
       id: "balance",
       label: "Balance",
       panelId: "monsterComposerPanel",
+      icon: "fa-solid fa-scale-balanced",
+      tooltip: "Balance",
+      tooltipDescription: "Review pressure, complexity, and combat expectations.",
     },
     {
       id: "run",
       label: "Run",
       panelId: "monsterComposerPanel",
+      icon: "fa-solid fa-dice-d20",
+      tooltip: "Run at the Table",
+      tooltipDescription: "Use table-facing play aids and encounter operation views.",
     },
     {
       id: "export",
       label: "Export",
       panelId: "monsterComposerPanel",
+      icon: "fa-solid fa-file-export",
+      tooltip: "Export",
+      tooltipDescription: "Prepare the monster output for use outside the workbench.",
     },
   ],
 };
@@ -169,7 +193,6 @@ export default function AppRouter() {
   const homeContent = (
     <section className="app-shell__home" aria-label="Cruor Games home">
       <div className="app-shell__home-panel panel">
-        <p className="app-shell__home-eyebrow">Cruor Games</p>
         <h1>Build drop-in horror for the session you already prepared.</h1>
         <p>
           Compose haunted locations, disturbing monsters, and source-inspired horror material
@@ -182,7 +205,6 @@ export default function AppRouter() {
             type="button"
             onClick={() => openCrucibleFromHome("darken")}
           >
-            <span>Place</span>
             <strong>Darken a Location</strong>
             <small>Build regions, hazards, clues, atmosphere, and a map-ready structure.</small>
           </button>
@@ -192,7 +214,6 @@ export default function AppRouter() {
             type="button"
             onClick={() => openCrucibleFromHome("monster")}
           >
-            <span>Threat</span>
             <strong>Build a Monster</strong>
             <small>Compose anatomy, pressure, mechanics, and table-ready creature behavior.</small>
           </button>
@@ -202,7 +223,6 @@ export default function AppRouter() {
             type="button"
             onClick={() => setActiveSection("inspirations")}
           >
-            <span>Sources</span>
             <strong>Browse Inspirations</strong>
             <small>Explore the real-world and folkloric roots behind Cruor components.</small>
           </button>
@@ -286,7 +306,6 @@ export default function AppRouter() {
           </Suspense>
         ) : (
           <div className="crucible-workspace__empty-map panel">
-            <p className="app-shell__home-eyebrow">Map Workspace</p>
             <h2>No map has been opened yet.</h2>
             <p>Generate a map from the current Darken a Location build.</p>
             <button
@@ -294,7 +313,6 @@ export default function AppRouter() {
               type="button"
               onClick={openDarkenMapView}
             >
-              <span>Map</span>
               <strong>Open Map Workspace</strong>
               <small>Use the current Darken regions as the starting configuration.</small>
             </button>

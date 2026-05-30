@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import "./monster-composer.styles.css";
 import {
   Skull,
@@ -27,10 +27,7 @@ import {
   isCreatureTypeUnavailable,
 } from "./monster-composer.taxonomies.js";
 
-import {
-  SLOTS,
-  DEFAULT_SLOT_CAPS,
-} from "./monster-composer.workflow.js";
+import { SLOTS, DEFAULT_SLOT_CAPS } from "./monster-composer.workflow.js";
 
 import {
   ALL_MONSTER_SOURCES as SOURCES,
@@ -91,7 +88,6 @@ import { GuidedFlowPanel, TemplatePickerModal } from "./components/start-flow.js
 import { MonsterSilhouetteMap } from "./components/anatomy.jsx";
 import { ComponentNavigatorModal } from "./components/navigator.jsx";
 import { BalanceWorkbench, ExportWorkbench, RunModePanel } from "./components/panels.jsx";
-
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -355,12 +351,11 @@ function normalizePresetSelection(preset) {
   );
 }
 
-
 function getFeatureDecisionProfile(feature, context = {}) {
   return buildFeatureDecisionProfileModel(feature, {
     ...context,
     getFeatureSection,
-  hasFeatureMechanicOverride,
+    hasFeatureMechanicOverride,
     getFeatureMechanicProfile,
     getFeatureCounterplayProfile,
     titleCase,
@@ -370,7 +365,7 @@ function getFeatureDecisionProfile(feature, context = {}) {
 function getFeatureSpiceScore(feature, profile) {
   return getFeatureSpiceScoreModel(feature, profile, {
     getFeatureSection,
-  hasFeatureMechanicOverride,
+    hasFeatureMechanicOverride,
     getFeatureCounterplayProfile,
   });
 }
@@ -1022,8 +1017,6 @@ function getSlotCap(slotCaps, slotId) {
   return Math.max(1, Number(slotCaps?.[slotId] || 1));
 }
 
-
-
 function pickForgeCandidate(candidates, slotId, remainingBudget, roleId) {
   if (!candidates.length) return null;
 
@@ -1049,7 +1042,6 @@ function pickForgeCandidate(candidates, slotId, remainingBudget, roleId) {
   return null;
 }
 
-
 function copyTextFallback(text) {
   if (typeof document === "undefined") return false;
   const textarea = document.createElement("textarea");
@@ -1069,14 +1061,7 @@ function copyTextFallback(text) {
   return copied;
 }
 
-
-
-
-export default function CruorMonsterComposerMvp({
-  viewMode: controlledViewMode,
-  onViewModeChange,
-  showInternalTopbar = true,
-} = {}) {
+export default function CruorMonsterComposerMvp() {
   const [typeId, setTypeId] = useState("undead");
   const [category, setCategory] = useState("Zombie");
   const [roleId, setRoleId] = useState("standard");
@@ -1092,18 +1077,10 @@ export default function CruorMonsterComposerMvp({
   const [composerStarted, setComposerStarted] = useState(false);
   const [startMode, setStartMode] = useState("");
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
-  const [draggedFeatureId, setDraggedFeatureId] = useState(null);
+  const [, setDraggedFeatureId] = useState(null);
   const [activeSlot, setActiveSlot] = useState("body");
   const [frameOpen, setFrameOpen] = useState(false);
-  const [internalViewMode, setInternalViewMode] = useState("composer");
-  const viewMode = controlledViewMode || internalViewMode;
-  const setViewMode = useCallback(
-    (nextViewMode) => {
-      setInternalViewMode(nextViewMode);
-      onViewModeChange?.(nextViewMode);
-    },
-    [onViewModeChange]
-  );
+  const [viewMode, setViewMode] = useState("composer");
   const [advancedMode, setAdvancedMode] = useState(false);
   const [customMode, setCustomMode] = useState(false);
   const [customPressureBudget, setCustomPressureBudget] = useState(15);
@@ -1634,14 +1611,6 @@ export default function CruorMonsterComposerMvp({
     });
   }
 
-  function handleDrop(slotId) {
-    if (!draggedFeatureId) return;
-    const feature = FEATURES.find((item) => item.id === draggedFeatureId);
-    if (!feature || feature.slot !== slotId) return;
-    addFeature(feature);
-    setDraggedFeatureId(null);
-  }
-
   function forgeMonster() {
     setComposerStarted(true);
     setStartMode((current) => current || "scratch");
@@ -1920,317 +1889,330 @@ export default function CruorMonsterComposerMvp({
 
   return (
     <div
-      className="monster-shell cruor-product-shell"
+      className="monster-shell"
       data-composer-started={composerStarted ? "true" : "false"}
       data-start-mode={startMode || "unstarted"}
       data-template-picker-open={templatePickerOpen ? "true" : "false"}
-      data-topbar-mode={showInternalTopbar ? "internal" : "shared"}
     >
-      <main className="monster-workspace cruor-workspace">
-        {showInternalTopbar ? (
-          <MonsterComposerTopbar
-            activePreset={activePreset}
-            targetCr={targetCr}
-            tacticalRole={tacticalRole}
-            monsterTier={monsterTier}
-            tempoProfile={tempoProfile}
-            viewMode={viewMode}
-            onSetViewMode={setViewMode}
-          />
-        ) : null}
+      <main className="monster-workspace">
+        <MonsterComposerTopbar
+          activePreset={activePreset}
+          targetCr={targetCr}
+          tacticalRole={tacticalRole}
+          monsterTier={monsterTier}
+          tempoProfile={tempoProfile}
+          viewMode={viewMode}
+          onSetViewMode={setViewMode}
+        />
 
         {frameOpen ? (
           <>
             <button
               className="monster-frame-scrim is-open"
-          type="button"
-          aria-label="Close Monster Frame"
-          onClick={() => setFrameOpen(false)}
+              type="button"
+              aria-label="Close Monster Frame"
+              onClick={() => setFrameOpen(false)}
             />
 
             <aside
-              className="panel navigator monster-frame-drawer game-frame-drawer is-open cruor-ui-panel-surface cruor-side-panel"
+              className="panel navigator monster-frame-drawer game-frame-drawer is-open"
               aria-label="Monster Frame"
               aria-hidden="false"
             >
-          <div className="game-frame__hero">
-            <div className="game-frame__status-row">
-              <span className="game-frame__status">
-                <span /> Live Frame
-              </span>
-              <button
-                className="icon-btn cruor-ui-control-surface cruor-button cruor-button--icon"
-                type="button"
-                aria-label="Close Monster Frame"
-                onClick={() => setFrameOpen(false)}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-            <p className="eyebrow">Monster Frame</p>
-            <h2>{computed.name}</h2>
-            <div className="game-frame__loadout" aria-label="Current frame summary">
-              <span>
-                <Skull aria-hidden="true" /> {creatureType.label}
-              </span>
-              <span>
-                <Activity aria-hidden="true" /> {category}
-              </span>
-              <span>
-                <Sword aria-hidden="true" /> {role.label}
-              </span>
-              <span>
-                <Gauge aria-hidden="true" /> CR {targetCr}
-              </span>
-              <span>
-                <Activity aria-hidden="true" /> {tacticalRole.label}
-              </span>
-              <span>
-                <Sparkles aria-hidden="true" /> {monsterTier.label}
-              </span>
-              <span>
-                <AlertTriangle aria-hidden="true" /> {tempoProfile.label}
-              </span>
-            </div>
-          </div>
-
-          <div className="game-frame__body">
-            <PanelGroup title="Creature Type" icon={Skull}>
-              <div className="game-type-grid">
-                {CREATURE_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const active = type.id === typeId;
-                  const unavailable = isCreatureTypeUnavailable(type.id);
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      disabled={unavailable}
-                      aria-disabled={unavailable}
-                      className={`game-type-card cruor-ui-card-surface ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                      onClick={() => selectType(type.id)}
-                    >
-                      <span className="game-type-card cruor-ui-card-surface__icon">
-                        <Icon aria-hidden="true" />
-                      </span>
-                      <span className="game-type-card cruor-ui-card-surface__text">
-                        <strong>{type.label}</strong>
-                        <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
-                      </span>
-                      <span className="game-type-card cruor-ui-card-surface__mark">
-                        {active ? "Active" : unavailable ? "Later" : "Select"}
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="game-frame__hero">
+                <div className="game-frame__status-row">
+                  <span className="game-frame__status">
+                    <span /> Live Frame
+                  </span>
+                  <button
+                    className="icon-btn"
+                    type="button"
+                    aria-label="Close Monster Frame"
+                    onClick={() => setFrameOpen(false)}
+                  >
+                    <X aria-hidden="true" />
+                  </button>
+                </div>
+                <p className="eyebrow">Monster Frame</p>
+                <h2>{computed.name}</h2>
+                <div className="game-frame__loadout" aria-label="Current frame summary">
+                  <span>
+                    <Skull aria-hidden="true" /> {creatureType.label}
+                  </span>
+                  <span>
+                    <Activity aria-hidden="true" /> {category}
+                  </span>
+                  <span>
+                    <Sword aria-hidden="true" /> {role.label}
+                  </span>
+                  <span>
+                    <Gauge aria-hidden="true" /> CR {targetCr}
+                  </span>
+                  <span>
+                    <Activity aria-hidden="true" /> {tacticalRole.label}
+                  </span>
+                  <span>
+                    <Sparkles aria-hidden="true" /> {monsterTier.label}
+                  </span>
+                  <span>
+                    <AlertTriangle aria-hidden="true" /> {tempoProfile.label}
+                  </span>
+                </div>
               </div>
 
-              <div className="game-category-panel cruor-ui-card-surface">
-                <div className="game-frame__minihead">
-                  <span>Variant</span>
-                  <strong>{category}</strong>
-                </div>
-                <div
-                  className="game-category-grid"
-                  role="radiogroup"
-                  aria-label="Creature category"
-                >
-                  {creatureType.categories.map((item) => {
-                    const unavailable = isCreatureCategoryUnavailable(typeId, item);
-                    return (
+              <div className="game-frame__body">
+                <PanelGroup title="Creature Type" icon={Skull}>
+                  <div className="game-type-grid">
+                    {CREATURE_TYPES.map((type) => {
+                      const Icon = type.icon;
+                      const active = type.id === typeId;
+                      const unavailable = isCreatureTypeUnavailable(type.id);
+                      return (
+                        <button
+                          key={type.id}
+                          type="button"
+                          disabled={unavailable}
+                          aria-disabled={unavailable}
+                          className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                          onClick={() => selectType(type.id)}
+                        >
+                          <span className="game-type-card__icon">
+                            <Icon aria-hidden="true" />
+                          </span>
+                          <span className="game-type-card__text">
+                            <strong>{type.label}</strong>
+                            <small>
+                              {unavailable ? "Unavailable" : `${type.categories.length} variants`}
+                            </small>
+                          </span>
+                          <span className="game-type-card__mark">
+                            {active ? "Active" : unavailable ? "Later" : "Select"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="game-category-panel">
+                    <div className="game-frame__minihead">
+                      <span>Variant</span>
+                      <strong>{category}</strong>
+                    </div>
+                    <div
+                      className="game-category-grid"
+                      role="radiogroup"
+                      aria-label="Creature category"
+                    >
+                      {creatureType.categories.map((item) => {
+                        const unavailable = isCreatureCategoryUnavailable(typeId, item);
+                        return (
+                          <button
+                            key={item}
+                            type="button"
+                            role="radio"
+                            disabled={unavailable}
+                            aria-disabled={unavailable}
+                            aria-checked={item === category}
+                            className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                            onClick={() => {
+                              if (unavailable) return;
+                              setCategory(item);
+                              setActivePresetId("");
+                            }}
+                          >
+                            {item}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </PanelGroup>
+
+                <PanelGroup title="Encounter Role" icon={Sword}>
+                  <div className="game-role-grid">
+                    {ROLES.map((item) => (
                       <button
-                        key={item}
+                        key={item.id}
                         type="button"
-                        role="radio"
-                        disabled={unavailable}
-                        aria-disabled={unavailable}
-                        aria-checked={item === category}
-                        className={`game-category-chip cruor-ui-control-surface cruor-ui-chip-surface ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                        className={`game-role-card ${item.id === roleId ? "active" : ""}`}
                         onClick={() => {
-                          if (unavailable) return;
-                          setCategory(item);
+                          setRoleId(item.id);
                           setActivePresetId("");
                         }}
                       >
-                        {item}
+                        <span className="game-role-card__top">
+                          <strong>{item.label}</strong>
+                          <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
+                        </span>
+                        <span className="game-role-card__summary">{item.summary}</span>
+                        <span className="game-role-card__stats">
+                          <span>HP {Math.round(item.hpMult * 100)}%</span>
+                          <span>DPR {Math.round(item.dprMult * 100)}%</span>
+                        </span>
                       </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Encounter Role" icon={Sword}>
-              <div className="game-role-grid">
-                {ROLES.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`game-role-card cruor-ui-card-surface ${item.id === roleId ? "active" : ""}`}
-                    onClick={() => {
-                      setRoleId(item.id);
-                      setActivePresetId("");
-                    }}
-                  >
-                    <span className="game-role-card cruor-ui-card-surface__top">
-                      <strong>{item.label}</strong>
-                      <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
-                    </span>
-                    <span className="game-role-card cruor-ui-card-surface__summary">{item.summary}</span>
-                    <span className="game-role-card cruor-ui-card-surface__stats">
-                      <span>HP {Math.round(item.hpMult * 100)}%</span>
-                      <span>DPR {Math.round(item.dprMult * 100)}%</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Design Profile" icon={Gauge}>
-              <div className="game-category-panel cruor-ui-card-surface">
-                <div className="game-frame__minihead">
-                  <span>Target CR</span>
-                  <strong>{targetCr}</strong>
-                </div>
-                <NumberField
-                  label="Target CR"
-                  value={targetCr}
-                  min={0}
-                  max={30}
-                  onChange={(value) => {
-                    setTargetCr(value);
-                    setActivePresetId("");
-                  }}
-                />
-              </div>
-
-              <div className="game-category-panel cruor-ui-card-surface">
-                <div className="game-frame__minihead">
-                  <span>Tactical Role</span>
-                  <strong>{tacticalRole.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Tactical role">
-                  {TACTICAL_ROLES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === tacticalRoleId}
-                      className={`game-category-chip cruor-ui-control-surface cruor-ui-chip-surface ${item.id === tacticalRoleId ? "active" : ""}`}
-                      onClick={() => {
-                        setTacticalRoleId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="game-category-panel cruor-ui-card-surface">
-                <div className="game-frame__minihead">
-                  <span>Tier</span>
-                  <strong>{monsterTier.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
-                  {MONSTER_TIERS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === monsterTierId}
-                      className={`game-category-chip cruor-ui-control-surface cruor-ui-chip-surface ${item.id === monsterTierId ? "active" : ""}`}
-                      onClick={() => {
-                        setMonsterTierId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="game-category-panel cruor-ui-card-surface">
-                <div className="game-frame__minihead">
-                  <span>Tempo</span>
-                  <strong>{tempoProfile.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Tempo profile">
-                  {TEMPO_PROFILES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === tempoProfileId}
-                      className={`game-category-chip cruor-ui-control-surface cruor-ui-chip-surface ${item.id === tempoProfileId ? "active" : ""}`}
-                      onClick={() => {
-                        setTempoProfileId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Danger" icon={AlertTriangle}>
-              <div className="game-threat-panel cruor-ui-card-surface">
-                <div className="game-threat-scale" role="radiogroup" aria-label="Monster danger">
-                  {DANGERS.map((item, index) => (
-                    <button
-                      key={item.id}
-                      className={`game-threat-chip cruor-ui-control-surface cruor-ui-chip-surface ${item.id === dangerId ? "active" : ""}`}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === dangerId}
-                      onClick={() => {
-                        setDangerId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      <span>0{index + 1}</span>
-                      <strong>{item.label}</strong>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="game-frame__meters" aria-label="Current pressure readout">
-                  <div className="game-frame__meter">
-                    <span>
-                      <small>Pressure</small>
-                      <strong>
-                        {computed.pressure} / {computed.budget}
-                      </strong>
-                    </span>
-                    <i>
-                      <b
-                        className={computed.pressure > computed.budget ? "is-over" : ""}
-                        style={{ width: `${Math.min(pressurePercent, 100)}%` }}
-                      />
-                    </i>
+                    ))}
                   </div>
-                  <div className="game-frame__meter">
-                    <span>
-                      <small>Complexity</small>
-                      <strong>
-                        {computed.complexity} / {computed.complexityCap}
-                      </strong>
-                    </span>
-                    <i>
-                      <b
-                        className={computed.complexity > computed.complexityCap ? "is-over" : ""}
-                        style={{ width: `${Math.min(complexityPercent, 100)}%` }}
-                      />
-                    </i>
+                </PanelGroup>
+
+                <PanelGroup title="Design Profile" icon={Gauge}>
+                  <div className="game-category-panel">
+                    <div className="game-frame__minihead">
+                      <span>Target CR</span>
+                      <strong>{targetCr}</strong>
+                    </div>
+                    <NumberField
+                      label="Target CR"
+                      value={targetCr}
+                      min={0}
+                      max={30}
+                      onChange={(value) => {
+                        setTargetCr(value);
+                        setActivePresetId("");
+                      }}
+                    />
                   </div>
-                </div>
+
+                  <div className="game-category-panel">
+                    <div className="game-frame__minihead">
+                      <span>Tactical Role</span>
+                      <strong>{tacticalRole.label}</strong>
+                    </div>
+                    <div
+                      className="game-category-grid"
+                      role="radiogroup"
+                      aria-label="Tactical role"
+                    >
+                      {TACTICAL_ROLES.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={item.id === tacticalRoleId}
+                          className={`game-category-chip ${item.id === tacticalRoleId ? "active" : ""}`}
+                          onClick={() => {
+                            setTacticalRoleId(item.id);
+                            setActivePresetId("");
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="game-category-panel">
+                    <div className="game-frame__minihead">
+                      <span>Tier</span>
+                      <strong>{monsterTier.label}</strong>
+                    </div>
+                    <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
+                      {MONSTER_TIERS.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={item.id === monsterTierId}
+                          className={`game-category-chip ${item.id === monsterTierId ? "active" : ""}`}
+                          onClick={() => {
+                            setMonsterTierId(item.id);
+                            setActivePresetId("");
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="game-category-panel">
+                    <div className="game-frame__minihead">
+                      <span>Tempo</span>
+                      <strong>{tempoProfile.label}</strong>
+                    </div>
+                    <div
+                      className="game-category-grid"
+                      role="radiogroup"
+                      aria-label="Tempo profile"
+                    >
+                      {TEMPO_PROFILES.map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={item.id === tempoProfileId}
+                          className={`game-category-chip ${item.id === tempoProfileId ? "active" : ""}`}
+                          onClick={() => {
+                            setTempoProfileId(item.id);
+                            setActivePresetId("");
+                          }}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </PanelGroup>
+
+                <PanelGroup title="Danger" icon={AlertTriangle}>
+                  <div className="game-threat-panel">
+                    <div
+                      className="game-threat-scale"
+                      role="radiogroup"
+                      aria-label="Monster danger"
+                    >
+                      {DANGERS.map((item, index) => (
+                        <button
+                          key={item.id}
+                          className={`game-threat-chip ${item.id === dangerId ? "active" : ""}`}
+                          type="button"
+                          role="radio"
+                          aria-checked={item.id === dangerId}
+                          onClick={() => {
+                            setDangerId(item.id);
+                            setActivePresetId("");
+                          }}
+                        >
+                          <span>0{index + 1}</span>
+                          <strong>{item.label}</strong>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="game-frame__meters" aria-label="Current pressure readout">
+                      <div className="game-frame__meter">
+                        <span>
+                          <small>Pressure</small>
+                          <strong>
+                            {computed.pressure} / {computed.budget}
+                          </strong>
+                        </span>
+                        <i>
+                          <b
+                            className={computed.pressure > computed.budget ? "is-over" : ""}
+                            style={{ width: `${Math.min(pressurePercent, 100)}%` }}
+                          />
+                        </i>
+                      </div>
+                      <div className="game-frame__meter">
+                        <span>
+                          <small>Complexity</small>
+                          <strong>
+                            {computed.complexity} / {computed.complexityCap}
+                          </strong>
+                        </span>
+                        <i>
+                          <b
+                            className={
+                              computed.complexity > computed.complexityCap ? "is-over" : ""
+                            }
+                            style={{ width: `${Math.min(complexityPercent, 100)}%` }}
+                          />
+                        </i>
+                      </div>
+                    </div>
+                  </div>
+                </PanelGroup>
               </div>
-            </PanelGroup>
-          </div>
             </aside>
           </>
         ) : null}
@@ -2238,7 +2220,7 @@ export default function CruorMonsterComposerMvp({
         {viewMode === "composer" && (
           <section className="monster-layout">
             <section
-              className="panel build-canvas monster-canvas cruor-ui-panel-surface cruor-workspace-surface"
+              className="panel build-canvas monster-canvas"
               aria-label="The Crucible build canvas"
             >
               <div className="build-head monster-build-head">
@@ -2267,7 +2249,7 @@ export default function CruorMonsterComposerMvp({
                 <div className="crucible-head-controls">
                   <div className="brief-actions" aria-label="Build actions">
                     <button
-                      className="icon-btn primary empty-cta tooltip-btn cruor-ui-control-surface cruor-button cruor-button--icon"
+                      className="icon-btn primary empty-cta tooltip-btn"
                       type="button"
                       aria-label="Forge Monster"
                       data-tooltip="Auto-build a playable first draft from the current Monster Frame. You can customize every anatomy slot afterward."
@@ -2276,12 +2258,10 @@ export default function CruorMonsterComposerMvp({
                       <Flame aria-hidden="true" />
                     </button>
                     <button
-                      className="crucible-action-btn tooltip-btn cruor-ui-control-surface cruor-button"
+                      className="crucible-action-btn tooltip-btn"
                       type="button"
                       aria-label="Open Component Navigator"
                       aria-disabled={!composerStarted}
-                      data-ui-mode-advanced-only=""
-                      data-monster-advanced-only=""
                       data-tooltip={
                         composerStarted
                           ? "Browse compatible components independently from a specific anatomy slot."
@@ -2292,7 +2272,7 @@ export default function CruorMonsterComposerMvp({
                       <SlidersHorizontal aria-hidden="true" /> Components
                     </button>
                     <button
-                      className={`icon-btn tooltip-btn cruor-ui-control-surface cruor-button cruor-button--icon ${composerStarted ? "" : "is-disabled"}`}
+                      className={`icon-btn tooltip-btn ${composerStarted ? "" : "is-disabled"}`}
                       type="button"
                       aria-label="Start Over"
                       aria-disabled={!composerStarted}
@@ -2334,66 +2314,6 @@ export default function CruorMonsterComposerMvp({
                 onOpenBalance={() => setViewMode("balance")}
                 onOpenExport={() => setViewMode("export")}
               />
-
-              <div className="build-slot cruor-slot-card cruor-ui-card-surfaces monster-slots cruor-slot-grid">
-                {SLOTS.map((slot) => {
-                  const Icon = slot.icon;
-                  const slotFeatures = getSelectedIdsForSlot(selected, slot.id)
-                    .map((id) => FEATURES.find((feature) => feature.id === id))
-                    .filter(Boolean);
-                  const active = activeSlot === slot.id;
-                  const filled = slotFeatures.length > 0;
-                  return (
-                    <article
-                      key={slot.id}
-                      role="button"
-                      tabIndex={0}
-                      className={`build-slot cruor-slot-card cruor-ui-card-surface ${active ? "active" : ""} ${guidedFlow.recommendedSlotId === slot.id ? "is-guided" : ""} ${filled ? "has-items" : "needs-attention"}`}
-                      onClick={() => openSlotNavigator(slot.id)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                          event.preventDefault();
-                          openSlotNavigator(slot.id);
-                        }
-                      }}
-                      onDragOver={(event) => event.preventDefault()}
-                      onDrop={() => handleDrop(slot.id)}
-                    >
-                      <div className="slot-head">
-                        <span className="slot-name">
-                          <Icon className="slot-icon" aria-hidden="true" /> {slot.label}
-                        </span>
-                        <span className="count cruor-ui-chip-surface cruor-micro-chip">{slotFeatures.length || "—"}</span>
-                      </div>
-                      {filled ? (
-                        <div className="slot-stack">
-                          {slotFeatures.map((feature) => (
-                            <article key={feature.id} className="slot-item cruor-slot-item">
-                              <button
-                                className="slot-item-remove cruor-ui-control-surface cruor-button cruor-button--icon cruor-button--sm"
-                                type="button"
-                                aria-label={`Remove ${feature.title}`}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  removeFeature(slot.id, feature.id);
-                                }}
-                              >
-                                <X aria-hidden="true" />
-                              </button>
-                              <p className="slot-item-text">
-                                <strong className="slot-item-title">{feature.title}</strong>
-                                {normalizeMonsterReferences(feature.summary, computed)}
-                              </p>
-                            </article>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="slot-empty cruor-empty-state">{slot.hint}</span>
-                      )}
-                    </article>
-                  );
-                })}
-              </div>
 
               {composerStarted && (
                 <GraftInspector
@@ -2590,8 +2510,6 @@ export default function CruorMonsterComposerMvp({
   );
 }
 
-
-
 function GraftInspector({
   slot,
   features,
@@ -2606,33 +2524,31 @@ function GraftInspector({
 
   return (
     <details
-      className={`graft-inspector cruor-inspector-card cruor-ui-card-surface ${installed ? "has-feature" : "is-empty"}`}
-      data-ui-mode-advanced-only=""
-      data-monster-advanced-only=""
+      className={`graft-inspector ${installed ? "has-feature" : "is-empty"}`}
       aria-label="Selected graft inspector"
     >
-      <summary className="graft-inspector cruor-inspector-card cruor-ui-card-surface__head">
+      <summary className="graft-inspector__head">
         <div>
           <h3>
             <Icon aria-hidden="true" /> {slot.label}
           </h3>
         </div>
-        <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__status cruor-chip-stack">
+        <div className="graft-inspector__status">
           <span>{source.label}</span>
           <strong>{installed ? `${features.length} Installed` : `${alternatives} Options`}</strong>
         </div>
       </summary>
 
       {installed ? (
-        <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__content">
-          <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__stack">
+        <div className="graft-inspector__content">
+          <div className="graft-inspector__stack">
             {features.map((feature) => {
               const statEntries = Object.entries(feature.stats || {});
               const mechanicProfile = getFeatureMechanicProfile(feature);
               return (
-                <article key={feature.id} className="graft-inspector cruor-inspector-card cruor-ui-card-surface__item cruor-ui-card-surface cruor-inspector-card">
-                  <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__main">
-                    <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__title-row">
+                <article key={feature.id} className="graft-inspector__item">
+                  <div className="graft-inspector__main">
+                    <div className="graft-inspector__title-row">
                       <h4>{feature.title}</h4>
                       <button
                         type="button"
@@ -2645,7 +2561,7 @@ function GraftInspector({
                     <p>{normalizeMonsterReferences(feature.summary, computed)}</p>
                   </div>
 
-                  <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__rules cruor-card-grid">
+                  <div className="graft-inspector__rules">
                     <article>
                       <BookOpen aria-hidden="true" />
                       <div>
@@ -2666,7 +2582,7 @@ function GraftInspector({
             })}
           </div>
 
-          <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__footer">
+          <div className="graft-inspector__footer">
             <span>
               {alternatives} alternative{alternatives === 1 ? "" : "s"}
             </span>
@@ -2676,7 +2592,7 @@ function GraftInspector({
           </div>
         </div>
       ) : (
-        <div className="graft-inspector cruor-inspector-card cruor-ui-card-surface__empty cruor-empty-state">
+        <div className="graft-inspector__empty">
           <p>{slot.hint}</p>
           <span>
             {alternatives} compatible graft{alternatives === 1 ? "" : "s"}
@@ -2689,7 +2605,7 @@ function GraftInspector({
 
 function PanelGroup({ title, icon: Icon, children }) {
   return (
-    <section className="monster-panel-group cruor-flow-panel">
+    <section className="monster-panel-group">
       <div className="monster-panel-group__head">
         <Icon aria-hidden="true" />
         <h3>{title}</h3>
@@ -2701,10 +2617,9 @@ function PanelGroup({ title, icon: Icon, children }) {
 
 function NumberField({ label, value, min, max, onChange }) {
   return (
-    <label className="monster-field cruor-field">
+    <label className="monster-field">
       <span>{label}</span>
       <input
-        className="cruor-input"
         type="number"
         min={min}
         max={max}

@@ -618,15 +618,6 @@
   padding: 0 13px;
 }
 
-.crucible-generator-switch__label {
-  color: inherit;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
 
 .crucible-topbar__legacy-workflow-slot,
 .crucible-topbar__legacy-workflow-slot[hidden] {
@@ -1060,101 +1051,98 @@
   }
 }
 
-/* Step 4.13 — Topbar final consolidation.
-   Crucible topbar semantics:
-   - .crucible-generator-switch / .crucible-topbar__generator-switch changes generator.
-   - .crucible-view-tabs / .crucible-workspace__tabs changes the active generator view.
-   Legacy darken-* classes remain as compatibility hooks only. */
-.crucible-topbar-shell {
-  --crucible-topbar-group-label-height: 12px;
+/* Step 5.3 — CrucibleTopbar icon-only controls.
+   Generator and view controls now use Font Awesome icons with aria labels and tooltips. */
+.darken-topbar__eyebrow,
+.crucible-topbar__eyebrow,
+.crucible-topbar__control-label {
+  display: none !important;
+}
+
+.crucible-topbar__primary {
+  gap: 13px;
 }
 
 .crucible-topbar__control-row {
-  align-items: end;
+  align-items: center;
 }
 
 .crucible-topbar__control-group {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-
-.crucible-topbar__control-group--generators {
-  justify-items: start;
-  flex: 0 0 auto;
-}
-
-.crucible-topbar__control-group--views {
-  justify-items: end;
-  margin-left: auto;
-  min-width: min(100%, 360px);
-}
-
-.crucible-topbar__control-label {
-  min-height: var(--crucible-topbar-group-label-height);
-  color: rgba(208, 162, 170, 0.62);
-  font-size: 9px;
-  font-weight: 950;
-  letter-spacing: 0.13em;
-  line-height: 1;
-  text-transform: uppercase;
+  gap: 0;
 }
 
 .crucible-topbar__generator-switch,
 .crucible-view-tabs {
-  min-width: 0;
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 6px;
 }
 
+.darken-workspace__topbar .crucible-generator-switch .mode-btn,
+.crucible-generator-switch__btn,
 .crucible-topbar__generator-btn,
-.crucible-view-tabs__btn {
-  white-space: nowrap;
+.crucible-view-tabs__btn,
+.darken-workspace__tab.crucible-view-tabs__btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--darken-control-height);
+  min-width: var(--darken-control-height);
+  height: var(--darken-control-height);
+  min-height: var(--darken-control-height);
+  padding: 0;
+  font-size: 0;
+  line-height: 1;
+}
+
+.crucible-topbar__generator-btn i,
+.crucible-view-tabs__btn i {
+  color: currentColor;
+  font-size: 15px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.crucible-view-tabs__btn i {
+  font-size: 14px;
+}
+
+.crucible-topbar__generator-btn[aria-pressed="true"] i,
+.crucible-view-tabs__btn[aria-selected="true"] i,
+.crucible-view-tabs__btn.is-active i {
+  filter: drop-shadow(0 0 10px rgba(240, 185, 194, 0.22));
+}
+
+.crucible-topbar__generator-switch {
+  flex: 0 0 auto;
+}
+
+.crucible-topbar__control-group--views {
+  min-width: auto;
 }
 
 .crucible-view-tabs {
-  justify-content: flex-end;
+  min-width: auto;
 }
 
-.crucible-topbar__state {
-  display: none;
-}
-
-.crucible-topbar-shell[data-active-generator="monster"] .crucible-view-tabs {
-  min-width: min(100%, 470px);
-}
-
+.crucible-topbar-shell[data-active-generator="monster"] .crucible-view-tabs,
 .crucible-topbar-shell[data-active-generator="darken"] .crucible-view-tabs {
-  min-width: min(100%, 240px);
-}
-
-@media (max-width: 1100px) {
-  .crucible-topbar__control-row {
-    align-items: stretch;
-  }
-
-  .crucible-topbar__control-group--views {
-    justify-items: stretch;
-    margin-left: 0;
-    min-width: 0;
-  }
-
-  .crucible-view-tabs {
-    justify-content: flex-start;
-  }
+  min-width: auto;
 }
 
 @media (max-width: 720px) {
-  .crucible-topbar__control-group {
-    width: 100%;
-  }
-
   .crucible-topbar__generator-switch,
   .crucible-view-tabs {
-    width: 100%;
+    justify-content: stretch;
   }
 
+  .darken-workspace__topbar .crucible-generator-switch .mode-btn,
+  .crucible-generator-switch__btn,
   .crucible-topbar__generator-btn,
-  .crucible-view-tabs__btn {
+  .crucible-view-tabs__btn,
+  .darken-workspace__tab.crucible-view-tabs__btn {
     flex: 1 1 0;
+    width: auto;
     min-width: 0;
   }
 }

@@ -6257,7 +6257,7 @@
 .monster-shell .template-picker-modal__panel,
 .monster-shell .component-navigator-modal__panel {
   border: var(--cruor-ui-panel-border);
-  border-top-color: var(--cruor-ui-panel-border-top);
+  border-top-color: var(--cruor-ui-panel-border-top-color);
   background-color: var(--cruor-ui-panel-bg);
   background-image: var(--cruor-ui-panel-image);
   background-blend-mode: overlay, overlay, normal;
@@ -6282,7 +6282,7 @@
 .monster-shell .monster-start-card,
 .monster-shell .template-choice-card__button,
 .monster-shell .balance-card {
-  border-color: var(--cruor-ui-card-border);
+  border-color: var(--cruor-ui-card-border-color);
   background: var(--cruor-ui-card-bg);
   box-shadow: var(--cruor-ui-card-shadow);
 }
@@ -6306,7 +6306,7 @@
 .monster-shell .monster-start-card:hover,
 .monster-shell .template-choice-card__button:hover,
 .monster-shell .template-choice-card.active .template-choice-card__button {
-  border-color: var(--cruor-ui-card-border-active);
+  border-color: var(--cruor-ui-card-border-color-active);
   background: var(--cruor-ui-card-bg-active);
   box-shadow: var(--cruor-ui-card-shadow-active);
 }
@@ -6321,7 +6321,7 @@
 .monster-shell .tag-clear-btn,
 .monster-shell .run-mode-actions button,
 .monster-shell .export-review-btn {
-  border-color: var(--cruor-ui-control-border);
+  border-color: var(--cruor-ui-control-border-color);
   background: var(--cruor-ui-control-bg);
   color: var(--cruor-ui-control-text);
 }
@@ -6340,7 +6340,7 @@
 .monster-shell .tag-clear-btn:hover,
 .monster-shell .run-mode-actions button:hover,
 .monster-shell .export-review-btn:hover {
-  border-color: var(--cruor-ui-control-border-active);
+  border-color: var(--cruor-ui-control-border-color-active);
   background: var(--cruor-ui-control-bg-active);
   color: var(--cruor-ui-control-text-active);
 }
@@ -6357,7 +6357,7 @@
 .monster-shell .guided-slot-chip,
 .monster-shell .guided-readiness-badge,
 .monster-shell .graft-inspector__chips span {
-  border-color: var(--cruor-ui-chip-border);
+  border-color: var(--cruor-ui-chip-border-color);
   background: var(--cruor-ui-chip-bg);
   color: var(--cruor-ui-chip-text);
 }

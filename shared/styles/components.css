@@ -1,6 +1,6 @@
-/* Step 5.7b — Corrected shared Cruor UI tokens.
-   Border shorthand tokens remain valid for `border`.
-   Matching `*-color` tokens must be used by `border-color` / `border-top-color`. */
+/* Step 5.8b — Corrected shared Cruor UI tokens.
+   Border shorthand tokens are only for `border`.
+   Matching `*-color` tokens are only for `border-color` / `border-top-color`. */
 :root {
   --cruor-ui-panel-border-color: rgba(255, 238, 242, 0.08);
   --cruor-ui-panel-border-top-color: rgba(255, 238, 242, 0.12);
@@ -60,7 +60,6 @@
   --cruor-z-fullscreen-modal: 2400;
 }
 
-/* Step 5.7b — Shared utility class baseline. */
 .cruor-ui-panel-surface {
   border: var(--cruor-ui-panel-border);
   border-top: var(--cruor-ui-panel-border-top);

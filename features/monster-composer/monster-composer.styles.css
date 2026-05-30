@@ -1110,7 +1110,8 @@
   height: 72px;
 }
 
-.monster-shell .build-head{
+.monster-shell .build-head,
+.monster-shell .slot-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1139,6 +1140,12 @@
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.monster-shell .build-slots {
+
+
+  align-items: start;
 }
 
 .monster-shell .guided-flow-panel {
@@ -1510,6 +1517,195 @@
   border: 1px dashed rgba(95, 7, 22, .46);
   background: rgba(0, 0, 0, .18);
   padding: 11px;
+}
+
+.monster-shell .build-slot {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background-color: rgba(8, 6, 7, .46);
+  background-image:
+    linear-gradient(180deg, rgba(122, 26, 40, .05), transparent 62%),
+    radial-gradient(circle at 24px 22px, rgba(122, 26, 40, .08), transparent 130px),
+    linear-gradient(135deg, rgba(51, 3, 12, .24), transparent 70%);
+  background-blend-mode: screen, screen, normal;
+
+
+  overflow: hidden;
+  transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease, filter .12s ease;
+}
+
+.monster-shell .build-slot:hover {
+  background: linear-gradient(180deg, rgba(51, 3, 12, .24), transparent 150px), radial-gradient(circle at 26px 22px, rgba(122, 26, 40, .16), transparent 140px), rgba(51, 3, 12, .09);
+  transform: scale(1.003);
+}
+
+.monster-shell .build-slot.active {
+  border-color: rgba(122, 26, 40, .95);
+  background:
+    linear-gradient(180deg, rgba(51, 3, 12, .36), transparent 160px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, .2), transparent 150px),
+    rgba(51, 3, 12, .17);
+  box-shadow: 0 0 0 1px rgba(122, 26, 40, .4), 0 0 46px rgba(51, 3, 12, .6), inset 0 0 44px rgba(122, 26, 40, .17), inset 0 1px 0 rgba(122, 26, 40, .08);
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(from var(--empty-slot-border-angle, 0deg), rgba(122, 26, 40, .2) 0deg, rgba(122, 26, 40, .2) 222deg, rgba(222, 146, 159, .4) 246deg, rgba(174, 50, 68, .62) 263deg, rgba(222, 146, 159, .32) 281deg, rgba(122, 26, 40, .2) 308deg, rgba(122, 26, 40, .2) 360deg);
+  opacity: .45;
+  animation: emptySlotBorderOrbit 8.3s linear infinite;
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #09090a;
+  background-image: linear-gradient(180deg, rgba(180, 174, 176, .045), transparent 62%), radial-gradient(circle at 24px 22px, rgba(150, 142, 146, .06), transparent 130px), linear-gradient(135deg, rgba(42, 39, 41, .14), transparent 70%);
+  filter: saturate(.56);
+}
+
+.monster-shell .build-slot > * {
+  position: relative;
+  z-index: 1;
+}
+
+@property --empty-slot-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes emptySlotBorderOrbit {
+  0% { --empty-slot-border-angle: 0deg; }
+  100% { --empty-slot-border-angle: 360deg; }
+}
+
+.monster-shell .slot-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+
+  font-weight: 900;
+
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.monster-shell .slot-icon {
+
+
+  filter: drop-shadow(0 0 5px rgba(122, 26, 40, .24));
+}
+
+.monster-shell .build-slot.active .slot-name,
+.monster-shell .build-slot.active .slot-icon,
+.monster-shell .slot-item-title {
+  color: #d0a2aa;
+  text-shadow: 0 0 13px rgba(122, 26, 40, .58), 0 0 2px rgba(255, 255, 255, .14);
+}
+
+.monster-shell .slot-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monster-shell .count {
+
+  border: 1px solid rgba(122, 26, 40, .18);
+
+
+  padding: 2px 7px;
+
+
+  text-align: center;
+}
+
+.monster-shell .slot-menu-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  opacity: 0;
+  transform: translateY(-1px);
+  transition: opacity .12s ease, color .12s ease, filter .12s ease;
+}
+
+.monster-shell .build-slot.has-items:hover .slot-menu-btn,
+.monster-shell .build-slot.has-items:focus-within .slot-menu-btn {
+  opacity: 1;
+}
+
+.monster-shell .slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+
+}
+
+.monster-shell .slot-stack {
+  display: grid;
+
+
+}
+
+.monster-shell .slot-item {
+  position: relative;
+  border: 0;
+  background: transparent;
+
+  box-shadow: none;
+}
+
+.monster-shell .slot-item-remove {
+  position: absolute;
+
+  right: 0;
+  display: grid;
+  place-items: center;
+
+
+  border: 1px solid rgba(95, 7, 22, .52);
+
+  color: #8f7278;
+  opacity: 0;
+  transition: opacity .12s ease, color .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.monster-shell .slot-item:hover .slot-item-remove,
+.monster-shell .slot-item:focus-within .slot-item-remove {
+  opacity: 1;
+}
+
+.monster-shell .slot-item-remove:hover {
+  border-color: rgba(190, 64, 82, .72);
+  background: rgba(95, 7, 22, .26);
+  color: #fff0f2;
+}
+
+.monster-shell .slot-item-remove svg {
+  width: 13px;
+  height: 13px;
+}
+
+.monster-shell .slot-item-text {
+  margin: 0;
+
+
 }
 
 .monster-shell .match-row.always-visible,
@@ -3981,7 +4177,8 @@
 }
 
 .monster-shell .monster-silhouette-node.is-guided:not(.is-active),
-.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active){
+.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active),
+.monster-shell .build-slot.is-guided:not(.active) {
   animation: guidedSlotPulse 1.8s ease-in-out infinite;
 }
 
@@ -4101,6 +4298,46 @@
 .monster-shell .monster-silhouette-slot-card:hover .monster-silhouette-slot-card__body em,
 .monster-shell .monster-silhouette-slot-card.is-active .monster-silhouette-slot-card__body em {
   -webkit-line-clamp: 2;
+}
+
+.monster-shell .build-slots {
+  display: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::before,
+.monster-shell .build-slot.needs-attention:not(.active)::after {
+  display: none;
+}
+
+.monster-shell .slot-icon {
+  width: 15px;
+  min-width: 15px;
+  height: 15px;
+
+}
+
+.monster-shell .slot-item-text {
+  padding-left: 0;
+  text-indent: 0;
+
+
+}
+
+.monster-shell .slot-item-text .slot-item-title {
+  display: block;
+  margin-bottom: 2px;
+  color: #d0a2aa;
+}
+
+.monster-shell .slot-item .match-row {
+  display: none;
+}
+
+.monster-shell .build-slot.active .slot-item .match-row,
+.monster-shell .build-slot:hover .slot-item .match-row {
+  display: flex;
 }
 
 .monster-shell .graft-inspector > summary,
@@ -5015,7 +5252,8 @@
     position: static;
   }
 
-  .monster-shell .monster-anatomy-composer,
+  .monster-shell .build-slots,
+.monster-shell .monster-anatomy-composer,
 .monster-shell .graft-inspector__rules,
 .monster-shell .monster-output-grid,
 .monster-shell .compiled-meta-grid,
@@ -5023,7 +5261,7 @@
 .monster-shell .balance-meta-grid,
 .monster-shell .export-meta-grid,
 .monster-shell .run-stat-strip,
-.monster-shell .cruor-stat-block__abilities{
+.monster-shell .cruor-stat-block__abilities {
     grid-template-columns: 1fr;
   }
 }
@@ -5088,6 +5326,10 @@
     display: grid;
   }
 
+  .monster-shell[data-composer-started="false"] .build-slots {
+    display: none;
+  }
+
   .monster-shell .monster-start-screen {
     min-height: 430px;
     padding: 18px;
@@ -5103,6 +5345,11 @@
 
   .monster-shell[data-composer-started="true"] .monster-anatomy-composer {
     display: none;
+  }
+
+  .monster-shell[data-composer-started="true"] .build-slots {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .monster-shell .monster-silhouette-slot-card,
@@ -5480,6 +5727,7 @@
 }
 
 .monster-shell .brief-choice-card,
+.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -5491,7 +5739,7 @@
 .monster-shell .graft-inspector,
 .monster-shell .graft-inspector__item,
 .monster-shell .guided-flow-panel,
-.monster-shell .guided-flow-next{
+.monster-shell .guided-flow-next {
   border-color: var(--monster-shared-card-border);
   background-color: var(--monster-shared-card-bg);
   background-image: var(--monster-shared-card-image);
@@ -5503,6 +5751,8 @@
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -5511,7 +5761,7 @@
 .monster-shell .game-role-card:hover,
 .monster-shell .game-role-card.active,
 .monster-shell .guided-slot-chip.is-next,
-.monster-shell .guided-slot-chip:hover{
+.monster-shell .guided-slot-chip:hover {
   border-color: rgba(122, 26, 40, 0.95);
   background:
     linear-gradient(180deg, rgba(51, 3, 12, 0.36), transparent 160px),
@@ -5536,6 +5786,10 @@
 
 .monster-shell .component-card {
   border-width: 2px;
+}
+
+.monster-shell .build-slot {
+  border-width: 1px;
 }
 
 .monster-shell .navigator-filter-chip,
@@ -5593,6 +5847,133 @@
     0 0 0 1px rgba(190, 64, 82, 0.1),
     0 0 30px rgba(122, 26, 40, 0.22),
     inset 0 1px 0 rgba(255, 238, 242, 0.055);
+}
+
+/* Build slots */
+.monster-shell .build-slots.monster-slots {
+  gap: 12px;
+  align-items: stretch;
+}
+
+.monster-shell .build-slot {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 112px;
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+  color: rgba(238, 238, 238, 0.66);
+  padding: 13px;
+}
+
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active {
+  transform: translateY(-1px);
+  border-color: var(--monster-card-border-active);
+  background: var(--monster-card-bg-active);
+  box-shadow: var(--monster-card-shadow-active);
+}
+
+.monster-shell .build-slot.is-guided:not(.active) {
+  border-color: rgba(190, 64, 82, 0.46);
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.08),
+    0 0 24px rgba(122, 26, 40, 0.2),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+}
+
+.monster-shell .build-slot.has-items {
+  min-height: 124px;
+}
+
+.monster-shell .slot-head {
+  align-items: center;
+  gap: 10px;
+}
+
+.monster-shell .slot-name {
+  color: rgba(238, 238, 238, 0.76);
+  font-size: 10.5px;
+  letter-spacing: 0.095em;
+}
+
+.monster-shell .build-slot.active .slot-name,
+.monster-shell .build-slot.active .slot-icon,
+.monster-shell .build-slot:hover .slot-name,
+.monster-shell .build-slot:hover .slot-icon {
+  color: #fff0f2;
+  text-shadow: 0 0 12px rgba(122, 26, 40, 0.42);
+}
+
+.monster-shell .slot-icon {
+  color: #8f7278;
+}
+
+.monster-shell .count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 22px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.monster-shell .slot-empty {
+  align-self: start;
+  margin-top: 0;
+  color: rgba(238, 238, 238, 0.44);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-stack {
+  gap: 8px;
+  margin-top: 0;
+}
+
+.monster-shell .slot-item {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 238, 242, 0.055);
+  padding: 8px 30px 0 0;
+}
+
+.monster-shell .slot-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.monster-shell .slot-item-text {
+  color: rgba(238, 238, 238, 0.58);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-item-title {
+  display: block;
+  margin-bottom: 2px;
+  color: #d0a2aa;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.18;
+}
+
+.monster-shell .slot-item-remove {
+  top: 5px;
+  width: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.monster-shell .slot-item:first-child .slot-item-remove {
+  top: -2px;
 }
 
 /* Component cards */
@@ -5832,6 +6213,9 @@
 
 /* Responsive safety for dense slot/card layouts */
 @media (max-width: 980px) {
+  .monster-shell .build-slots.monster-slots {
+    grid-template-columns: 1fr;
+  }
 
   .monster-shell .guided-flow-next {
     grid-template-columns: 1fr;
@@ -5846,15 +6230,15 @@
    Monster overrides now point to shared UI Kit tokens instead of local one-off values. */
 .monster-shell {
   --monster-shared-panel-border: var(--cruor-ui-panel-border);
-  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);
+  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);
   --monster-shared-panel-bg: var(--cruor-ui-panel-bg);
   --monster-shared-panel-image: var(--cruor-ui-panel-image);
   --monster-shared-panel-shadow: var(--cruor-ui-panel-shadow);
 
-  --monster-shared-card-border: var(--cruor-ui-card-border);
+  --monster-shared-card-border: var(--cruor-ui-card-border-color);
   --monster-shared-card-bg: var(--cruor-ui-card-bg);
-  --monster-card-border-soft: var(--cruor-ui-card-border);
-  --monster-card-border-active: var(--cruor-ui-card-border-active);
+  --monster-card-border-soft: var(--cruor-ui-card-border-color);
+  --monster-card-border-active: var(--cruor-ui-card-border-color-active);
   --monster-card-bg-soft: var(--cruor-ui-card-bg);
   --monster-card-bg-active: var(--cruor-ui-card-bg-active);
   --monster-card-shadow-soft: var(--cruor-ui-card-shadow);
@@ -5881,6 +6265,7 @@
 }
 
 .monster-shell .brief-choice-card,
+.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -5896,7 +6281,7 @@
 .monster-shell .monster-silhouette-slot-card,
 .monster-shell .monster-start-card,
 .monster-shell .template-choice-card__button,
-.monster-shell .balance-card{
+.monster-shell .balance-card {
   border-color: var(--cruor-ui-card-border-color);
   background: var(--cruor-ui-card-bg);
   box-shadow: var(--cruor-ui-card-shadow);
@@ -5904,6 +6289,8 @@
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -5918,7 +6305,7 @@
 .monster-shell .monster-silhouette-slot-card.is-guided,
 .monster-shell .monster-start-card:hover,
 .monster-shell .template-choice-card__button:hover,
-.monster-shell .template-choice-card.active .template-choice-card__button{
+.monster-shell .template-choice-card.active .template-choice-card__button {
   border-color: var(--cruor-ui-card-border-color-active);
   background: var(--cruor-ui-card-bg-active);
   box-shadow: var(--cruor-ui-card-shadow-active);
@@ -6392,432 +6779,5 @@
 
   .monster-shell .component-navigator-modal__list .component-title-stack {
     padding-right: 64px;
-  }
-}
-
-/* Step 5.6 — Fullscreen Game Frame Drawer refactor.
-   The Monster Frame is now a full-screen workbench above the topbar, with responsive internal sections and fixed card typography. */
-.monster-shell .monster-frame-scrim {
-  z-index: var(--cruor-z-fullscreen-scrim, 2390);
-  background:
-    radial-gradient(circle at 50% 18%, rgba(190, 64, 82, 0.18), transparent 34rem),
-    radial-gradient(circle at 16% 76%, rgba(95, 7, 22, 0.18), transparent 28rem),
-    rgba(0, 0, 0, 0.76);
-  backdrop-filter: blur(14px) saturate(112%);
-  -webkit-backdrop-filter: blur(14px) saturate(112%);
-}
-
-.monster-shell .monster-frame-drawer.game-frame-drawer--fullscreen {
-  position: fixed;
-  inset: clamp(14px, 2vw, 28px);
-  z-index: var(--cruor-z-fullscreen-modal, 2400);
-  display: grid;
-  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
-  grid-template-areas: "hero body";
-  gap: clamp(14px, 1.5vw, 22px);
-  width: auto;
-  max-width: min(1760px, calc(100vw - clamp(28px, 4vw, 56px)));
-  height: auto;
-  max-height: none;
-  margin: auto;
-  overflow: hidden;
-  transform: none;
-  opacity: 1;
-  pointer-events: auto;
-  border: 1px solid rgba(240, 185, 194, 0.18);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.14), transparent 26rem),
-    radial-gradient(circle at 82% 100%, rgba(95, 7, 22, 0.2), transparent 30rem),
-    linear-gradient(180deg, rgba(18, 12, 14, 0.99), rgba(7, 5, 6, 0.98));
-  padding: clamp(14px, 1.6vw, 22px);
-  box-shadow:
-    0 54px 150px rgba(0, 0, 0, 0.92),
-    0 0 0 1px rgba(255, 238, 242, 0.06),
-    0 0 96px rgba(122, 26, 40, 0.26),
-    inset 0 1px 0 rgba(255, 238, 242, 0.07);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__hero {
-  grid-area: hero;
-  display: grid;
-  align-content: start;
-  gap: 16px;
-  min-width: 0;
-  min-height: 0;
-  overflow: auto;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.045), transparent 15rem),
-    radial-gradient(circle at 34% 0%, rgba(190, 64, 82, 0.2), transparent 18rem),
-    rgba(0, 0, 0, 0.18);
-  padding: clamp(14px, 1.5vw, 20px);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__status-row {
-  margin: 0;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__status {
-  min-height: 30px;
-  width: fit-content;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__hero h2 {
-  margin: 0;
-  font-size: clamp(42px, 5.8vw, 82px);
-  line-height: 0.86;
-  letter-spacing: -0.065em;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__loadout {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__loadout span {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  align-items: center;
-  min-height: 36px;
-  gap: 9px;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.2);
-  color: rgba(238, 238, 238, 0.72);
-  padding: 0 10px;
-  font-size: 12px;
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__loadout svg {
-  width: 15px;
-  height: 15px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__body {
-  grid-area: body;
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  grid-auto-rows: min-content;
-  gap: clamp(12px, 1.2vw, 16px);
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.026), transparent 16rem),
-    rgba(0, 0, 0, 0.12);
-  padding: clamp(12px, 1.25vw, 18px);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .monster-panel-group {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.034), transparent 12rem),
-    rgba(0, 0, 0, 0.15);
-  padding: 13px;
-  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame-section--type {
-  grid-column: span 7;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame-section--role {
-  grid-column: span 5;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame-section--profile {
-  grid-column: span 8;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame-section--danger {
-  grid-column: span 4;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .monster-panel-group__head {
-  align-items: center;
-  border-bottom: 1px solid rgba(255, 238, 242, 0.07);
-  padding-bottom: 9px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .monster-panel-group__head h3 {
-  color: #d0a2aa;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-grid {
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 9px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-grid {
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 9px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card,
-.monster-shell .game-frame-drawer--fullscreen .game-role-card,
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip {
-  min-width: 0;
-  border: 1px solid rgba(255, 238, 242, 0.085);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
-    rgba(5, 5, 6, 0.54);
-  color: rgba(238, 238, 238, 0.68);
-  padding: 12px;
-  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card {
-  grid-template-columns: 42px minmax(0, 1fr);
-  align-items: start;
-  gap: 11px;
-  min-height: 82px;
-  padding-right: 78px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card__icon {
-  width: 42px;
-  height: 42px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card__text {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card__text strong,
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__top strong {
-  display: block;
-  min-width: 0;
-  color: #fff0f2;
-  font-size: 14px;
-  font-weight: 950;
-  line-height: 1.12;
-  overflow-wrap: anywhere;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card__text small,
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__top small {
-  display: block;
-  color: #8f7278;
-  font-size: 9px;
-  line-height: 1.15;
-  white-space: normal;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card__mark {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  max-width: 58px;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.22);
-  color: #d0a2aa;
-  padding: 4px 6px;
-  font-size: 8px;
-  line-height: 1;
-  text-align: center;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-card {
-  gap: 10px;
-  min-height: 120px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 8px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__summary {
-  color: rgba(238, 238, 238, 0.58);
-  font-size: 12px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-role-card__stats span {
-  min-height: 24px;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.18);
-  padding: 4px 7px;
-  font-size: 9px;
-  line-height: 1;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-category-panel,
-.monster-shell .game-frame-drawer--fullscreen .game-threat-panel {
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.16);
-  padding: 11px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-category-grid {
-  gap: 7px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-category-chip {
-  min-height: 32px;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(255, 255, 255, 0.024);
-  padding: 0 10px;
-  color: rgba(238, 238, 238, 0.62);
-  font-size: 10.5px;
-  line-height: 1.1;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card:hover,
-.monster-shell .game-frame-drawer--fullscreen .game-type-card.active,
-.monster-shell .game-frame-drawer--fullscreen .game-role-card:hover,
-.monster-shell .game-frame-drawer--fullscreen .game-role-card.active,
-.monster-shell .game-frame-drawer--fullscreen .game-category-chip:hover,
-.monster-shell .game-frame-drawer--fullscreen .game-category-chip.active,
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip:hover,
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip.active {
-  transform: none;
-  border-color: rgba(190, 64, 82, 0.58);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(190, 64, 82, 0.16), transparent 12rem),
-    rgba(95, 7, 22, 0.22);
-  color: #fff0f2;
-  box-shadow:
-    0 0 0 1px rgba(190, 64, 82, 0.1),
-    0 0 24px rgba(122, 26, 40, 0.2),
-    inset 0 1px 0 rgba(255, 238, 242, 0.045);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-type-card.is-disabled,
-.monster-shell .game-frame-drawer--fullscreen .game-type-card:disabled,
-.monster-shell .game-frame-drawer--fullscreen .game-category-chip.is-disabled,
-.monster-shell .game-frame-drawer--fullscreen .game-category-chip:disabled {
-  opacity: 0.48;
-  filter: grayscale(0.84);
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-threat-scale {
-  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
-  gap: 8px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip {
-  min-height: 78px;
-  align-content: start;
-  gap: 7px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip span {
-  font-size: 9px;
-  line-height: 1;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-threat-chip strong {
-  color: #fff0f2;
-  font-size: 13px;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__meters {
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__meter {
-  border: 1px solid rgba(255, 238, 242, 0.065);
-  background: rgba(0, 0, 0, 0.14);
-  padding: 10px;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__meter span {
-  align-items: center;
-  min-width: 0;
-}
-
-.monster-shell .game-frame-drawer--fullscreen .game-frame__meter small,
-.monster-shell .game-frame-drawer--fullscreen .game-frame__meter strong {
-  line-height: 1;
-}
-
-@media (max-width: 1240px) {
-  .monster-shell .monster-frame-drawer.game-frame-drawer--fullscreen {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "hero"
-      "body";
-    overflow: auto;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame__hero {
-    overflow: visible;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame__loadout {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame__body {
-    overflow: visible;
-    height: auto;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame-section--type,
-  .monster-shell .game-frame-drawer--fullscreen .game-frame-section--role,
-  .monster-shell .game-frame-drawer--fullscreen .game-frame-section--profile,
-  .monster-shell .game-frame-drawer--fullscreen .game-frame-section--danger {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 720px) {
-  .monster-shell .monster-frame-drawer.game-frame-drawer--fullscreen {
-    inset: 10px;
-    max-width: none;
-    padding: 12px;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame__hero h2 {
-    font-family: var(--font);
-    font-size: clamp(28px, 10vw, 44px);
-    line-height: 0.95;
-    letter-spacing: -0.045em;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-frame__body {
-    grid-template-columns: 1fr;
-    padding: 10px;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-type-grid,
-  .monster-shell .game-frame-drawer--fullscreen .game-role-grid,
-  .monster-shell .game-frame-drawer--fullscreen .game-threat-scale {
-    grid-template-columns: 1fr;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-type-card {
-    min-height: 78px;
-  }
-
-  .monster-shell .game-frame-drawer--fullscreen .game-role-card__top {
-    grid-template-columns: 1fr;
   }
 }

@@ -1,0 +1,45 @@
+{
+  "scope": {
+    "repository": "danilo-aversa/cruor-games",
+    "audited_files": [
+      "app/app-shell.css",
+      "features/monster-composer/monster-composer.styles.css",
+      "shared/styles/components.css"
+    ],
+    "method": "Semantic var audit: resolves direct CSS vars and aliases before validating border-color-like contexts."
+  },
+  "bad_contexts_after_fix": [],
+  "undefined_cruor_ui_or_z_vars_after_fix": [],
+  "checks": {
+    "semantic border-color audit clean": true,
+    "no undefined cruor ui/z vars": true,
+    "monster alias card soft is color": true,
+    "monster alias card active is color": true,
+    "monster alias shared card is color": true,
+    "monster alias panel top is color": true,
+    "shared tokens restored": true,
+    "AppShell has icons": true,
+    "AppShell has Patreon placeholder": true,
+    "AppShell spacing css present": true,
+    "AppShell icon gap present": true,
+    "AppShell Patreon styled": true,
+    "monster explicit import": true,
+    "css braces balanced": true,
+    "jsx braces roughly balanced": true
+  },
+  "fixed_aliases": {
+    "--monster-card-border-soft: var(--cruor-ui-card-border);": "--monster-card-border-soft: var(--cruor-ui-card-border-color);",
+    "--monster-card-border-active: var(--cruor-ui-card-border-active);": "--monster-card-border-active: var(--cruor-ui-card-border-color-active);",
+    "--monster-shared-card-border: var(--cruor-ui-card-border);": "--monster-shared-card-border: var(--cruor-ui-card-border-color);",
+    "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);": "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);"
+  },
+  "direct_property_replacements": {
+    "border-color: var(--cruor-ui-card-border);": "border-color: var(--cruor-ui-card-border-color);",
+    "border-color: var(--cruor-ui-card-border-active);": "border-color: var(--cruor-ui-card-border-color-active);",
+    "border-color: var(--cruor-ui-chip-border);": "border-color: var(--cruor-ui-chip-border-color);",
+    "border-color: var(--cruor-ui-control-border);": "border-color: var(--cruor-ui-control-border-color);",
+    "border-color: var(--cruor-ui-control-border-active);": "border-color: var(--cruor-ui-control-border-color-active);",
+    "border-color: var(--cruor-ui-panel-border);": "border-color: var(--cruor-ui-panel-border-color);",
+    "border-top-color: var(--cruor-ui-panel-border-top);": "border-top-color: var(--cruor-ui-panel-border-top-color);"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "checks": {
+    "specific reported line removed": true,
+    "no direct shorthand vars in border-color properties": true,
+    "no alias resolving to shorthand in border-color properties": true,
+    "no undefined cruor ui/z vars": true,
+    "shared corrected tokens present": true,
+    "app css braces balanced": true,
+    "monster css braces balanced": true,
+    "components css braces balanced": true
+  },
+  "fix_hits": [],
+  "border_color_contexts_after_fix": [
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5695,
+      "property": "border-top-color",
+      "var": "--monster-shared-panel-top-border",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5743,
+      "property": "border-color",
+      "var": "--monster-shared-card-border",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5863,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5873,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5982,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5992,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6007,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6068,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6112,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6186,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6197,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6260,
+      "property": "border-top-color",
+      "var": "--cruor-ui-panel-border-top-color",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6285,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6309,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6324,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color",
+      "resolved": "rgba(255, 238, 242, 0.09)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6343,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.55)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6360,
+      "property": "border-color",
+      "var": "--cruor-ui-chip-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    }
+  ],
+  "bad_contexts_after_fix": [],
+  "undefined_cruor_ui_or_z_vars": []
+}

@@ -123,8 +123,6 @@ export function ComponentNavigatorModal({
     <div
       className="component-navigator-modal"
       data-navigator-mode={mode}
-      data-filters-open={navigatorFiltersOpen ? "true" : "false"}
-      data-has-smart-picks={smartPicks.length > 0 ? "true" : "false"}
       role="dialog"
       aria-modal="true"
       aria-label={modalTitle}
@@ -140,13 +138,8 @@ export function ComponentNavigatorModal({
         aria-label="Component Navigator"
       >
         <div className="component-navigator-modal__head">
-          <div className="component-navigator-modal__head-copy">
+          <div>
             <h2>{modalTitle}</h2>
-            <p className="component-navigator-modal__subtitle">
-              {mode === "global"
-                ? "Browse every available graft and filter by slot, pack, or source."
-                : `Pick a graft for ${slotData.label}.`}
-            </p>
           </div>
           <button
             className="icon-btn"
@@ -158,7 +151,7 @@ export function ComponentNavigatorModal({
           </button>
         </div>
 
-        <div className="navigator-tools monster-navigator-tools component-navigator-modal__rail">
+        <div className="navigator-tools monster-navigator-tools">
           <div className="navigator-search-row">
             <div className="search-wrap monster-search-wrap">
               <input
@@ -291,7 +284,7 @@ export function ComponentNavigatorModal({
           />
         )}
 
-        <div className="component-list monster-component-list component-navigator-modal__list cruor-scroll-surface">
+        <div className="component-list monster-component-list component-navigator-modal__list">
           {visibleFeatures.length === 0 ? (
             <EmptyState text="No compatible components for this source/type/role/filter combination in the MVP dataset." />
           ) : (

@@ -1,0 +1,519 @@
+{
+  "checks": {
+    "reported bad patterns removed everywhere": true,
+    "no direct shorthand vars in border-color properties": true,
+    "no alias resolving to shorthand in border-color properties": true,
+    "no undefined cruor ui/z vars": true,
+    "crucible css included": true,
+    "legacy crucible styles copy included": true,
+    "app css braces balanced": true,
+    "monster css braces balanced": true,
+    "crucible css braces balanced": true,
+    "components css braces balanced": true
+  },
+  "fix_hits": [
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6436,
+      "property": "border-top-color",
+      "from": "--cruor-ui-panel-border-top",
+      "to": "--cruor-ui-panel-border-top-color"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6461,
+      "property": "border-color",
+      "from": "--cruor-ui-card-border",
+      "to": "--cruor-ui-card-border-color"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6485,
+      "property": "border-color",
+      "from": "--cruor-ui-card-border-active",
+      "to": "--cruor-ui-card-border-color-active"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6500,
+      "property": "border-color",
+      "from": "--cruor-ui-control-border",
+      "to": "--cruor-ui-control-border-color"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6519,
+      "property": "border-color",
+      "from": "--cruor-ui-control-border-active",
+      "to": "--cruor-ui-control-border-color-active"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6536,
+      "property": "border-color",
+      "from": "--cruor-ui-chip-border",
+      "to": "--cruor-ui-chip-border-color"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6436,
+      "property": "border-top-color",
+      "from": "--cruor-ui-panel-border-top",
+      "to": "--cruor-ui-panel-border-top-color"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6461,
+      "property": "border-color",
+      "from": "--cruor-ui-card-border",
+      "to": "--cruor-ui-card-border-color"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6485,
+      "property": "border-color",
+      "from": "--cruor-ui-card-border-active",
+      "to": "--cruor-ui-card-border-color-active"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6500,
+      "property": "border-color",
+      "from": "--cruor-ui-control-border",
+      "to": "--cruor-ui-control-border-color"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6519,
+      "property": "border-color",
+      "from": "--cruor-ui-control-border-active",
+      "to": "--cruor-ui-control-border-color-active"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6536,
+      "property": "border-color",
+      "from": "--cruor-ui-chip-border",
+      "to": "--cruor-ui-chip-border-color"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6416,
+      "property": "custom-property",
+      "from": "--monster-card-border-soft: var(--cruor-ui-card-border);",
+      "to": "--monster-card-border-soft: var(--cruor-ui-card-border-color);"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6417,
+      "property": "custom-property",
+      "from": "--monster-card-border-active: var(--cruor-ui-card-border-active);",
+      "to": "--monster-card-border-active: var(--cruor-ui-card-border-color-active);"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6414,
+      "property": "custom-property",
+      "from": "--monster-shared-card-border: var(--cruor-ui-card-border);",
+      "to": "--monster-shared-card-border: var(--cruor-ui-card-border-color);"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6409,
+      "property": "custom-property",
+      "from": "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);",
+      "to": "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6416,
+      "property": "custom-property",
+      "from": "--monster-card-border-soft: var(--cruor-ui-card-border);",
+      "to": "--monster-card-border-soft: var(--cruor-ui-card-border-color);"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6417,
+      "property": "custom-property",
+      "from": "--monster-card-border-active: var(--cruor-ui-card-border-active);",
+      "to": "--monster-card-border-active: var(--cruor-ui-card-border-color-active);"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6414,
+      "property": "custom-property",
+      "from": "--monster-shared-card-border: var(--cruor-ui-card-border);",
+      "to": "--monster-shared-card-border: var(--cruor-ui-card-border-color);"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6409,
+      "property": "custom-property",
+      "from": "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);",
+      "to": "--monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);"
+    }
+  ],
+  "border_color_contexts_after_fix": [
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5695,
+      "property": "border-top-color",
+      "var": "--monster-shared-panel-top-border",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5743,
+      "property": "border-color",
+      "var": "--monster-shared-card-border",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5863,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5873,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5982,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 5992,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6007,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6068,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6112,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6186,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6197,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6260,
+      "property": "border-top-color",
+      "var": "--cruor-ui-panel-border-top-color",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6285,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6309,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6324,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color",
+      "resolved": "rgba(255, 238, 242, 0.09)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6343,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.55)"
+    },
+    {
+      "file": "features/monster-composer/monster-composer.styles.css",
+      "line": 6360,
+      "property": "border-color",
+      "var": "--cruor-ui-chip-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 5871,
+      "property": "border-top-color",
+      "var": "--monster-shared-panel-top-border",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 5919,
+      "property": "border-color",
+      "var": "--monster-shared-card-border",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6039,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6049,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6158,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6168,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6183,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6244,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6288,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6362,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6373,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6436,
+      "property": "border-top-color",
+      "var": "--cruor-ui-panel-border-top-color",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6461,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6485,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6500,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color",
+      "resolved": "rgba(255, 238, 242, 0.09)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6519,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.55)"
+    },
+    {
+      "file": "features/crucible/crucible.styles.css",
+      "line": 6536,
+      "property": "border-color",
+      "var": "--cruor-ui-chip-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 5871,
+      "property": "border-top-color",
+      "var": "--monster-shared-panel-top-border",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 5919,
+      "property": "border-color",
+      "var": "--monster-shared-card-border",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6039,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6049,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6158,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6168,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6183,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6244,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6288,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6362,
+      "property": "border-color",
+      "var": "--monster-card-border-soft",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6373,
+      "property": "border-color",
+      "var": "--monster-card-border-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6436,
+      "property": "border-top-color",
+      "var": "--cruor-ui-panel-border-top-color",
+      "resolved": "rgba(255, 238, 242, 0.12)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6461,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6485,
+      "property": "border-color",
+      "var": "--cruor-ui-card-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.42)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6500,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color",
+      "resolved": "rgba(255, 238, 242, 0.09)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6519,
+      "property": "border-color",
+      "var": "--cruor-ui-control-border-color-active",
+      "resolved": "rgba(190, 64, 82, 0.55)"
+    },
+    {
+      "file": "features/crucible/styles.css",
+      "line": 6536,
+      "property": "border-color",
+      "var": "--cruor-ui-chip-border-color",
+      "resolved": "rgba(255, 238, 242, 0.075)"
+    }
+  ],
+  "specific_bad_after_fix": [],
+  "bad_contexts_after_fix": [],
+  "reported_remaining_after_fix": [],
+  "undefined_cruor_ui_or_z_vars": []
+}

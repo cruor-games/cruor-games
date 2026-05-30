@@ -2,7 +2,7 @@
    Keep legacy selectors during migration; shared .cruor-* primitives can replace
    these feature-local rules progressively in JSX later.
    Step 1.10: preserves legacy 38px map controls and 10000 context-menu stacking.
-   Step 2.4: Map Generator mode gates for Simple / Advanced / Debug. */
+   Step 2.4: initial Map Generator mode gates. Step 2.10: gates narrowed to explicit markers only. */
 .map-generator-view {
   min-height: calc(
     100dvh - var(--cruor-shell-bar-height, var(--app-shell-bar-height, 62px)) -
@@ -1106,67 +1106,28 @@
 }
 
 
-/* Step 2.4 — Map Generator mode gates.
-   AppShell owns [data-ui-mode], so the map can be progressively simplified
-   without changing map-generator.ui.jsx yet. */
-[data-ui-mode="simple"] .cruor-map-mvp .test-report,
-[data-ui-mode="simple"] .cruor-map-workspace .test-report,
-[data-ui-mode="simple"] .cruor-map-workspace .map-tests-modal,
-[data-ui-mode="simple"] .cruor-map-workspace .map-canvas-topbar__meta,
-[data-ui-mode="simple"] .cruor-map-workspace .map-inspector-section:has(.test-report),
-[data-ui-mode="simple"] .map-generator-debug-only,
-[data-ui-mode="simple"] [data-ui-mode-debug-only],
-[data-ui-mode="simple"] [data-map-debug-only],
-[data-ui-mode="advanced"] .map-generator-debug-only,
-[data-ui-mode="advanced"] [data-ui-mode-debug-only],
-[data-ui-mode="advanced"] [data-map-debug-only] {
-  display: none !important;
-}
 
-[data-ui-mode="simple"] .cruor-map-mvp .state-status,
-[data-ui-mode="simple"] .cruor-map-mvp .imported-map-request,
-[data-ui-mode="simple"] .cruor-map-workspace .imported-map-request,
+/* Step 2.10 — Safe Map Generator mode gates.
+   Only explicit mode markers are hidden. Existing structural classes remain untouched. */
 [data-ui-mode="simple"] .map-generator-advanced-only,
+[data-ui-mode="simple"] [data-map-advanced-only],
 [data-ui-mode="simple"] [data-ui-mode-advanced-only],
-[data-ui-mode="simple"] [data-map-advanced-only] {
+[data-ui-mode="simple"] .map-generator-debug-only,
+[data-ui-mode="simple"] [data-map-debug-only],
+[data-ui-mode="simple"] [data-ui-mode-debug-only],
+[data-ui-mode="advanced"] .map-generator-debug-only,
+[data-ui-mode="advanced"] [data-map-debug-only],
+[data-ui-mode="advanced"] [data-ui-mode-debug-only] {
   display: none !important;
-}
-
-[data-ui-mode="simple"] .cruor-map-mvp .mvp-shell {
-  grid-template-columns: minmax(0, 1fr);
-  max-width: min(1180px, var(--cruor-workspace-max, var(--darken-workspace-max, 1540px)));
-}
-
-[data-ui-mode="simple"] .cruor-map-mvp .control-panel {
-  position: static;
-}
-
-[data-ui-mode="simple"] .cruor-map-mvp .stats {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-[data-ui-mode="simple"] .cruor-map-workspace .map-workspace-shell,
-[data-ui-mode="simple"] .cruor-map-workspace .map-workspace-shell.is-inspector-collapsed {
-  grid-template-columns: 48px minmax(0, 1fr);
-}
-
-[data-ui-mode="simple"] .cruor-map-workspace .map-inspector-panel {
-  display: none;
 }
 
 [data-ui-mode="debug"] .map-generator-advanced-only,
-[data-ui-mode="debug"] [data-ui-mode-advanced-only],
 [data-ui-mode="debug"] [data-map-advanced-only],
+[data-ui-mode="debug"] [data-ui-mode-advanced-only],
 [data-ui-mode="debug"] .map-generator-debug-only,
-[data-ui-mode="debug"] [data-ui-mode-debug-only],
-[data-ui-mode="debug"] [data-map-debug-only] {
+[data-ui-mode="debug"] [data-map-debug-only],
+[data-ui-mode="debug"] [data-ui-mode-debug-only] {
   display: revert;
-}
-
-@media (max-width: 760px) {
-  [data-ui-mode="simple"] .cruor-map-mvp .stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 1180px) {

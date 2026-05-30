@@ -3,7 +3,7 @@
 
 /* Step 1.4: Monster Composer now consumes Cruor UI Kit tokens where safe.
    Legacy selectors remain in place to avoid JSX or cascade changes during migration.
-   Step 2.5: Monster Composer mode gates for Simple / Advanced / Debug. */
+   Step 2.5: initial Monster Composer mode gates. Step 2.10: gates narrowed to explicit markers only. */
 
 .monster-shell {
   --bg: var(--cruor-color-bg, #000);
@@ -5309,125 +5309,28 @@
 }
 
 
-/* Step 2.5 — Monster Composer mode gates.
-   AppShell owns [data-ui-mode], so this pass can simplify the composer
-   without changing monster-composer.page.jsx yet. */
+
+/* Step 2.10 — Safe Monster Composer mode gates.
+   Only explicit mode markers are hidden. Existing structural classes remain untouched. */
 [data-ui-mode="simple"] .monster-shell .monster-composer-advanced-only,
-[data-ui-mode="simple"] .monster-shell [data-ui-mode-advanced-only],
 [data-ui-mode="simple"] .monster-shell [data-monster-advanced-only],
-[data-ui-mode="simple"] .monster-shell .brief-control-grid,
-[data-ui-mode="simple"] .monster-shell .navigator-mode-row,
-[data-ui-mode="simple"] .monster-shell .monster-source-grid-open,
-[data-ui-mode="simple"] .monster-shell .monster-slot-tabs,
-[data-ui-mode="simple"] .monster-shell .graft-inspector,
-[data-ui-mode="simple"] .monster-shell .component-decision-grid,
-[data-ui-mode="simple"] .monster-shell .compatibility-note,
-[data-ui-mode="simple"] .monster-shell .balance-controls-card,
-[data-ui-mode="simple"] .monster-shell .balance-advanced-card,
-[data-ui-mode="simple"] .monster-shell .balance-diagnostics,
-[data-ui-mode="simple"] .monster-shell .advanced-mode-strip,
-[data-ui-mode="simple"] .monster-shell .export-raw-panel,
-[data-ui-mode="simple"] .monster-shell .cruor-stat-block__designer-notes,
-[data-ui-mode="simple"] .monster-shell .component-details,
-[data-ui-mode="simple"] .monster-shell .meta-list,
-[data-ui-mode="simple"] .monster-shell .match-row,
-[data-ui-mode="simple"] .monster-shell .component-quick-meta {
-  display: none !important;
-}
-
+[data-ui-mode="simple"] .monster-shell [data-ui-mode-advanced-only],
 [data-ui-mode="simple"] .monster-shell .monster-composer-debug-only,
-[data-ui-mode="simple"] .monster-shell [data-ui-mode-debug-only],
 [data-ui-mode="simple"] .monster-shell [data-monster-debug-only],
+[data-ui-mode="simple"] .monster-shell [data-ui-mode-debug-only],
 [data-ui-mode="advanced"] .monster-shell .monster-composer-debug-only,
-[data-ui-mode="advanced"] .monster-shell [data-ui-mode-debug-only],
 [data-ui-mode="advanced"] .monster-shell [data-monster-debug-only],
-[data-ui-mode="advanced"] .monster-shell .balance-diagnostics,
-[data-ui-mode="advanced"] .monster-shell .export-raw-panel,
-[data-ui-mode="advanced"] .monster-shell .cruor-stat-block__designer-notes {
+[data-ui-mode="advanced"] .monster-shell [data-ui-mode-debug-only] {
   display: none !important;
-}
-
-[data-ui-mode="simple"] .monster-shell .monster-layout {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-[data-ui-mode="simple"] .monster-shell .monster-navigator {
-  display: none;
-}
-
-[data-ui-mode="simple"] .monster-shell .monster-build-head {
-  display: grid;
-  gap: 12px;
-}
-
-[data-ui-mode="simple"] .monster-shell .crucible-head-controls {
-  display: none;
-}
-
-[data-ui-mode="simple"] .monster-shell .monster-anatomy-composer {
-  margin-bottom: 0;
-}
-
-[data-ui-mode="simple"] .monster-shell .monster-silhouette-panel__tools {
-  display: none;
-}
-
-[data-ui-mode="simple"] .monster-shell .guided-flow-panel.is-wizard {
-  margin-top: 12px;
-}
-
-[data-ui-mode="simple"] .monster-shell .guided-flow-warnings {
-  display: none;
-}
-
-[data-ui-mode="simple"] .monster-shell .component-card {
-  cursor: pointer;
-}
-
-[data-ui-mode="simple"] .monster-shell .component-card .summary {
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  display: -webkit-box;
-  overflow: hidden;
-}
-
-[data-ui-mode="simple"] .monster-shell .balance-grid,
-[data-ui-mode="simple"] .monster-shell .balance-grid--simplified {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-[data-ui-mode="simple"] .monster-shell .balance-recommendations-card {
-  grid-column: 1 / -1;
-}
-
-[data-ui-mode="simple"] .monster-shell .export-layout {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-[data-ui-mode="simple"] .monster-shell .export-console {
-  position: static;
 }
 
 [data-ui-mode="debug"] .monster-shell .monster-composer-advanced-only,
-[data-ui-mode="debug"] .monster-shell [data-ui-mode-advanced-only],
 [data-ui-mode="debug"] .monster-shell [data-monster-advanced-only],
+[data-ui-mode="debug"] .monster-shell [data-ui-mode-advanced-only],
 [data-ui-mode="debug"] .monster-shell .monster-composer-debug-only,
-[data-ui-mode="debug"] .monster-shell [data-ui-mode-debug-only],
-[data-ui-mode="debug"] .monster-shell [data-monster-debug-only] {
+[data-ui-mode="debug"] .monster-shell [data-monster-debug-only],
+[data-ui-mode="debug"] .monster-shell [data-ui-mode-debug-only] {
   display: revert;
-}
-
-[data-ui-mode="debug"] .monster-shell .balance-diagnostics,
-[data-ui-mode="debug"] .monster-shell .export-raw-panel,
-[data-ui-mode="debug"] .monster-shell .cruor-stat-block__designer-notes {
-  display: block;
-}
-
-@media (max-width: 1220px) {
-  [data-ui-mode="simple"] .monster-shell .balance-grid,
-  [data-ui-mode="simple"] .monster-shell .balance-grid--simplified {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 1500px) and (min-width: 1321px) {

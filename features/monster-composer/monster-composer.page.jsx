@@ -1915,13 +1915,11 @@ export default function CruorMonsterComposerMvp() {
             />
 
             <aside
-              className="panel navigator monster-frame-drawer game-frame-drawer game-frame-drawer--fullscreen is-open cruor-ui-panel-surface cruor-side-panel cruor-scroll-surface"
-              role="dialog"
-              aria-modal="true"
+              className="panel navigator monster-frame-drawer game-frame-drawer is-open"
               aria-label="Monster Frame"
               aria-hidden="false"
             >
-              <div className="game-frame__hero game-frame__hero--fullscreen">
+              <div className="game-frame__hero">
                 <div className="game-frame__status-row">
                   <span className="game-frame__status">
                     <span /> Live Frame
@@ -1962,8 +1960,8 @@ export default function CruorMonsterComposerMvp() {
                 </div>
               </div>
 
-              <div className="game-frame__body game-frame__body--fullscreen">
-                <PanelGroup title="Creature Type" icon={Skull} className="game-frame-section game-frame-section--type">
+              <div className="game-frame__body">
+                <PanelGroup title="Creature Type" icon={Skull}>
                   <div className="game-type-grid">
                     {CREATURE_TYPES.map((type) => {
                       const Icon = type.icon;
@@ -1975,7 +1973,7 @@ export default function CruorMonsterComposerMvp() {
                           type="button"
                           disabled={unavailable}
                           aria-disabled={unavailable}
-                          className={`game-type-card cruor-ui-card-surface ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                          className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
                           onClick={() => selectType(type.id)}
                         >
                           <span className="game-type-card__icon">
@@ -2015,7 +2013,7 @@ export default function CruorMonsterComposerMvp() {
                             disabled={unavailable}
                             aria-disabled={unavailable}
                             aria-checked={item === category}
-                            className={`game-category-chip cruor-ui-chip-surface ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                            className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
                             onClick={() => {
                               if (unavailable) return;
                               setCategory(item);
@@ -2030,13 +2028,13 @@ export default function CruorMonsterComposerMvp() {
                   </div>
                 </PanelGroup>
 
-                <PanelGroup title="Encounter Role" icon={Sword} className="game-frame-section game-frame-section--role">
+                <PanelGroup title="Encounter Role" icon={Sword}>
                   <div className="game-role-grid">
                     {ROLES.map((item) => (
                       <button
                         key={item.id}
                         type="button"
-                        className={`game-role-card cruor-ui-card-surface ${item.id === roleId ? "active" : ""}`}
+                        className={`game-role-card ${item.id === roleId ? "active" : ""}`}
                         onClick={() => {
                           setRoleId(item.id);
                           setActivePresetId("");
@@ -2056,7 +2054,7 @@ export default function CruorMonsterComposerMvp() {
                   </div>
                 </PanelGroup>
 
-                <PanelGroup title="Design Profile" icon={Gauge} className="game-frame-section game-frame-section--profile">
+                <PanelGroup title="Design Profile" icon={Gauge}>
                   <div className="game-category-panel">
                     <div className="game-frame__minihead">
                       <span>Target CR</span>
@@ -2090,7 +2088,7 @@ export default function CruorMonsterComposerMvp() {
                           type="button"
                           role="radio"
                           aria-checked={item.id === tacticalRoleId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === tacticalRoleId ? "active" : ""}`}
+                          className={`game-category-chip ${item.id === tacticalRoleId ? "active" : ""}`}
                           onClick={() => {
                             setTacticalRoleId(item.id);
                             setActivePresetId("");
@@ -2114,7 +2112,7 @@ export default function CruorMonsterComposerMvp() {
                           type="button"
                           role="radio"
                           aria-checked={item.id === monsterTierId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === monsterTierId ? "active" : ""}`}
+                          className={`game-category-chip ${item.id === monsterTierId ? "active" : ""}`}
                           onClick={() => {
                             setMonsterTierId(item.id);
                             setActivePresetId("");
@@ -2142,7 +2140,7 @@ export default function CruorMonsterComposerMvp() {
                           type="button"
                           role="radio"
                           aria-checked={item.id === tempoProfileId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === tempoProfileId ? "active" : ""}`}
+                          className={`game-category-chip ${item.id === tempoProfileId ? "active" : ""}`}
                           onClick={() => {
                             setTempoProfileId(item.id);
                             setActivePresetId("");
@@ -2155,7 +2153,7 @@ export default function CruorMonsterComposerMvp() {
                   </div>
                 </PanelGroup>
 
-                <PanelGroup title="Danger" icon={AlertTriangle} className="game-frame-section game-frame-section--danger">
+                <PanelGroup title="Danger" icon={AlertTriangle}>
                   <div className="game-threat-panel">
                     <div
                       className="game-threat-scale"
@@ -2165,7 +2163,7 @@ export default function CruorMonsterComposerMvp() {
                       {DANGERS.map((item, index) => (
                         <button
                           key={item.id}
-                          className={`game-threat-chip cruor-ui-card-surface ${item.id === dangerId ? "active" : ""}`}
+                          className={`game-threat-chip ${item.id === dangerId ? "active" : ""}`}
                           type="button"
                           role="radio"
                           aria-checked={item.id === dangerId}
@@ -2605,11 +2603,9 @@ function GraftInspector({
   );
 }
 
-function PanelGroup({ title, icon: Icon, className = "", children }) {
-  const sectionClassName = ["monster-panel-group", className].filter(Boolean).join(" ");
-
+function PanelGroup({ title, icon: Icon, children }) {
   return (
-    <section className={sectionClassName}>
+    <section className="monster-panel-group">
       <div className="monster-panel-group__head">
         <Icon aria-hidden="true" />
         <h3>{title}</h3>

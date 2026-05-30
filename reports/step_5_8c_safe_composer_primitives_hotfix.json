@@ -1,0 +1,20 @@
+{
+  "cause": "previous composer-primitives.css directly targeted feature DOM and overrode Darken layout/cards/panels after feature CSS",
+  "fix": "replace composer-primitives.css with token-only/app-shell-only safe layer",
+  "changed_files": [
+    "shared/styles/composer-primitives.css",
+    "app/main.jsx"
+  ],
+  "checks": {
+    "composer primitives contains no direct feature selectors": true,
+    "composer primitives still defines shared surface tokens": true,
+    "composer primitives keeps app shell icon spacing": true,
+    "composer primitives keeps patreon styling": true,
+    "no border-color var resolves to shorthand": true,
+    "no targeted undefined vars in safe layer": true,
+    "css braces balanced": true
+  },
+  "forbidden_direct_feature_selectors": [],
+  "bad_border_color_contexts": [],
+  "undefined_targeted_vars": []
+}

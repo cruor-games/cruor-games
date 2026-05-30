@@ -1,0 +1,26 @@
+{
+  "scope": "additive shared style architecture layer",
+  "changed_files": [
+    "app/main.jsx",
+    "shared/styles/composer-primitives.css"
+  ],
+  "untouched_existing_feature_css": [
+    "features/crucible/crucible.styles.css",
+    "features/monster-composer/monster-composer.styles.css",
+    "shared/styles/components.css",
+    "app/app-shell.css"
+  ],
+  "checks": {
+    "new shared primitive CSS only": true,
+    "main imports composer-primitives after app-shell": true,
+    "darken root targeted": true,
+    "monster root targeted": true,
+    "workspace max shared": true,
+    "panel tokens split": true,
+    "card border-color uses color token": true,
+    "control border-color uses color token": true,
+    "no border-color resolves to shorthand": true,
+    "css braces balanced": true
+  },
+  "bad_border_color_contexts": []
+}

@@ -1,25 +1,22 @@
-/* Step 2.8 — AppShell Cruor token normalization.
-   Restores the Step 1.10 token alignment while preserving the current mode switch,
-   Darken topbar layout, and mobile behavior. */
 .app-shell {
-  --app-shell-bar-height: var(--cruor-shell-bar-height, 62px);
-  --darken-workspace-topbar-height: var(--cruor-command-bar-height, 190px);
-  --darken-workspace-panel-gap: var(--cruor-space-lg, 1rem);
-  --darken-workspace-max: var(--cruor-workspace-max, 1540px);
-  --darken-control-height: var(--cruor-control-height-darken, 38px);
+  --app-shell-bar-height: 62px;
+  --darken-workspace-topbar-height: 190px;
+  --darken-workspace-panel-gap: 1rem;
+  --darken-workspace-max: 1540px;
+  --darken-control-height: 38px;
 
   min-height: 100dvh;
   background:
     radial-gradient(circle at 12% -8%, rgba(122, 26, 40, 0.2), transparent 34%),
     radial-gradient(circle at 92% 2%, rgba(95, 7, 22, 0.13), transparent 32%),
     linear-gradient(180deg, rgba(255, 238, 242, 0.018), transparent 15rem),
-    var(--cruor-color-bg, var(--bg));
+    var(--bg);
 }
 
 .app-shell__bar {
   position: sticky;
   top: 0;
-  z-index: var(--cruor-z-shell, 80);
+  z-index: 80;
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -40,6 +37,34 @@
 }
 
 .app-shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-shell__logo-mark {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border: 1px solid rgba(190, 64, 82, 0.68);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(190, 64, 82, 0.24), transparent 70%),
+    rgba(51, 3, 12, 0.36);
+  color: #fff0f2;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow:
+    0 0 0 1px rgba(122, 26, 40, 0.2),
+    0 0 20px rgba(51, 3, 12, 0.34),
+    inset 0 1px 0 rgba(255, 238, 242, 0.06);
+}
+
+.app-shell__brand-copy {
   display: grid;
   gap: 3px;
   min-width: 0;
@@ -52,6 +77,7 @@
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
+  white-space: nowrap;
 }
 
 .app-shell__eyebrow {
@@ -60,6 +86,7 @@
   font-weight: 900;
   letter-spacing: 0.16em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .app-shell__nav {
@@ -69,92 +96,14 @@
   gap: 8px;
 }
 
-
-.app-shell__bar-actions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: var(--cruor-space-md, 12px);
-  min-width: 0;
-}
-
-.app-shell__mode-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: var(--cruor-control-height-sm, 36px);
-  border: 1px solid rgba(95, 7, 22, 0.42);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.02), transparent),
-    rgba(0, 0, 0, 0.18);
-  padding: 3px;
-  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.028);
-}
-
-.app-shell__mode-item {
-  min-height: 28px;
-  border: 1px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: var(--cruor-color-faint, var(--faint));
-  padding: 0 9px;
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease,
-    box-shadow 0.12s ease;
-}
-
-.app-shell__mode-item:hover,
-.app-shell__mode-item:focus-visible {
-  border-color: rgba(95, 7, 22, 0.68);
-  background: rgba(51, 3, 12, 0.24);
-  color: var(--cruor-color-text, var(--text));
-  outline: none;
-}
-
-.app-shell__mode-item.is-active {
-  border-color: rgba(190, 64, 82, 0.74);
-  background:
-    radial-gradient(circle at 50% 42%, rgba(122, 26, 40, 0.28), transparent 72%),
-    rgba(51, 3, 12, 0.42);
-  color: #f0d7dc;
-  box-shadow:
-    0 0 0 1px rgba(122, 26, 40, 0.16),
-    0 0 18px rgba(51, 3, 12, 0.36);
-}
-
-/* Mode layer contract:
-   Default UI renders in every mode.
-   Add data-ui-mode-advanced-only to optional controls.
-   Add data-ui-mode-debug-only to diagnostics, test panels, and raw output. */
-.app-shell[data-ui-mode="simple"] [data-ui-mode-advanced-only],
-.app-shell[data-ui-mode="simple"] [data-ui-mode-debug-only],
-.app-shell[data-ui-mode="advanced"] [data-ui-mode-debug-only] {
-  display: none !important;
-}
-
-.app-shell[data-ui-mode="debug"] [data-ui-mode-debug-only] {
-  outline: 1px dashed rgba(190, 64, 82, 0.42);
-  outline-offset: 2px;
-}
-
-.app-shell[data-ui-mode="debug"] {
-  --cruor-debug-outline: 1px dashed rgba(190, 64, 82, 0.42);
-}
-
 .app-shell__nav-item {
   min-height: 36px;
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.58));
+  border: 1px solid rgba(95, 7, 22, 0.58);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(255, 238, 242, 0.025), transparent),
     rgba(0, 0, 0, 0.22);
-  color: var(--cruor-color-muted, var(--muted));
+  color: var(--muted);
   padding: 0 14px;
   font-size: 12px;
   font-weight: 900;
@@ -171,7 +120,7 @@
 .app-shell__nav-item:focus-visible {
   border-color: rgba(190, 64, 82, 0.76);
   background: rgba(51, 3, 12, 0.34);
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   box-shadow: 0 0 0 1px rgba(190, 64, 82, 0.12);
   outline: none;
 }
@@ -213,7 +162,7 @@
 
 .app-shell__placeholder-panel h1 {
   margin: 0 0 10px;
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   font-family: var(--display);
   font-size: clamp(34px, 5vw, 64px);
   line-height: 0.95;
@@ -222,7 +171,7 @@
 .app-shell__placeholder-panel p {
   max-width: 620px;
   margin: 0 0 10px;
-  color: var(--cruor-color-muted, var(--muted));
+  color: var(--muted);
   line-height: 1.55;
 }
 
@@ -232,8 +181,131 @@
   color: #d0a2aa !important;
 }
 
+
+.app-shell__home {
+  min-height: calc(100dvh - var(--app-shell-bar-height));
+  display: grid;
+  align-items: center;
+  padding: clamp(22px, 5vw, 62px);
+}
+
+.app-shell__home-panel {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: clamp(22px, 4vw, 42px);
+}
+
+.app-shell__home-eyebrow {
+  margin: 0 0 10px;
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.app-shell__home-panel h1 {
+  max-width: 840px;
+  margin: 0;
+  color: var(--cruor-color-text, var(--text));
+  font-family: var(--display);
+  font-size: clamp(44px, 6vw, 82px);
+  font-weight: 950;
+  line-height: 0.9;
+  letter-spacing: -0.06em;
+  text-shadow:
+    0 0 26px rgba(122, 26, 40, 0.28),
+    0 2px 0 rgba(0, 0, 0, 0.34);
+}
+
+.app-shell__home-panel > p {
+  max-width: 680px;
+  margin: 16px 0 0;
+  color: var(--cruor-color-muted, var(--muted));
+  font-size: 15px;
+  line-height: 1.58;
+}
+
+.app-shell__home-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: clamp(22px, 4vw, 36px);
+}
+
+.app-shell__home-action {
+  display: grid;
+  gap: 8px;
+  min-height: 158px;
+  border: 1px solid rgba(95, 7, 22, 0.58);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.035), transparent 58%),
+    radial-gradient(circle at 12% 0%, rgba(122, 26, 40, 0.16), transparent 42%),
+    rgba(5, 5, 6, 0.42);
+  color: var(--cruor-color-muted, var(--muted));
+  padding: 16px;
+  text-align: left;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 242, 0.045),
+    0 18px 42px rgba(0, 0, 0, 0.24);
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.app-shell__home-action:hover,
+.app-shell__home-action:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(190, 64, 82, 0.8);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.05), transparent 58%),
+    radial-gradient(circle at 12% 0%, rgba(190, 64, 82, 0.2), transparent 42%),
+    rgba(51, 3, 12, 0.34);
+  color: #fff0f2;
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.14),
+    0 0 28px rgba(122, 26, 40, 0.26),
+    inset 0 1px 0 rgba(255, 238, 242, 0.06);
+  outline: none;
+}
+
+.app-shell__home-action span {
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.app-shell__home-action strong {
+  color: var(--cruor-color-text, var(--text));
+  font-family: var(--display);
+  font-size: clamp(23px, 2vw, 32px);
+  font-weight: 950;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.app-shell__home-action small {
+  color: var(--cruor-color-muted, var(--muted));
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.app-shell__home-action:hover small,
+.app-shell__home-action:focus-visible small {
+  color: rgba(240, 215, 220, 0.78);
+}
+
+
 .darken-workspace {
-  --darken-workspace-max: var(--cruor-workspace-max, 1540px);
+  --darken-workspace-max: 1540px;
 
   display: grid;
   gap: 0;
@@ -248,7 +320,7 @@
   top: var(--app-shell-bar-height);
   left: 0;
   right: 0;
-  z-index: var(--cruor-z-topbar, 70);
+  z-index: 70;
   box-sizing: border-box;
   width: 100%;
   height: var(--darken-workspace-topbar-height);
@@ -272,7 +344,7 @@
   height: 100%;
   margin: 0 auto;
   padding: 18px 20px;
-  border: var(--cruor-panel-border, 2px solid rgba(95, 7, 22, 0.64));
+  border: 2px solid rgba(95, 7, 22, 0.64);
   background:
     radial-gradient(circle at 12% 0%, rgba(122, 26, 40, 0.18), transparent 34%),
     linear-gradient(180deg, rgba(18, 5, 8, 0.985), rgba(8, 5, 6, 0.96)),
@@ -308,7 +380,7 @@
   gap: 10px;
   min-width: 0;
   margin: 0;
-  color: var(--cruor-color-text, var(--text));
+  color: var(--text);
   font-family: var(--display);
   line-height: 0.94;
 }
@@ -370,7 +442,7 @@
   box-sizing: border-box;
   align-self: center;
   min-height: var(--darken-control-height);
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.74));
+  border: 1px solid rgba(95, 7, 22, 0.74);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(22, 6, 9, 0.92), rgba(8, 5, 6, 0.86)),
@@ -400,7 +472,7 @@
   place-items: center;
   height: var(--darken-control-height);
   min-height: var(--darken-control-height);
-  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, 0.74));
+  border: 1px solid rgba(95, 7, 22, 0.74);
   border-radius: 0;
   background:
     linear-gradient(180deg, rgba(22, 6, 9, 0.92), rgba(8, 5, 6, 0.86)),
@@ -489,6 +561,7 @@
 }
 
 #darkenComposerPanel,
+#monsterComposerPanel,
 #darkenMapGeneratorPanel {
   box-sizing: border-box;
   width: min(
@@ -500,13 +573,111 @@
 
 .map-generator-view {
   min-height: calc(
-    100dvh - var(--cruor-shell-bar-height, var(--app-shell-bar-height)) -
-      var(--cruor-command-bar-height, var(--darken-workspace-topbar-height))
+    100dvh - var(--app-shell-bar-height) - var(--darken-workspace-topbar-height)
   );
   padding-top: 0;
 }
 
+
+
+/* Step 4.2 — Shared Crucible Topbar component hooks. */
+.crucible-topbar__primary {
+  min-width: 0;
+}
+
+.crucible-topbar__heading {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.crucible-topbar__summary {
+  max-width: 760px;
+  margin: 0;
+  color: var(--cruor-color-muted, var(--muted));
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.35;
+}
+
+.crucible-topbar__control-row {
+  min-width: 0;
+}
+
+.crucible-workspace > [role="tabpanel"][hidden] {
+  display: none;
+}
+
+.crucible-workspace__topbar .mode-switch[hidden] {
+  display: none !important;
+}
+
+.crucible-workspace__tabs {
+  margin-left: auto;
+}
+
+#monsterComposerPanel {
+  min-height: calc(
+    100dvh - var(--cruor-shell-bar-height, var(--app-shell-bar-height)) -
+      var(--cruor-command-bar-height, var(--darken-workspace-topbar-height))
+  );
+}
+
+.crucible-workspace #monsterComposerPanel .monster-shell {
+  min-height: auto;
+  background: transparent;
+  background-image: none;
+}
+
+.crucible-workspace #monsterComposerPanel .monster-shell::before {
+  display: none;
+}
+
+.crucible-workspace #monsterComposerPanel .monster-topbar-wrap {
+  display: none;
+}
+
+.crucible-workspace #monsterComposerPanel .monster-workspace {
+  min-height: auto;
+  padding-inline: 0;
+}
+
+.crucible-workspace__empty-map {
+  display: grid;
+  gap: 12px;
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding: clamp(18px, 3vw, 30px);
+}
+
+.crucible-workspace__empty-map h2 {
+  margin: 0;
+  color: var(--cruor-color-text, var(--text));
+  font-family: var(--display);
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.crucible-workspace__empty-map p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--cruor-color-muted, var(--muted));
+  line-height: 1.55;
+}
+
+.crucible-workspace__empty-map-action {
+  width: min(320px, 100%);
+  min-height: 126px;
+  margin-top: 4px;
+}
+
+
 @media (max-width: 1100px) {
+  .app-shell__home-actions {
+    grid-template-columns: 1fr;
+  }
+
   .darken-topbar__control-row {
     display: grid;
     justify-content: stretch;
@@ -523,9 +694,33 @@
 }
 
 @media (max-width: 720px) {
+  .app-shell__brand {
+    width: 100%;
+  }
+
+  .app-shell__logo-mark {
+    width: 30px;
+    height: 30px;
+    flex-basis: 30px;
+    font-size: 19px;
+  }
+
+  .app-shell__home {
+    align-items: start;
+    padding: clamp(16px, 6vw, 28px);
+  }
+
+  .app-shell__home-panel {
+    padding: 18px;
+  }
+
+  .app-shell__home-action {
+    min-height: 132px;
+  }
+
   .app-shell {
-    --app-shell-bar-height: var(--cruor-shell-bar-height-mobile, 104px);
-    --darken-control-height: var(--cruor-control-height-sm, 36px);
+    --app-shell-bar-height: 104px;
+    --darken-control-height: 36px;
   }
 
   .app-shell__bar {
@@ -533,23 +728,8 @@
     display: grid;
   }
 
-  .app-shell__bar-actions {
-    align-items: flex-start;
-    display: grid;
-    justify-content: stretch;
-  }
-
   .app-shell__nav {
     justify-content: flex-start;
-  }
-
-  .app-shell__mode-switch {
-    width: 100%;
-    overflow-x: auto;
-  }
-
-  .app-shell__mode-item {
-    flex: 1 0 auto;
   }
 
   .darken-workspace__topbar {
@@ -562,6 +742,7 @@
   }
 
   #darkenComposerPanel,
+  #monsterComposerPanel,
   #darkenMapGeneratorPanel {
     width: calc(100% - clamp(28px, 8vw, 44px));
   }

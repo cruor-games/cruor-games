@@ -5,27 +5,33 @@ const APP_MODE_OPTIONS = [
 ];
 
 const APP_SECTIONS = [
-  { id: "darken", label: "Darken a Location" },
-  { id: "monster-composer", label: "Monster Composer" },
+  { id: "home", label: "Home" },
+  { id: "crucible", label: "Crucible" },
   { id: "inspirations", label: "Inspirations" },
 ];
 
 export default function AppShell({
-  activeSection,
+  activeSection = "home",
   activeUiMode = "simple",
   onSectionChange,
   onUiModeChange,
-  darkenContent,
-  monsterComposerContent,
+  homeContent,
+  crucibleContent,
   inspirationsContent,
 }) {
   return (
     <div className="app-shell" data-ui-mode={activeUiMode}>
       <header className="app-shell__bar">
-        <div className="app-shell__brand">
-          <span className="app-shell__eyebrow">Cruor Games</span>
-          <strong>Cruor Games</strong>
+        <div className="app-shell__brand" aria-label="Cruor Games">
+          <span className="app-shell__logo-mark" aria-hidden="true">
+            C
+          </span>
+          <div className="app-shell__brand-copy">
+            <span className="app-shell__eyebrow">Dark Fantasy Workbench</span>
+            <strong>Cruor Games</strong>
+          </div>
         </div>
+
         <div className="app-shell__bar-actions">
           <nav className="app-shell__nav" aria-label="Primary sections">
             {APP_SECTIONS.map((section) => (
@@ -38,7 +44,7 @@ export default function AppShell({
                 }
                 type="button"
                 aria-current={activeSection === section.id ? "page" : undefined}
-                onClick={() => onSectionChange(section.id)}
+                onClick={() => onSectionChange?.(section.id)}
               >
                 {section.label}
               </button>
@@ -66,12 +72,12 @@ export default function AppShell({
       </header>
 
       <main className="app-shell__workspace">
-        {activeSection === "darken" ? (
-          <section aria-label="Darken a Location workspace">{darkenContent}</section>
+        {activeSection === "home" ? (
+          <section aria-label="Home">{homeContent}</section>
         ) : null}
 
-        {activeSection === "monster-composer" ? (
-          <section aria-label="Monster Composer workspace">{monsterComposerContent}</section>
+        {activeSection === "crucible" ? (
+          <section aria-label="Crucible workspace">{crucibleContent}</section>
         ) : null}
 
         {activeSection === "inspirations" ? (

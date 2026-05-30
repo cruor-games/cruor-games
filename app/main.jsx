@@ -6,6 +6,7 @@ import "../shared/styles/components.css";
 import "../shared/styles/tooltips.css";
 import "../features/crucible/crucible.styles.css";
 import "./app-shell.css";
+import "../shared/styles/composer-primitives.css";
 import { startTooltipRuntime } from "../shared/tooltips/tooltip.runtime.js";
 
 startTooltipRuntime();

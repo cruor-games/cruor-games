@@ -1110,7 +1110,8 @@
   height: 72px;
 }
 
-.monster-shell .build-head{
+.monster-shell .build-head,
+.monster-shell .slot-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1139,6 +1140,12 @@
   margin: 0;
   color: var(--muted);
   font-size: 13px;
+}
+
+.monster-shell .build-slots {
+
+
+  align-items: start;
 }
 
 .monster-shell .guided-flow-panel {
@@ -1510,6 +1517,195 @@
   border: 1px dashed rgba(95, 7, 22, .46);
   background: rgba(0, 0, 0, .18);
   padding: 11px;
+}
+
+.monster-shell .build-slot {
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background-color: rgba(8, 6, 7, .46);
+  background-image:
+    linear-gradient(180deg, rgba(122, 26, 40, .05), transparent 62%),
+    radial-gradient(circle at 24px 22px, rgba(122, 26, 40, .08), transparent 130px),
+    linear-gradient(135deg, rgba(51, 3, 12, .24), transparent 70%);
+  background-blend-mode: screen, screen, normal;
+
+
+  overflow: hidden;
+  transition: border-color .12s ease, background .12s ease, box-shadow .12s ease, transform .12s ease, opacity .12s ease, filter .12s ease;
+}
+
+.monster-shell .build-slot:hover {
+  background: linear-gradient(180deg, rgba(51, 3, 12, .24), transparent 150px), radial-gradient(circle at 26px 22px, rgba(122, 26, 40, .16), transparent 140px), rgba(51, 3, 12, .09);
+  transform: scale(1.003);
+}
+
+.monster-shell .build-slot.active {
+  border-color: rgba(122, 26, 40, .95);
+  background:
+    linear-gradient(180deg, rgba(51, 3, 12, .36), transparent 160px),
+    radial-gradient(circle at 28px 22px, rgba(190, 64, 82, .2), transparent 150px),
+    rgba(51, 3, 12, .17);
+  box-shadow: 0 0 0 1px rgba(122, 26, 40, .4), 0 0 46px rgba(51, 3, 12, .6), inset 0 0 44px rgba(122, 26, 40, .17), inset 0 1px 0 rgba(122, 26, 40, .08);
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: conic-gradient(from var(--empty-slot-border-angle, 0deg), rgba(122, 26, 40, .2) 0deg, rgba(122, 26, 40, .2) 222deg, rgba(222, 146, 159, .4) 246deg, rgba(174, 50, 68, .62) 263deg, rgba(222, 146, 159, .32) 281deg, rgba(122, 26, 40, .2) 308deg, rgba(122, 26, 40, .2) 360deg);
+  opacity: .45;
+  animation: emptySlotBorderOrbit 8.3s linear infinite;
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background-color: #09090a;
+  background-image: linear-gradient(180deg, rgba(180, 174, 176, .045), transparent 62%), radial-gradient(circle at 24px 22px, rgba(150, 142, 146, .06), transparent 130px), linear-gradient(135deg, rgba(42, 39, 41, .14), transparent 70%);
+  filter: saturate(.56);
+}
+
+.monster-shell .build-slot > * {
+  position: relative;
+  z-index: 1;
+}
+
+@property --empty-slot-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes emptySlotBorderOrbit {
+  0% { --empty-slot-border-angle: 0deg; }
+  100% { --empty-slot-border-angle: 360deg; }
+}
+
+.monster-shell .slot-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+
+  font-weight: 900;
+
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.monster-shell .slot-icon {
+
+
+  filter: drop-shadow(0 0 5px rgba(122, 26, 40, .24));
+}
+
+.monster-shell .build-slot.active .slot-name,
+.monster-shell .build-slot.active .slot-icon,
+.monster-shell .slot-item-title {
+  color: #d0a2aa;
+  text-shadow: 0 0 13px rgba(122, 26, 40, .58), 0 0 2px rgba(255, 255, 255, .14);
+}
+
+.monster-shell .slot-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.monster-shell .count {
+
+  border: 1px solid rgba(122, 26, 40, .18);
+
+
+  padding: 2px 7px;
+
+
+  text-align: center;
+}
+
+.monster-shell .slot-menu-btn {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  min-width: 26px;
+  min-height: 26px;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  opacity: 0;
+  transform: translateY(-1px);
+  transition: opacity .12s ease, color .12s ease, filter .12s ease;
+}
+
+.monster-shell .build-slot.has-items:hover .slot-menu-btn,
+.monster-shell .build-slot.has-items:focus-within .slot-menu-btn {
+  opacity: 1;
+}
+
+.monster-shell .slot-empty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+
+}
+
+.monster-shell .slot-stack {
+  display: grid;
+
+
+}
+
+.monster-shell .slot-item {
+  position: relative;
+  border: 0;
+  background: transparent;
+
+  box-shadow: none;
+}
+
+.monster-shell .slot-item-remove {
+  position: absolute;
+
+  right: 0;
+  display: grid;
+  place-items: center;
+
+
+  border: 1px solid rgba(95, 7, 22, .52);
+
+  color: #8f7278;
+  opacity: 0;
+  transition: opacity .12s ease, color .12s ease, border-color .12s ease, background .12s ease;
+}
+
+.monster-shell .slot-item:hover .slot-item-remove,
+.monster-shell .slot-item:focus-within .slot-item-remove {
+  opacity: 1;
+}
+
+.monster-shell .slot-item-remove:hover {
+  border-color: rgba(190, 64, 82, .72);
+  background: rgba(95, 7, 22, .26);
+  color: #fff0f2;
+}
+
+.monster-shell .slot-item-remove svg {
+  width: 13px;
+  height: 13px;
+}
+
+.monster-shell .slot-item-text {
+  margin: 0;
+
+
 }
 
 .monster-shell .match-row.always-visible,
@@ -3981,7 +4177,8 @@
 }
 
 .monster-shell .monster-silhouette-node.is-guided:not(.is-active),
-.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active){
+.monster-shell .monster-silhouette-slot-card.is-guided:not(.is-active),
+.monster-shell .build-slot.is-guided:not(.active) {
   animation: guidedSlotPulse 1.8s ease-in-out infinite;
 }
 
@@ -4101,6 +4298,46 @@
 .monster-shell .monster-silhouette-slot-card:hover .monster-silhouette-slot-card__body em,
 .monster-shell .monster-silhouette-slot-card.is-active .monster-silhouette-slot-card__body em {
   -webkit-line-clamp: 2;
+}
+
+.monster-shell .build-slots {
+  display: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.monster-shell .build-slot.needs-attention:not(.active)::before,
+.monster-shell .build-slot.needs-attention:not(.active)::after {
+  display: none;
+}
+
+.monster-shell .slot-icon {
+  width: 15px;
+  min-width: 15px;
+  height: 15px;
+
+}
+
+.monster-shell .slot-item-text {
+  padding-left: 0;
+  text-indent: 0;
+
+
+}
+
+.monster-shell .slot-item-text .slot-item-title {
+  display: block;
+  margin-bottom: 2px;
+  color: #d0a2aa;
+}
+
+.monster-shell .slot-item .match-row {
+  display: none;
+}
+
+.monster-shell .build-slot.active .slot-item .match-row,
+.monster-shell .build-slot:hover .slot-item .match-row {
+  display: flex;
 }
 
 .monster-shell .graft-inspector > summary,
@@ -5015,7 +5252,8 @@
     position: static;
   }
 
-  .monster-shell .monster-anatomy-composer,
+  .monster-shell .build-slots,
+.monster-shell .monster-anatomy-composer,
 .monster-shell .graft-inspector__rules,
 .monster-shell .monster-output-grid,
 .monster-shell .compiled-meta-grid,
@@ -5023,7 +5261,7 @@
 .monster-shell .balance-meta-grid,
 .monster-shell .export-meta-grid,
 .monster-shell .run-stat-strip,
-.monster-shell .cruor-stat-block__abilities{
+.monster-shell .cruor-stat-block__abilities {
     grid-template-columns: 1fr;
   }
 }
@@ -5088,6 +5326,10 @@
     display: grid;
   }
 
+  .monster-shell[data-composer-started="false"] .build-slots {
+    display: none;
+  }
+
   .monster-shell .monster-start-screen {
     min-height: 430px;
     padding: 18px;
@@ -5103,6 +5345,11 @@
 
   .monster-shell[data-composer-started="true"] .monster-anatomy-composer {
     display: none;
+  }
+
+  .monster-shell[data-composer-started="true"] .build-slots {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 
   .monster-shell .monster-silhouette-slot-card,
@@ -5412,11 +5659,7 @@
     --cruor-panel-border,
     2px solid color-mix(in srgb, var(--glass-line) 78%, white 22%)
   );
-  --monster-shared-panel-top-border: color-mix(
-    in srgb,
-    var(--cruor-color-line-strong, var(--glass-line)) 78%,
-    white 22%
-  );
+  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);
   --monster-shared-panel-bg: rgba(33, 27, 29, 0.88);
   --monster-shared-panel-image:
     linear-gradient(180deg, rgba(255, 238, 242, 0.064), transparent 10rem),
@@ -5428,7 +5671,7 @@
     0 0 58px rgba(255, 238, 242, 0.038),
     inset 0 1px 0 var(--cruor-panel-highlight, var(--panel-white-line)),
     inset 0 -1px 0 rgba(0, 0, 0, 0.54);
-  --monster-shared-card-border: var(--cruor-color-line, var(--line));
+  --monster-shared-card-border: var(--cruor-ui-card-border-color);
   --monster-shared-card-bg: rgba(9, 6, 8, 0.56);
   --monster-shared-card-image:
     linear-gradient(180deg, rgba(122, 26, 40, 0.045), transparent 48%),
@@ -5480,6 +5723,7 @@
 }
 
 .monster-shell .brief-choice-card,
+.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -5491,7 +5735,7 @@
 .monster-shell .graft-inspector,
 .monster-shell .graft-inspector__item,
 .monster-shell .guided-flow-panel,
-.monster-shell .guided-flow-next{
+.monster-shell .guided-flow-next {
   border-color: var(--monster-shared-card-border);
   background-color: var(--monster-shared-card-bg);
   background-image: var(--monster-shared-card-image);
@@ -5503,6 +5747,8 @@
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -5511,7 +5757,7 @@
 .monster-shell .game-role-card:hover,
 .monster-shell .game-role-card.active,
 .monster-shell .guided-slot-chip.is-next,
-.monster-shell .guided-slot-chip:hover{
+.monster-shell .guided-slot-chip:hover {
   border-color: rgba(122, 26, 40, 0.95);
   background:
     linear-gradient(180deg, rgba(51, 3, 12, 0.36), transparent 160px),
@@ -5536,6 +5782,10 @@
 
 .monster-shell .component-card {
   border-width: 2px;
+}
+
+.monster-shell .build-slot {
+  border-width: 1px;
 }
 
 .monster-shell .navigator-filter-chip,
@@ -5576,8 +5826,8 @@
 /* Step 4.8 — Monster slots/cards alignment pass 2.
    Tighten slot, card, flow, and inspector patterns after the panel/sidebar pass. */
 .monster-shell {
-  --monster-card-border-soft: rgba(255, 238, 242, 0.09);
-  --monster-card-border-active: rgba(190, 64, 82, 0.52);
+  --monster-card-border-soft: var(--cruor-ui-card-border-color);
+  --monster-card-border-active: var(--cruor-ui-card-border-color-active);
   --monster-card-bg-soft:
     linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
     radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.12), transparent 13rem),
@@ -5593,6 +5843,133 @@
     0 0 0 1px rgba(190, 64, 82, 0.1),
     0 0 30px rgba(122, 26, 40, 0.22),
     inset 0 1px 0 rgba(255, 238, 242, 0.055);
+}
+
+/* Build slots */
+.monster-shell .build-slots.monster-slots {
+  gap: 12px;
+  align-items: stretch;
+}
+
+.monster-shell .build-slot {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  min-height: 112px;
+  border-color: var(--monster-card-border-soft);
+  background: var(--monster-card-bg-soft);
+  box-shadow: var(--monster-card-shadow-soft);
+  color: rgba(238, 238, 238, 0.66);
+  padding: 13px;
+}
+
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active {
+  transform: translateY(-1px);
+  border-color: var(--monster-card-border-active);
+  background: var(--monster-card-bg-active);
+  box-shadow: var(--monster-card-shadow-active);
+}
+
+.monster-shell .build-slot.is-guided:not(.active) {
+  border-color: rgba(190, 64, 82, 0.46);
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, 0.08),
+    0 0 24px rgba(122, 26, 40, 0.2),
+    inset 0 1px 0 rgba(255, 238, 242, 0.04);
+}
+
+.monster-shell .build-slot.has-items {
+  min-height: 124px;
+}
+
+.monster-shell .slot-head {
+  align-items: center;
+  gap: 10px;
+}
+
+.monster-shell .slot-name {
+  color: rgba(238, 238, 238, 0.76);
+  font-size: 10.5px;
+  letter-spacing: 0.095em;
+}
+
+.monster-shell .build-slot.active .slot-name,
+.monster-shell .build-slot.active .slot-icon,
+.monster-shell .build-slot:hover .slot-name,
+.monster-shell .build-slot:hover .slot-icon {
+  color: #fff0f2;
+  text-shadow: 0 0 12px rgba(122, 26, 40, 0.42);
+}
+
+.monster-shell .slot-icon {
+  color: #8f7278;
+}
+
+.monster-shell .count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  min-height: 22px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.monster-shell .slot-empty {
+  align-self: start;
+  margin-top: 0;
+  color: rgba(238, 238, 238, 0.44);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-stack {
+  gap: 8px;
+  margin-top: 0;
+}
+
+.monster-shell .slot-item {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  border-top: 1px solid rgba(255, 238, 242, 0.055);
+  padding: 8px 30px 0 0;
+}
+
+.monster-shell .slot-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.monster-shell .slot-item-text {
+  color: rgba(238, 238, 238, 0.58);
+  font-size: 12px;
+  line-height: 1.38;
+}
+
+.monster-shell .slot-item-title {
+  display: block;
+  margin-bottom: 2px;
+  color: #d0a2aa;
+  font-size: 12px;
+  font-weight: 950;
+  line-height: 1.18;
+}
+
+.monster-shell .slot-item-remove {
+  top: 5px;
+  width: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.monster-shell .slot-item:first-child .slot-item-remove {
+  top: -2px;
 }
 
 /* Component cards */
@@ -5832,6 +6209,9 @@
 
 /* Responsive safety for dense slot/card layouts */
 @media (max-width: 980px) {
+  .monster-shell .build-slots.monster-slots {
+    grid-template-columns: 1fr;
+  }
 
   .monster-shell .guided-flow-next {
     grid-template-columns: 1fr;
@@ -5846,15 +6226,15 @@
    Monster overrides now point to shared UI Kit tokens instead of local one-off values. */
 .monster-shell {
   --monster-shared-panel-border: var(--cruor-ui-panel-border);
-  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top);
+  --monster-shared-panel-top-border: var(--cruor-ui-panel-border-top-color);
   --monster-shared-panel-bg: var(--cruor-ui-panel-bg);
   --monster-shared-panel-image: var(--cruor-ui-panel-image);
   --monster-shared-panel-shadow: var(--cruor-ui-panel-shadow);
 
-  --monster-shared-card-border: var(--cruor-ui-card-border);
+  --monster-shared-card-border: var(--cruor-ui-card-border-color);
   --monster-shared-card-bg: var(--cruor-ui-card-bg);
-  --monster-card-border-soft: var(--cruor-ui-card-border);
-  --monster-card-border-active: var(--cruor-ui-card-border-active);
+  --monster-card-border-soft: var(--cruor-ui-card-border-color);
+  --monster-card-border-active: var(--cruor-ui-card-border-color-active);
   --monster-card-bg-soft: var(--cruor-ui-card-bg);
   --monster-card-bg-active: var(--cruor-ui-card-bg-active);
   --monster-card-shadow-soft: var(--cruor-ui-card-shadow);
@@ -5873,7 +6253,7 @@
 .monster-shell .template-picker-modal__panel,
 .monster-shell .component-navigator-modal__panel {
   border: var(--cruor-ui-panel-border);
-  border-top-color: var(--cruor-ui-panel-border-top-color);
+  border-top-color: var(--cruor-ui-panel-border-top-color, rgba(255, 238, 242, 0.12));
   background-color: var(--cruor-ui-panel-bg);
   background-image: var(--cruor-ui-panel-image);
   background-blend-mode: overlay, overlay, normal;
@@ -5881,6 +6261,7 @@
 }
 
 .monster-shell .brief-choice-card,
+.monster-shell .build-slot,
 .monster-shell .component-card,
 .monster-shell .game-type-card,
 .monster-shell .game-role-card,
@@ -5896,14 +6277,16 @@
 .monster-shell .monster-silhouette-slot-card,
 .monster-shell .monster-start-card,
 .monster-shell .template-choice-card__button,
-.monster-shell .balance-card{
-  border-color: var(--cruor-ui-card-border-color);
+.monster-shell .balance-card {
+  border-color: var(--cruor-ui-card-border-color, rgba(255, 238, 242, 0.075));
   background: var(--cruor-ui-card-bg);
   box-shadow: var(--cruor-ui-card-shadow);
 }
 
 .monster-shell .brief-choice-card:hover,
 .monster-shell .brief-choice-card.selected,
+.monster-shell .build-slot:hover,
+.monster-shell .build-slot.active,
 .monster-shell .component-card:hover,
 .monster-shell .component-card.in-build,
 .monster-shell .component-card.expanded,
@@ -5918,8 +6301,8 @@
 .monster-shell .monster-silhouette-slot-card.is-guided,
 .monster-shell .monster-start-card:hover,
 .monster-shell .template-choice-card__button:hover,
-.monster-shell .template-choice-card.active .template-choice-card__button{
-  border-color: var(--cruor-ui-card-border-color-active);
+.monster-shell .template-choice-card.active .template-choice-card__button {
+  border-color: var(--cruor-ui-card-border-color-active, rgba(190, 64, 82, 0.42));
   background: var(--cruor-ui-card-bg-active);
   box-shadow: var(--cruor-ui-card-shadow-active);
 }
@@ -5934,7 +6317,7 @@
 .monster-shell .tag-clear-btn,
 .monster-shell .run-mode-actions button,
 .monster-shell .export-review-btn {
-  border-color: var(--cruor-ui-control-border-color);
+  border-color: var(--cruor-ui-control-border-color, rgba(255, 238, 242, 0.09));
   background: var(--cruor-ui-control-bg);
   color: var(--cruor-ui-control-text);
 }
@@ -5953,7 +6336,7 @@
 .monster-shell .tag-clear-btn:hover,
 .monster-shell .run-mode-actions button:hover,
 .monster-shell .export-review-btn:hover {
-  border-color: var(--cruor-ui-control-border-color-active);
+  border-color: var(--cruor-ui-control-border-color-active, rgba(190, 64, 82, 0.55));
   background: var(--cruor-ui-control-bg-active);
   color: var(--cruor-ui-control-text-active);
 }
@@ -5970,427 +6353,10 @@
 .monster-shell .guided-slot-chip,
 .monster-shell .guided-readiness-badge,
 .monster-shell .graft-inspector__chips span {
-  border-color: var(--cruor-ui-chip-border-color);
+  border-color: var(--cruor-ui-chip-border-color, rgba(255, 238, 242, 0.075));
   background: var(--cruor-ui-chip-bg);
   color: var(--cruor-ui-chip-text);
 }
 
 /* Step 4.11 — CSS duplicate cleanup.
    No visual changes: removed superseded duplicate declarations and dead legacy pseudo-tooltip blocks. */
-
-/* Step 5.5 — Fullscreen Component Navigator.
-   The component navigator is now a real fullscreen workbench overlay above the Crucible topbar. */
-.monster-shell .component-navigator-modal {
-  position: fixed;
-  inset: 0;
-  z-index: var(--cruor-z-fullscreen-modal, 2400);
-  display: grid;
-  place-items: stretch;
-  padding: clamp(14px, 2vw, 28px);
-  isolation: isolate;
-}
-
-.monster-shell .component-navigator-modal__scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  border: 0;
-  background:
-    radial-gradient(circle at 50% 12%, rgba(190, 64, 82, 0.18), transparent 34rem),
-    radial-gradient(circle at 18% 72%, rgba(95, 7, 22, 0.2), transparent 30rem),
-    rgba(0, 0, 0, 0.78);
-  backdrop-filter: blur(14px) saturate(112%);
-  -webkit-backdrop-filter: blur(14px) saturate(112%);
-}
-
-.monster-shell .component-navigator-modal__panel,
-.monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
-.monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
-  grid-template-areas:
-    "head head"
-    "rail list"
-    "smart list";
-  gap: clamp(12px, 1.35vw, 18px);
-  width: min(1760px, 100%);
-  height: min(980px, calc(100dvh - clamp(28px, 4vw, 56px)));
-  max-height: none;
-  margin: auto;
-  overflow: hidden;
-  padding: clamp(14px, 1.6vw, 22px);
-  border: 1px solid rgba(240, 185, 194, 0.18);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.14), transparent 26rem),
-    radial-gradient(circle at 82% 100%, rgba(95, 7, 22, 0.2), transparent 30rem),
-    linear-gradient(180deg, rgba(18, 12, 14, 0.99), rgba(7, 5, 6, 0.98));
-  box-shadow:
-    0 54px 150px rgba(0, 0, 0, 0.92),
-    0 0 0 1px rgba(255, 238, 242, 0.06),
-    0 0 96px rgba(122, 26, 40, 0.26),
-    inset 0 1px 0 rgba(255, 238, 242, 0.07);
-}
-
-.monster-shell .component-navigator-modal__head {
-  grid-area: head;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  min-width: 0;
-  border-bottom: 1px solid rgba(255, 238, 242, 0.075);
-  padding: 0 0 14px;
-}
-
-.monster-shell .component-navigator-modal__head-copy {
-  display: grid;
-  gap: 7px;
-  min-width: 0;
-}
-
-.monster-shell .component-navigator-modal__head h2 {
-  margin: 0;
-  color: #fff0f2;
-  font-family: var(--display);
-  font-size: clamp(34px, 4vw, 68px);
-  font-weight: 950;
-  letter-spacing: -0.06em;
-  line-height: 0.9;
-  text-shadow: 0 0 30px rgba(122, 26, 40, 0.42);
-}
-
-.monster-shell .component-navigator-modal__subtitle {
-  max-width: 760px;
-  margin: 0;
-  color: rgba(238, 238, 238, 0.54);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.42;
-}
-
-.monster-shell .component-navigator-modal__head > .icon-btn {
-  position: static;
-  flex: 0 0 auto;
-  width: 42px;
-  min-width: 42px;
-  min-height: 42px;
-  border-color: rgba(255, 238, 242, 0.11);
-  background: rgba(0, 0, 0, 0.24);
-}
-
-.monster-shell .component-navigator-modal__rail {
-  grid-area: rail;
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  min-width: 0;
-  min-height: 0;
-  margin: 0;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 12rem),
-    rgba(0, 0, 0, 0.18);
-  padding: 12px;
-  overflow: auto;
-}
-
-.monster-shell .component-navigator-modal__rail .navigator-search-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 38px 46px;
-  gap: 8px;
-  align-items: center;
-}
-
-.monster-shell .component-navigator-modal__rail .search-wrap input {
-  min-height: 38px;
-}
-
-.monster-shell .component-navigator-modal__rail .navigator-filter-btn,
-.monster-shell .component-navigator-modal__rail .navigator-count {
-  width: 38px;
-  min-width: 38px;
-  min-height: 38px;
-}
-
-.monster-shell .component-navigator-modal__rail .navigator-count {
-  width: auto;
-  min-width: 46px;
-}
-
-.monster-shell .component-navigator-modal__rail .tag-filter-row.monster-source-grid-open {
-  display: grid;
-  gap: 12px;
-  margin: 0;
-  border-color: rgba(255, 238, 242, 0.075);
-  background: rgba(0, 0, 0, 0.18);
-  padding: 10px;
-}
-
-.monster-shell .component-navigator-modal__rail .navigator-filter-panel {
-  display: grid;
-  gap: 14px;
-}
-
-.monster-shell .component-navigator-modal__rail .filter-chip-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 6px;
-}
-
-.monster-shell .component-navigator-modal__rail .navigator-filter-chip {
-  justify-content: flex-start;
-  width: 100%;
-  min-height: 32px;
-  text-align: left;
-}
-
-.monster-shell .component-navigator-modal__slot-tabs {
-  grid-area: rail;
-  align-self: end;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-height: 170px;
-  margin: 0;
-  border-top: 1px solid rgba(255, 238, 242, 0.07);
-  padding: 12px 12px 0;
-  overflow: auto;
-}
-
-.monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__rail {
-  padding-bottom: 184px;
-}
-
-.monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__slot-tabs {
-  display: none;
-}
-
-.monster-shell .component-navigator-modal .smart-slot-picks {
-  grid-area: smart;
-  min-height: 0;
-  border-color: rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(143, 150, 148, 0.035), transparent 12rem),
-    rgba(0, 0, 0, 0.16);
-  overflow: auto;
-}
-
-.monster-shell .component-navigator-modal[data-has-smart-picks="false"] {
-  --component-navigator-smart-min: 0px;
-}
-
-.monster-shell .component-navigator-modal__list {
-  grid-area: list;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  align-content: start;
-  gap: 12px;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-  max-height: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  border: 1px solid rgba(255, 238, 242, 0.075);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.026), transparent 14rem),
-    rgba(0, 0, 0, 0.12);
-  padding: 12px;
-  scrollbar-width: auto;
-  scrollbar-color: auto;
-}
-
-.monster-shell .component-navigator-modal__list .empty {
-  grid-column: 1 / -1;
-}
-
-.monster-shell .component-navigator-modal__list .component-card {
-  min-height: 0;
-  height: auto;
-  align-content: start;
-  overflow: visible;
-  border-width: 1px;
-  padding: 14px;
-}
-
-.monster-shell .component-navigator-modal__list .card-top {
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.monster-shell .component-navigator-modal__list .component-title-stack {
-  padding-right: 72px;
-}
-
-.monster-shell .component-navigator-modal__list .component-card h3 {
-  color: #fff0f2;
-  font-size: 15px;
-  font-weight: 950;
-  line-height: 1.12;
-}
-
-.monster-shell .component-navigator-modal__list .summary {
-  color: rgba(238, 238, 238, 0.62);
-  font-size: 12.5px;
-  line-height: 1.44;
-}
-
-.monster-shell .component-navigator-modal__list .component-toggle-btn {
-  top: 12px;
-  right: 12px;
-  min-height: 27px;
-  border-color: rgba(190, 64, 82, 0.42);
-  background: rgba(95, 7, 22, 0.22);
-}
-
-.monster-shell .component-navigator-modal__list .component-details {
-  display: block;
-  overflow: visible;
-  margin-top: 8px;
-}
-
-.monster-shell .component-navigator-modal__list .component-details[open] .meta-list {
-  display: grid;
-  visibility: visible;
-  opacity: 1;
-  max-height: none;
-  overflow: visible;
-  transform: none;
-}
-
-.monster-shell .component-navigator-modal__list .meta-row {
-  grid-template-columns: minmax(74px, 0.34fr) minmax(0, 1fr);
-}
-
-.monster-shell .component-navigator-modal__list .meta-value {
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.monster-shell .smart-slot-picks__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.monster-shell .smart-pick-card {
-  min-height: 0;
-  padding: 10px;
-}
-
-.monster-shell .smart-pick-card h3 {
-  font-size: 12.5px;
-}
-
-.monster-shell .smart-pick-card p {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-@media (min-width: 1380px) {
-  .monster-shell .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
-    grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-  }
-
-  .monster-shell .component-navigator-modal__list {
-    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  }
-}
-
-@media (max-width: 1040px) {
-  .monster-shell .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto minmax(0, 1fr);
-    grid-template-areas:
-      "head"
-      "rail"
-      "smart"
-      "list";
-  }
-
-  .monster-shell .component-navigator-modal__rail {
-    max-height: 260px;
-  }
-
-  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__rail {
-    padding-bottom: 12px;
-  }
-
-  .monster-shell .component-navigator-modal__slot-tabs {
-    grid-area: rail;
-    position: static;
-    align-self: auto;
-    max-height: none;
-    padding: 10px 0 0;
-  }
-
-  .monster-shell .component-navigator-modal__list {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .monster-shell .component-navigator-modal {
-    padding: 10px;
-  }
-
-  .monster-shell .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
-  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
-    width: 100%;
-    height: calc(100dvh - 20px);
-    padding: 12px;
-    gap: 10px;
-  }
-
-  .monster-shell .component-navigator-modal__head {
-    padding-bottom: 10px;
-  }
-
-  .monster-shell .component-navigator-modal__head h2 {
-    padding-right: 48px;
-    font-family: var(--font);
-    font-size: 24px;
-    line-height: 1;
-    letter-spacing: -0.045em;
-  }
-
-  .monster-shell .component-navigator-modal__subtitle {
-    padding-right: 48px;
-    font-size: 12px;
-  }
-
-  .monster-shell .component-navigator-modal__head > .icon-btn {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-  }
-
-  .monster-shell .component-navigator-modal__rail {
-    max-height: 238px;
-    padding: 10px;
-  }
-
-  .monster-shell .component-navigator-modal__rail .navigator-search-row {
-    grid-template-columns: minmax(0, 1fr) 38px 44px;
-  }
-
-  .monster-shell .component-navigator-modal__list {
-    grid-template-columns: 1fr;
-    padding: 10px;
-  }
-
-  .monster-shell .component-navigator-modal__list .component-title-stack {
-    padding-right: 64px;
-  }
-}

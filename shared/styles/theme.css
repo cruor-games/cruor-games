@@ -244,7 +244,7 @@ textarea::-webkit-scrollbar-track {
 
 .panel.build-canvas::-webkit-scrollbar-thumb,
 .panel.navigator::-webkit-scrollbar-thumb,
-saved-builds-body::-webkit-scrollbar-thumb,
+.saved-builds-body::-webkit-scrollbar-thumb,
 .build-canvas::-webkit-scrollbar-thumb,
 .navigator::-webkit-scrollbar-thumb,
 .tag-filter-row::-webkit-scrollbar-thumb,

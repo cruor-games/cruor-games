@@ -11,9 +11,8 @@ export function Crucible({ onOpenMapGenerator, onSnapshotProviderReady, uiMode =
     return mountCrucible(rootRef.current, {
       onOpenMapGenerator,
       onSnapshotProviderReady,
-      uiMode,
     });
-  }, [onOpenMapGenerator, onSnapshotProviderReady, uiMode]);
+  }, [onOpenMapGenerator, onSnapshotProviderReady]);
 
   return React.createElement("div", {
     ref: rootRef,

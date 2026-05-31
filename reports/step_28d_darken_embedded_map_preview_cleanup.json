@@ -1,0 +1,38 @@
+{
+  "step": "Step 28d \u2014 Darken Embedded Map Preview Cleanup",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/map-generator/map-generator.page.jsx"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "shared CSS",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "map_viewport_signature_has_embedded_props": true,
+    "map_viewport_defaults_preserve_full_chrome": true,
+    "map_viewport_disables_wheel_when_not_interactive": true,
+    "map_viewport_conditionally_renders_context_menus": true,
+    "map_viewport_conditionally_renders_bottom_bar": true,
+    "location_stage_passes_embedded_props": true,
+    "location_stage_keeps_map_viewport": true,
+    "location_stage_keeps_region_board": true,
+    "css_step28d_present": true,
+    "css_hides_embedded_zoom_chrome": true,
+    "css_makes_preview_passive": true,
+    "css_braces_balanced": true,
+    "stage_braces_balanced": true,
+    "map_page_braces_balanced": true,
+    "no_router_appshell_topbar_touched": true,
+    "no_supabase_backend_added": true
+  }
+}

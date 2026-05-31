@@ -1,0 +1,39 @@
+{
+  "step": "Step 28f \u2014 Darken Layout Polish Pass",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/map-generator/map-generator.page.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "shared CSS",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "slot_removes_region_summary_panel_function": true,
+    "slot_removes_region_summary_panel_render": true,
+    "slot_removes_duplicate_summary_imports": true,
+    "slot_keeps_slot_list": true,
+    "slot_keeps_active_target_control": true,
+    "slot_keeps_add_remove": true,
+    "slot_keeps_map_workspace_button": true,
+    "slot_empty_state_quiet": true,
+    "css_step28f_present": true,
+    "css_hides_old_summary_fallback": true,
+    "css_polishes_right_rail": true,
+    "css_softens_region_nodes": true,
+    "css_braces_balanced": true,
+    "slot_braces_balanced": true,
+    "no_router_appshell_topbar_touched": true,
+    "no_map_stage_touched": true,
+    "no_supabase_backend_added": true
+  }
+}

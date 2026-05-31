@@ -1,0 +1,34 @@
+{
+  "step": "Step 28b \u2014 Darken Draft Controls Cleanup",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "Monster Composer",
+    "Map Generator internals",
+    "legacy Crucible runtime",
+    "shared CSS",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "draft_jsx_braces_balanced": true,
+    "draft_jsx_parens_balanced": true,
+    "css_braces_balanced": true,
+    "technical_copy_removed_from_jsx": true,
+    "draft_main_removed": true,
+    "draft_scope_removed": true,
+    "draft_status_removed": true,
+    "save_button_preserved": true,
+    "load_button_preserved": true,
+    "clear_button_preserved": true,
+    "reset_button_preserved": true,
+    "simple_mode_still_hides_clear_and_reset": true,
+    "step28a_css_still_present": true,
+    "step28b_css_present": true
+  }
+}

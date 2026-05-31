@@ -312,6 +312,9 @@ export function MapViewport({
   onExportState,
   onImportState,
   viewResetKey,
+  embeddedPreview = false,
+  showViewportChrome = true,
+  enableViewportInteractions = true,
 }) {
   const viewportRef = useRef(null);
   const panRef = useRef(null);
@@ -348,6 +351,8 @@ export function MapViewport({
     width: generatedMap.config.mapWidth,
     height: generatedMap.config.mapHeight,
   });
+  const viewportInteractive = enableViewportInteractions && !embeddedPreview;
+  const shouldShowViewportChrome = showViewportChrome && !embeddedPreview;
 
   contentBoundsRef.current = generatedMap.contentBounds;
 
@@ -487,11 +492,12 @@ export function MapViewport({
   );
 
   useEffect(() => {
+    if (!viewportInteractive) return undefined;
     const viewport = viewportRef.current;
-    if (!viewport) return;
+    if (!viewport) return undefined;
     viewport.addEventListener("wheel", handleWheel, { passive: false });
     return () => viewport.removeEventListener("wheel", handleWheel);
-  }, [handleWheel]);
+  }, [handleWheel, viewportInteractive]);
 
   useEffect(
     () => () => {
@@ -1448,14 +1454,15 @@ export function MapViewport({
     <>
       <div
         ref={viewportRef}
-        className={`map-viewport ${isPanning ? "is-panning" : ""}`}
-        tabIndex={0}
-        onContextMenu={openMapContextMenu}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={endPan}
-        onPointerCancel={endPan}
-        onKeyDown={handleKeyDown}
+        className={`map-viewport ${isPanning ? "is-panning" : ""} ${embeddedPreview ? "is-embedded-preview" : ""}`}
+        tabIndex={viewportInteractive ? 0 : -1}
+        aria-label={embeddedPreview ? "Embedded map preview" : "Interactive map viewport"}
+        onContextMenu={viewportInteractive ? openMapContextMenu : undefined}
+        onPointerDown={viewportInteractive ? handlePointerDown : undefined}
+        onPointerMove={viewportInteractive ? handlePointerMove : undefined}
+        onPointerUp={viewportInteractive ? endPan : undefined}
+        onPointerCancel={viewportInteractive ? endPan : undefined}
+        onKeyDown={viewportInteractive ? handleKeyDown : undefined}
       >
         <div
           className="map-pan-layer"
@@ -1513,6 +1520,7 @@ export function MapViewport({
             }}
           />
         </div>
+        {viewportInteractive ? (
         <ContextMenuPortal>
           <RoomStyleContextMenu
             menu={roomContextMenu}
@@ -1588,7 +1596,9 @@ export function MapViewport({
             onClose={() => setMapContextMenu(null)}
           />
         </ContextMenuPortal>
+        ) : null}
       </div>
+      {shouldShowViewportChrome ? (
       <div className="map-canvas-bottombar cruor-ui-panel-surface">
         <div className="zoom-toolbar" aria-label="Map zoom controls">
           <button
@@ -1636,6 +1646,7 @@ export function MapViewport({
           Wheel zooms. Drag pans. Arrow keys pan. + / - zoom. 0 or Home fits.
         </div>
       </div>
+      ) : null}
     </>
   );
 }

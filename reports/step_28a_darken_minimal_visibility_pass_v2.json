@@ -1,0 +1,38 @@
+{
+  "step": "Step 28a \u2014 Darken Minimal Visibility Pass v2",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "Monster Composer",
+    "Map Generator internals",
+    "legacy Crucible runtime",
+    "shared CSS",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "jsx_curly_balanced": true,
+    "jsx_paren_balanced": true,
+    "css_braces_balanced": true,
+    "workflow_guide_import_removed": true,
+    "workflow_guide_render_removed": true,
+    "audit_strip_removed_from_jsx": true,
+    "system_legend_removed_from_jsx": true,
+    "intro_explanatory_copy_removed": true,
+    "darken_title_present": true,
+    "draft_controls_preserved": true,
+    "map_stage_preserved": true,
+    "slot_rail_preserved": true,
+    "brief_panel_preserved": true,
+    "snapshot_provider_preserved": true,
+    "map_bridge_preserved": true,
+    "minimal_css_override_present": true,
+    "simple_mode_hides_status_layers": true,
+    "simple_mode_quiets_panel_prose": true,
+    "simple_mode_hides_debug_output": true
+  }
+}

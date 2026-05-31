@@ -1,0 +1,38 @@
+{
+  "step": "Step 28h \u2014 Darken Header Removal / Draft Controls Relocation",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "features/darken-location/map-generator/map-generator.page.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "page_removes_location_composer_intro_render": true,
+    "page_removes_header_element": true,
+    "page_passes_draft_controls_to_brief_panel": true,
+    "brief_accepts_draft_controls_prop": true,
+    "brief_renders_draft_controls_inside_panel": true,
+    "draft_buttons_still_present_via_component": true,
+    "css_adds_step28h": true,
+    "css_styles_brief_draft": true,
+    "css_no_intro_selectors": true,
+    "css_braces_balanced": true,
+    "page_braces_balanced": true,
+    "brief_braces_balanced": true,
+    "no_router_appshell_topbar_touched": true,
+    "no_map_stage_touched": true,
+    "no_map_generator_touched": true,
+    "no_supabase_backend_added": true
+  }
+}

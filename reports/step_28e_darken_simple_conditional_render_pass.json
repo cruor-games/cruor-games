@@ -1,0 +1,44 @@
+{
+  "step": "Step 28e \u2014 Darken Simple Conditional Render Pass",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/map-generator/map-generator.page.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "shared CSS",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "page_removes_workflow_guide_import": true,
+    "page_removes_old_intro_copy": true,
+    "page_removes_audit_and_legend": true,
+    "page_passes_ui_mode_to_draft_controls": true,
+    "page_passes_ui_mode_to_map_stage": true,
+    "draft_removes_technical_browser_copy": true,
+    "draft_conditionally_renders_clear_reset": true,
+    "draft_keeps_save_load": true,
+    "map_stage_accepts_ui_mode": true,
+    "map_stage_does_not_mount_output_in_simple": true,
+    "map_stage_conditionally_renders_footer": true,
+    "map_stage_keeps_embedded_map_props": true,
+    "map_stage_keeps_region_nodes": true,
+    "css_step28e_present": true,
+    "css_braces_balanced": true,
+    "page_braces_balanced": true,
+    "draft_braces_balanced": true,
+    "stage_braces_balanced": true,
+    "no_router_appshell_topbar_touched": true,
+    "no_map_generator_touched": true,
+    "no_supabase_backend_added": true
+  }
+}

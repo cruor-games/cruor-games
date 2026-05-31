@@ -1,0 +1,41 @@
+{
+  "step": "Step 28g \u2014 Darken Layout Consolidation Pass",
+  "changed_files": [
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "original_bytes": 46602,
+  "new_bytes": 18687,
+  "size_delta_bytes": -27915,
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "features/darken-location/map-generator/map-generator.page.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "backend/Supabase"
+  ],
+  "checks": {
+    "contains_single_step28g_header": true,
+    "removes_step28a_section": true,
+    "removes_step28b_section": true,
+    "removes_step28c_section": true,
+    "removes_step28d_section": true,
+    "removes_step28e_section": true,
+    "removes_step28f_section": true,
+    "keeps_composer_shell_layout": true,
+    "keeps_header_draft_controls": true,
+    "keeps_left_rail_controls": true,
+    "keeps_stage_preview": true,
+    "keeps_embedded_map_chrome_hiding": true,
+    "keeps_region_nodes": true,
+    "keeps_right_rail": true,
+    "keeps_simple_mode_guards": true,
+    "keeps_responsive_breakpoints": true,
+    "css_braces_balanced": true
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "step": "Step 18 \u2014 Darken Composer Final UX Audit / Regression Cleanup",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "included_for_baseline_integrity": [
+    "features/darken-location/composer/model/location-composer-output.js",
+    "features/darken-location/composer/model/location-composer-draft.js"
+  ],
+  "notes": [
+    "Compacts Map Sync into a details/summary card.",
+    "Adds a compact readiness audit strip.",
+    "Shortens duplicated legend/copy labels.",
+    "Reduces crowding in footer, copy buttons, region badges, and draft copy.",
+    "No map pipeline, router, backend, or Monster changes."
+  ],
+  "checks": {
+    "map sync converted to details": true,
+    "map sync compact when synced": true,
+    "region node labels shortened": true,
+    "audit strip added": true,
+    "legend copy shortened": true,
+    "copy buttons shortened": true,
+    "old copy labels removed": true,
+    "draft copy shortened": true,
+    "map footer synced short label": true,
+    "final audit CSS added": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

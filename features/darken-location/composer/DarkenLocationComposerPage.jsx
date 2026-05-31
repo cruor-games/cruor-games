@@ -134,29 +134,33 @@ function LocationCompilePreview({ state, digest, mapRequest, generatedMapPreview
               className="cruor-composer-control location-copy-btn"
               type="button"
               onClick={() => handleCopy("Session Insert", compilePreview.sessionInsertText)}
+              title="Copy the DM-facing session insert"
             >
-              Copy Session Insert
+              Copy Insert
             </button>
             <button
               className="cruor-composer-control location-copy-btn"
               type="button"
               onClick={() => handleCopy("Table Text", compilePreview.tableReadyText)}
+              title="Copy the table-ready text"
             >
-              Copy Table Text
+              Copy Table
             </button>
             <button
               className="cruor-composer-control location-copy-btn"
               type="button"
               onClick={() => handleCopy("Region Summary", regionSummaryText)}
+              title="Copy region summary text"
             >
-              Copy Region Summary
+              Copy Regions
             </button>
             <button
               className="cruor-composer-control location-copy-btn"
               type="button"
               onClick={() => handleCopy("JSON Snapshot", jsonSnapshotText)}
+              title="Copy JSON snapshot"
             >
-              Copy JSON Snapshot
+              Copy JSON
             </button>
           </div>
 
@@ -258,11 +262,11 @@ function LocationDraftControls({
     <section className="location-draft-strip" aria-label="Browser-local draft controls">
       <div className="location-draft-strip__main">
         <p className="location-kicker">Browser Draft</p>
-        <strong>{draftSummary?.title || "Unsaved Local Build"}</strong>
+        <strong>{draftSummary?.title || "Unsaved Build"}</strong>
         <small>
           {draftSummary
             ? `${draftSummary.context} · ${draftSummary.regionCount} regions · Last saved ${lastSavedLabel}`
-            : "This is only a browser-local draft. Project/backend saves will be handled separately later."}
+            : "Browser-local recovery only. Project/backend save comes later."}
         </small>
       </div>
 
@@ -434,20 +438,29 @@ function LocationBriefPanel({ state, setState, mapRequest }) {
 
 
 function LocationMapSyncStatus({ activeGeneratedRoom, syncStatus }) {
+  const syncRatio = `${syncStatus.synced}/${syncStatus.requested || syncStatus.generated || "—"}`;
+
   return (
-    <aside className={cx("location-map-sync-status", `is-${syncStatus.mode}`)} aria-label="Map and output synchronization status">
-      <div>
-        <p className="location-kicker">Map Sync</p>
-        <strong>{syncStatus.label}</strong>
-        <small>{syncStatus.description}</small>
-      </div>
+    <details
+      className={cx("location-map-sync-status", `is-${syncStatus.mode}`)}
+      aria-label="Map and output synchronization status"
+      open={syncStatus.mode !== "synced"}
+    >
+      <summary>
+        <span>
+          <p className="location-kicker">Map Sync</p>
+          <strong>{syncStatus.label}</strong>
+        </span>
+        <em>{syncRatio}</em>
+      </summary>
+      <small>{syncStatus.description}</small>
       <dl>
         <div><dt>Requested</dt><dd>{syncStatus.requested}</dd></div>
         <div><dt>Generated</dt><dd>{syncStatus.generated || "—"}</dd></div>
         <div><dt>Synced</dt><dd>{syncStatus.synced}</dd></div>
       </dl>
       <span>{activeGeneratedRoom ? `Output room #${activeGeneratedRoom.number || "—"}` : "Region metadata only"}</span>
-    </aside>
+    </details>
   );
 }
 
@@ -556,7 +569,7 @@ function LocationStage({ state, setState, mapRequest, digest, generatedMapPrevie
                 <span>{generatedRoom?.number ? String(generatedRoom.number).padStart(2, "0") : String(index + 1).padStart(2, "0")}</span>
                 <strong>{region.name}</strong>
                 <small>{regionComponents.length ? `${regionComponents.length} attached · ${generatedRoom ? `room ${generatedRoom.number || index + 1}` : "region-only"}` : generatedRoom ? `Room ${generatedRoom.number || index + 1} · ${getGeneratedRoomSurfaceLabel(generatedRoom)}` : getRegionStageSummary(state, region.id)?.shortRole || region.role}</small>
-                <em className="location-region-node__target">{active ? "Next Target" : generatedRoom ? "Synced Room" : "Region Only"}</em>
+                <em className="location-region-node__target">{active ? "Target" : generatedRoom ? "Synced" : "Region"}</em>
               </button>
             );
           })}
@@ -575,7 +588,7 @@ function LocationStage({ state, setState, mapRequest, digest, generatedMapPrevie
 
         <div className="location-stage-footer">
           <div><span>Map Request</span><strong>{mapSyncStatus.requested} regions</strong></div>
-          <div><span>Preview</span><strong>{mapSyncStatus.label}</strong></div>
+          <div><span>Preview</span><strong>{mapSyncStatus.mode === "synced" ? "Synced" : mapSyncStatus.label}</strong></div>
           <div><span>Synced Rooms</span><strong>{mapSyncStatus.synced}/{mapSyncStatus.requested || mapSyncStatus.generated || "—"}</strong></div>
           <div><span>Active Room</span><strong>{activeGeneratedRoom ? `#${activeGeneratedRoom.number || "—"} · ${activeGeneratedRoom.graphRole || activeGeneratedRoom.role}` : "Region Only"}</strong></div>
         </div>
@@ -1039,9 +1052,15 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
 
         <LocationWorkflowGuide state={state} digest={digest} mapRequest={mapRequest} />
 
+        <section className="location-audit-strip" aria-label="Composer readiness audit">
+          <span className={hasUnsavedChanges ? "is-warning" : "is-ok"}>{hasUnsavedChanges ? "Draft unsaved" : "Draft stable"}</span>
+          <span className={mapRequest.requiredRegions.length ? "is-ok" : "is-warning"}>{mapRequest.requiredRegions.length || 0} map regions</span>
+          <span className={digest.filledSlots ? "is-ok" : "is-warning"}>{digest.filledSlots}/{digest.totalSlots} slots filled</span>
+        </section>
+
         <section className="location-system-legend" aria-label="Composer output scopes">
-          <span><strong>Draft Locale</strong> browser recovery only</span>
-          <span><strong>Session Insert</strong> DM-facing text</span>
+          <span><strong>Draft</strong> browser recovery</span>
+          <span><strong>Insert</strong> DM-facing text</span>
           <span><strong>Export</strong> copy-ready data</span>
         </section>
 

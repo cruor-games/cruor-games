@@ -1,0 +1,21 @@
+{
+  "step": "Step 2b \u2014 Router/AppShell contract fix",
+  "changed_files": [
+    "app/router.jsx"
+  ],
+  "cause": "Router passed darkenContent/monsterComposerContent, but AppShell renders homeContent/crucibleContent/inspirationsContent. activeSection also started as darken, which is not a valid AppShell section.",
+  "checks": {
+    "activeSection defaults to valid AppShell section": true,
+    "router passes homeContent to AppShell": true,
+    "router passes crucibleContent to AppShell": true,
+    "router no longer passes unused darkenContent prop": true,
+    "router no longer passes unused monsterComposerContent prop": true,
+    "home content is defined": true,
+    "crucible content is defined": true,
+    "darken shell remains mounted through DarkenLocationComposerPage": true,
+    "monster composer remains accessible": true,
+    "AppShell UI mode wiring exists": true,
+    "map generator lazy path unchanged": true,
+    "no legacy Crucible import": true
+  }
+}

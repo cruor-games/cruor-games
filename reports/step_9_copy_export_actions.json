@@ -1,0 +1,31 @@
+{
+  "step": "Step 9 \u2014 Copy / Export Actions",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Adds Copy Table Text, Copy Region Summary, and Copy JSON Snapshot buttons.",
+    "Adds visible copied/unavailable/failed status.",
+    "Adds JSON snapshot preview.",
+    "Uses only browser clipboard APIs with textarea fallback.",
+    "No backend, router, Monster, or map generator changes."
+  ],
+  "checks": {
+    "copyTextToClipboard helper added": true,
+    "region summary export helper added": true,
+    "json export payload helper added": true,
+    "copy state added": true,
+    "Copy Table Text button added": true,
+    "Copy Region Summary button added": true,
+    "Copy JSON Snapshot button added": true,
+    "JSON Snapshot preview added": true,
+    "no backend calls added": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS includes copy/export styles": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

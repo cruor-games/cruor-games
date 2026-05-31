@@ -1,0 +1,33 @@
+{
+  "step": "Step 1 \u2014 Composer System Base + Monster Compatibility Root",
+  "changed_files": [
+    "app/main.jsx",
+    "features/monster-composer/monster-composer.page.jsx",
+    "shared/styles/composer-system.css"
+  ],
+  "untouched_uploaded_files": [
+    "features/monster-composer/monster-composer.styles.css",
+    "shared/styles/components.css"
+  ],
+  "notes": [
+    "Replaced composer-primitives.css import with composer-system.css.",
+    "Changed Monster root to compatibility classes: cruor-composer-shell monster-composer monster-shell.",
+    "Created feature-agnostic shared composer primitives.",
+    "Did not touch Darken legacy files.",
+    "Did not generate features/crucible/styles.css."
+  ],
+  "checks": {
+    "main imports composer-system.css": true,
+    "main no longer imports composer-primitives.css": true,
+    "Monster root uses compatibility classes": true,
+    "Monster still keeps monster-shell compatibility": true,
+    "composer-system.css has no feature-specific selectors": true,
+    "composer-system.css defines root shell primitive": true,
+    "composer-system.css defines stage/rail/panel/card/slot/control primitives": true,
+    "no semantic border-color shorthand regressions in audited files": true,
+    "no features/crucible/styles.css generated": true,
+    "css braces balanced": true
+  },
+  "forbidden_selector_terms_found_in_composer_system": [],
+  "bad_border_color_contexts": []
+}

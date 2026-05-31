@@ -1,0 +1,34 @@
+{
+  "step": "Step 15 \u2014 Darken Composer Output Quality Pass",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "notes": [
+    "Improves Table-Ready Text structure.",
+    "Adds Session Insert output section and Copy Session Insert action.",
+    "Separates Premise, Rooms, Components, and Map Notes in the output model.",
+    "Updates JSON payload with sessionInsertText, mapNotes, components, and richer room fields.",
+    "No router, backend, Monster, or map generator changes."
+  ],
+  "checks": {
+    "output module has session insert text": true,
+    "output module has premise section": true,
+    "output module has map notes": true,
+    "output module has room sections": true,
+    "output module keeps export async syntax": true,
+    "copy session insert button added": true,
+    "session insert UI added": true,
+    "rooms output UI added": true,
+    "components output UI added": true,
+    "map notes UI added": true,
+    "output quality CSS added": true,
+    "no backend calls added": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

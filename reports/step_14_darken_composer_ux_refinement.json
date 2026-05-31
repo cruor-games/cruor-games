@@ -1,0 +1,32 @@
+{
+  "step": "Step 14 \u2014 Darken Composer UX Refinement",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Adds Source \u2192 Slot \u2192 Region \u2192 Map workflow guide.",
+    "Clarifies intro, left panel, active slot, target region, component cards, and empty states.",
+    "Makes numbered region chips more explicit with R1/R2/R3/R4 labels.",
+    "No logic changes to map generator, router, backend, or Monster."
+  ],
+  "checks": {
+    "workflow guide component added": true,
+    "workflow guide rendered": true,
+    "intro copy refined": true,
+    "left panel copy refined": true,
+    "region node next target label": true,
+    "empty action states added": true,
+    "slot target note added": true,
+    "component card meta added": true,
+    "region chips labeled R": true,
+    "default target card copy refined": true,
+    "workflow CSS added": true,
+    "no backend calls added": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

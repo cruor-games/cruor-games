@@ -1,0 +1,44 @@
+{
+  "step": "Step 2 \u2014 Darken React Shell",
+  "changed_files": [
+    "app/router.jsx",
+    "features/darken-location/composer/index.js",
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/composer/model/location-composer-state.js",
+    "features/darken-location/composer/model/location-composer-selectors.js"
+  ],
+  "untouched_uploaded_files": [
+    "features/crucible/index.js",
+    "features/darken-location/darken-location.map-request.js",
+    "features/crucible/crucible.components-data.js",
+    "features/crucible/crucible.sources-data.js",
+    "features/crucible/crucible.location-regions.js",
+    "features/crucible/crucible.workflows.js",
+    "features/crucible/crucible.state.js"
+  ],
+  "notes": [
+    "Router now mounts DarkenLocationComposerPage instead of legacy Crucible for the Darken Location tab.",
+    "Legacy Crucible index remains untouched as fallback but is no longer used by this route.",
+    "Created a React shell with left rail, center map stage, right slot inspector.",
+    "Created minimal model/selectors around existing Crucible data.",
+    "Snapshot provider remains compatible with the existing map workspace flow.",
+    "No Monster files were modified."
+  ],
+  "checks": {
+    "router imports DarkenLocationComposerPage": true,
+    "router no longer imports legacy Crucible": true,
+    "router renders DarkenLocationComposerPage in darken panel": true,
+    "new Darken root uses cruor composer location classes": true,
+    "new Darken files do not use monster-shell": true,
+    "snapshot provider compatibility is present": true,
+    "map request compatibility is present": true,
+    "new files use shared composer primitives": true,
+    "new CSS has no Monster selectors": true,
+    "no features/crucible/styles.css generated": true,
+    "css braces balanced": true,
+    "new files use expected relative imports": true,
+    "no border-color shorthand misuse in new CSS": true
+  },
+  "bad_border_contexts": []
+}

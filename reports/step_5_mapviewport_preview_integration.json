@@ -1,0 +1,40 @@
+{
+  "step": "Step 5 \u2014 MapViewport Preview Integration",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "included_preserved_files": [
+    "features/darken-location/darken-location.map-request.js"
+  ],
+  "notes": [
+    "MapViewport is mounted as a live preview inside the Darken center stage.",
+    "The preview uses createConfigFromNormalizedMapRequest and generateMap from the map generator pipeline.",
+    "Editor mode, props overlay, internal bottom toolbar, and map context menu are disabled/hidden for composer preview use.",
+    "The occult placeholder remains as a fallback when the pipeline cannot produce a map.",
+    "Monster files were not modified.",
+    "Full map generator workspace files were not modified."
+  ],
+  "checks": {
+    "page imports map generator css": true,
+    "page imports MapViewport directly": true,
+    "page imports createConfigFromNormalizedMapRequest": true,
+    "page imports generateMap": true,
+    "preview disables editor mode": true,
+    "preview disables props overlay": true,
+    "preview renders map fallback": true,
+    "preview catches pipeline errors": true,
+    "stage passes generated map preview": true,
+    "stage keeps location composer root": true,
+    "no monster shell in updated files": true,
+    "css hides map viewport internal bottom bar": true,
+    "css lets region board overlay avoid blocking map except nodes": true,
+    "map request keeps assigned components contract": true,
+    "css braces balanced": true,
+    "uploaded map page exports MapViewport": true,
+    "uploaded map input exports createConfigFromNormalizedMapRequest": true,
+    "uploaded map pipeline exports generateMap": true,
+    "no border-color shorthand misuse in updated CSS": true
+  },
+  "bad_border_contexts": []
+}

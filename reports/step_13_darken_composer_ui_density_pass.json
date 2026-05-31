@@ -1,0 +1,31 @@
+{
+  "step": "Step 13 \u2014 Darken Composer UI Density Pass",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "notes": [
+    "Makes Compile Preview collapsed by default and expandable.",
+    "Reduces visual dominance of draft strip.",
+    "Adds scroll constraints to left/right list surfaces.",
+    "Compacts panel spacing and preview output blocks.",
+    "Includes Step 12a hotfixed output module to preserve export async syntax fix.",
+    "No logic changes to map generator, router, or Monster."
+  ],
+  "checks": {
+    "compile preview has open state": true,
+    "compile preview section has collapsed class": true,
+    "compile preview body conditional": true,
+    "compile preview toggle button added": true,
+    "draft strip density css added": true,
+    "rail scroll css added": true,
+    "compile preview collapsed css added": true,
+    "hotfixed output module included": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

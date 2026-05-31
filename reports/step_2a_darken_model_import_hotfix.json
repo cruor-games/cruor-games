@@ -1,0 +1,14 @@
+{
+  "step": "Step 2a \u2014 Darken model import hotfix",
+  "changed_files": [
+    "features/darken-location/composer/model/location-composer-state.js",
+    "features/darken-location/composer/model/location-composer-selectors.js"
+  ],
+  "cause": "Model files live in features/darken-location/composer/model, so imports to features/crucible require ../../../crucible, not ../../crucible.",
+  "checks": {
+    "state import uses ../../../crucible": true,
+    "selectors imports use ../../../crucible": true,
+    "no wrong ../../crucible import remains": true,
+    "relative model import unchanged": true
+  }
+}

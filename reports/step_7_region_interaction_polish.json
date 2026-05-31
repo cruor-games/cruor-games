@@ -1,0 +1,29 @@
+{
+  "step": "Step 7 \u2014 Region Interaction Polish",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Added explicit target badge to map region nodes.",
+    "Added direct region assignment buttons on component cards.",
+    "Clarified Add/Replace wording for full slots and default target region.",
+    "Added target-card controls in right rail.",
+    "No router, Monster, or map pipeline changes."
+  ],
+  "checks": {
+    "direct region buttons on component cards": true,
+    "active target card exists": true,
+    "region nodes have target badge": true,
+    "replace label clarified": true,
+    "add target label clarified": true,
+    "root remains location composer": true,
+    "no monster shell": true,
+    "css braces balanced": true,
+    "step7 css appended": true,
+    "target card switcher css exists": true,
+    "inline region button css exists": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

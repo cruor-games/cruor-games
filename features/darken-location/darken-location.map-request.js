@@ -27,6 +27,71 @@ function normalizeSize(value) {
   return SUPPORTED_REGION_SIZES.has(text) ? text : undefined;
 }
 
+function normalizeSlotAssignments(value = {}) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value).map(([slotId, assignments]) => [
+      slotId,
+      normalizeArray(assignments)
+        .filter((assignment) => assignment && typeof assignment === "object")
+        .map((assignment) => ({
+          componentId: normalizeText(assignment.componentId),
+          slotId: normalizeText(assignment.slotId, slotId),
+          regionId: normalizeText(assignment.regionId),
+        }))
+        .filter((assignment) => assignment.componentId),
+    ]),
+  );
+}
+
+function createComponentIndex(components = []) {
+  return new Map(
+    normalizeArray(components)
+      .filter((component) => component && typeof component === "object")
+      .map((component) => [normalizeText(component.id), component])
+      .filter(([id]) => Boolean(id)),
+  );
+}
+
+function normalizeAssignedComponents(slotAssignments, selectedComponents = []) {
+  const componentIndex = createComponentIndex(selectedComponents);
+  const assignedComponents = Object.entries(slotAssignments)
+    .flatMap(([slotId, assignments]) =>
+      normalizeArray(assignments).map((assignment) => {
+        const component = componentIndex.get(assignment.componentId) || {};
+        return {
+          id: normalizeText(assignment.componentId || component.id),
+          title: normalizeText(component.title),
+          type: normalizeText(component.type),
+          summary: normalizeText(component.summary),
+          slotId: normalizeText(assignment.slotId, slotId),
+          regionId: normalizeText(assignment.regionId),
+        };
+      }),
+    )
+    .filter((component) => component.id || component.title || component.slotId);
+
+  if (assignedComponents.length) return assignedComponents;
+
+  return normalizeArray(selectedComponents)
+    .map((component) => ({
+      id: normalizeText(component?.id),
+      title: normalizeText(component?.title),
+      type: normalizeText(component?.type),
+      summary: normalizeText(component?.summary),
+      slotId: normalizeText(component?.slotId),
+      regionId: normalizeText(component?.regionId),
+    }))
+    .filter((component) => component.id || component.title || component.slotId);
+}
+
+function getAssignedComponentsForRegion(regionId, assignedComponents) {
+  return normalizeArray(assignedComponents).filter(
+    (component) => component.regionId && component.regionId === regionId,
+  );
+}
+
 export function mapDarkenLocationContextToMapType(context) {
   const text = String(context || "").toLowerCase();
   if (text.includes("cave") || text.includes("cavern")) return "Cave";
@@ -67,7 +132,7 @@ function createStableSeed(snapshot, requiredRegions) {
   }`;
 }
 
-function normalizeRequiredRegion(region, index) {
+function normalizeRequiredRegion(region, index, assignedComponents = []) {
   if (!region || typeof region !== "object") return null;
   const sourceRegionId = normalizeText(
     region.id,
@@ -88,6 +153,7 @@ function normalizeRequiredRegion(region, index) {
     String(anchor),
   );
   const horror = normalizeArray(region.horror).map((item) => String(item));
+  const regionComponents = getAssignedComponentsForRegion(sourceRegionId, assignedComponents);
 
   return {
     id: `map-region-${index + 1}`,
@@ -115,6 +181,10 @@ function normalizeRequiredRegion(region, index) {
         region.readAloud && typeof region.readAloud === "object"
           ? { ...region.readAloud }
           : region.readAloud || "",
+      assignedComponents: regionComponents,
+      assignedSlotIds: Array.from(
+        new Set(regionComponents.map((component) => component.slotId).filter(Boolean)),
+      ),
     },
   };
 }
@@ -123,8 +193,13 @@ export function createMapRequestFromDarkenLocationState(crucibleSnapshot = {}) {
   const workflow = normalizeText(crucibleSnapshot.workflow, "location");
   const context = normalizeText(crucibleSnapshot.context, "Crypt");
   const mapType = mapDarkenLocationContextToMapType(context);
+  const slotAssignments = normalizeSlotAssignments(crucibleSnapshot.slotAssignments);
+  const assignedComponents = normalizeAssignedComponents(
+    slotAssignments,
+    crucibleSnapshot.selectedComponents,
+  );
   const requiredRegions = normalizeArray(crucibleSnapshot.locationRegions)
-    .map((region, index) => normalizeRequiredRegion(region, index))
+    .map((region, index) => normalizeRequiredRegion(region, index, assignedComponents))
     .filter(Boolean);
   const safeMapType = SUPPORTED_MAP_TYPES.has(mapType) ? mapType : "Crypt";
 
@@ -147,15 +222,18 @@ export function createMapRequestFromDarkenLocationState(crucibleSnapshot = {}) {
         (anchor) => String(anchor),
       ),
       intrusion: normalizeText(crucibleSnapshot.intrusion),
-      selectedComponents: normalizeArray(crucibleSnapshot.selectedComponents)
+      activeSlot: normalizeText(crucibleSnapshot.activeSlot),
+      activeRegionId: normalizeText(crucibleSnapshot.activeRegionId),
+      slotAssignments,
+      selectedComponents: assignedComponents,
+      regionComponentLinks: assignedComponents
+        .filter((component) => component.regionId)
         .map((component) => ({
-          id: normalizeText(component?.id),
-          title: normalizeText(component?.title),
-          slotId: normalizeText(component?.slotId),
-        }))
-        .filter(
-          (component) => component.id || component.title || component.slotId,
-        ),
+          regionId: component.regionId,
+          slotId: component.slotId,
+          componentId: component.id,
+          title: component.title,
+        })),
     },
   };
 }

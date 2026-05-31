@@ -1,0 +1,28 @@
+{
+  "step": "Step 8 \u2014 Compile Preview / Output Strip",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Adds a table-ready textual compile preview under the map stage.",
+    "Does not use legacy compiledView.",
+    "Does not implement clipboard/export yet.",
+    "Does not touch router, Monster, or map generator internals."
+  ],
+  "checks": {
+    "LocationCompilePreview component added": true,
+    "compile preview helper added": true,
+    "table ready text exists": true,
+    "LocationStage renders compile preview": true,
+    "compile preview uses slot assignments": true,
+    "compile preview uses region assignments": true,
+    "compile preview includes read aloud": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS includes compile preview styles": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

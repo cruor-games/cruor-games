@@ -1,0 +1,37 @@
+{
+  "step": "Step 16 \u2014 Darken Composer Save/Load UX Hardening",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/composer/model/location-composer-output.js",
+    "features/darken-location/composer/model/location-composer-draft.js"
+  ],
+  "notes": [
+    "Clipboard helper now returns status details and distinguishes native clipboard from fallback copy.",
+    "Draft storage helpers now expose status-aware save/delete APIs.",
+    "Draft UI now shows storage capability and hardened local-draft wording.",
+    "Added Draft Locale / Session Insert / Export scope legend.",
+    "No Supabase/backend/router/Monster/map-generator changes."
+  ],
+  "checks": {
+    "output clipboard returns status object": true,
+    "output clipboard fallback status added": true,
+    "page imports clipboard status message": true,
+    "page handleCopy uses status object": true,
+    "draft status helpers added": true,
+    "page uses draft status helpers": true,
+    "draft storage status state added": true,
+    "local draft wording hardened": true,
+    "system legend added": true,
+    "session/export scope labels added": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "CSS hardening added": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

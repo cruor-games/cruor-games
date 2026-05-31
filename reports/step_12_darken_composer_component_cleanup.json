@@ -1,0 +1,35 @@
+{
+  "step": "Step 12 \u2014 Darken Composer Component Cleanup",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/model/location-composer-map-preview.js",
+    "features/darken-location/composer/model/location-composer-draft.js",
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "notes": [
+    "Extracted map-preview helpers from DarkenLocationComposerPage.jsx.",
+    "Extracted local draft persistence helpers into a dedicated model module.",
+    "Extracted compile/copy/export helpers into a dedicated model module.",
+    "No intended functional or visual changes.",
+    "No CSS, router, Monster, or map generator changes."
+  ],
+  "checks": {
+    "page imports map preview helpers": true,
+    "page imports draft helpers": true,
+    "page imports output helpers": true,
+    "preview helper module exports room helpers": true,
+    "draft helper module imports toArray": true,
+    "draft helper module exports storage helpers": true,
+    "output helper module imports selectors": true,
+    "output helper module exports compile helpers": true,
+    "page no longer defines extracted helpers": true,
+    "LocationCompilePreview remains in page": true,
+    "LocationDraftControls remains in page": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "balanced braces in modules": true,
+    "no duplicate helper functions in page": true
+  },
+  "size_before_bytes": 50234,
+  "size_after_bytes": 39846
+}

@@ -1,0 +1,25 @@
+{
+  "step": "Step 6 \u2014 Map Preview Polish + Region Sync",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "checks": {
+    "helpers added": true,
+    "MapViewport names disabled": true,
+    "LocationStage uses generated room positions": true,
+    "RegionFocusPanel receives generatedMapPreview": true,
+    "LocationSlotRail passes generatedMapPreview": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "css braces balanced": true,
+    "css hides map labels": true,
+    "generated room card CSS": true
+  },
+  "notes": [
+    "Region nodes now prefer generatedMap room label points instead of fixed grid positions.",
+    "MapViewport labels are disabled to reduce duplicate labels; region nodes become the composer labels.",
+    "RegionFocusPanel now shows generated room metadata for the active region.",
+    "No map generator internals were modified."
+  ]
+}

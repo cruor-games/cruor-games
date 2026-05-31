@@ -1,0 +1,14 @@
+{
+  "step": "Step 12a \u2014 Output export syntax hotfix",
+  "changed_files": [
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "cause": "Step 12 generated `async export function copyTextToClipboard`, but valid ES module syntax is `export async function copyTextToClipboard`.",
+  "checks": {
+    "bad async export removed": true,
+    "copyTextToClipboard correctly exported": true,
+    "file still exports compile helper": true,
+    "file still exports JSON payload helper": true,
+    "braces balanced": true
+  }
+}

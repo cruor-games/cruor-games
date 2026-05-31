@@ -1,0 +1,31 @@
+{
+  "step": "Step 11 \u2014 Preset / Draft Quality Pass",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Adds Clear Saved Draft without discarding the current composer.",
+    "Clarifies browser-local draft scope versus future project/backend save.",
+    "Improves last saved visibility.",
+    "Clarifies reset as Reset Current.",
+    "No backend, router, Monster, or map generator changes."
+  ],
+  "checks": {
+    "deleteStoredLocationDraft helper added": true,
+    "Clear Saved button added": true,
+    "clearSavedDraft callback added": true,
+    "clear saved passed to controls": true,
+    "draft scope note added": true,
+    "last saved label added": true,
+    "reset label clarified": true,
+    "current reset status clarified": true,
+    "no backend calls added": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS draft quality styles added": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

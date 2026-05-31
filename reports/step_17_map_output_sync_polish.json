@@ -1,0 +1,42 @@
+{
+  "step": "Step 17 \u2014 Darken Composer Map/Output Synchronization Polish",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css",
+    "features/darken-location/composer/model/location-composer-output.js",
+    "features/darken-location/composer/model/location-composer-draft.js"
+  ],
+  "notes": [
+    "Adds map sync status model used by output and UI.",
+    "Clarifies generated/fallback/partial map preview states.",
+    "Adds Map Sync card to map stage.",
+    "Adds room sync labels to Room output and JSON export.",
+    "Clarifies Region Focus fallback when generated geometry is unavailable.",
+    "No map pipeline, router, backend, or Monster changes."
+  ],
+  "checks": {
+    "output exports map sync status": true,
+    "output map notes include sync": true,
+    "room sections include sync label": true,
+    "json export includes map sync status": true,
+    "page imports map sync status": true,
+    "map sync status component added": true,
+    "map sync status rendered": true,
+    "stage mode class added": true,
+    "fallback copy improved": true,
+    "region nodes show synced room": true,
+    "compile preview sync description added": true,
+    "compile room sync label rendered": true,
+    "region focus fallback card added": true,
+    "sync CSS added": true,
+    "pipeline still imported only by page": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import "./monster-composer.styles.css";
+import "./styles.css";
 import {
   Skull,
   Shield,
@@ -27,7 +27,10 @@ import {
   isCreatureTypeUnavailable,
 } from "./monster-composer.taxonomies.js";
 
-import { SLOTS, DEFAULT_SLOT_CAPS } from "./monster-composer.workflow.js";
+import {
+  SLOTS,
+  DEFAULT_SLOT_CAPS,
+} from "./monster-composer.workflow.js";
 
 import {
   ALL_MONSTER_SOURCES as SOURCES,
@@ -88,6 +91,7 @@ import { GuidedFlowPanel, TemplatePickerModal } from "./components/start-flow.js
 import { MonsterSilhouetteMap } from "./components/anatomy.jsx";
 import { ComponentNavigatorModal } from "./components/navigator.jsx";
 import { BalanceWorkbench, ExportWorkbench, RunModePanel } from "./components/panels.jsx";
+
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -351,11 +355,12 @@ function normalizePresetSelection(preset) {
   );
 }
 
+
 function getFeatureDecisionProfile(feature, context = {}) {
   return buildFeatureDecisionProfileModel(feature, {
     ...context,
     getFeatureSection,
-    hasFeatureMechanicOverride,
+  hasFeatureMechanicOverride,
     getFeatureMechanicProfile,
     getFeatureCounterplayProfile,
     titleCase,
@@ -365,7 +370,7 @@ function getFeatureDecisionProfile(feature, context = {}) {
 function getFeatureSpiceScore(feature, profile) {
   return getFeatureSpiceScoreModel(feature, profile, {
     getFeatureSection,
-    hasFeatureMechanicOverride,
+  hasFeatureMechanicOverride,
     getFeatureCounterplayProfile,
   });
 }
@@ -1017,6 +1022,8 @@ function getSlotCap(slotCaps, slotId) {
   return Math.max(1, Number(slotCaps?.[slotId] || 1));
 }
 
+
+
 function pickForgeCandidate(candidates, slotId, remainingBudget, roleId) {
   if (!candidates.length) return null;
 
@@ -1042,6 +1049,7 @@ function pickForgeCandidate(candidates, slotId, remainingBudget, roleId) {
   return null;
 }
 
+
 function copyTextFallback(text) {
   if (typeof document === "undefined") return false;
   const textarea = document.createElement("textarea");
@@ -1060,6 +1068,9 @@ function copyTextFallback(text) {
   document.body.removeChild(textarea);
   return copied;
 }
+
+
+
 
 export default function CruorMonsterComposerMvp() {
   const [typeId, setTypeId] = useState("undead");
@@ -1611,6 +1622,7 @@ export default function CruorMonsterComposerMvp() {
     });
   }
 
+
   function forgeMonster() {
     setComposerStarted(true);
     setStartMode((current) => current || "scratch");
@@ -1889,7 +1901,7 @@ export default function CruorMonsterComposerMvp() {
 
   return (
     <div
-      className="monster-shell"
+      className="cruor-composer-shell monster-composer monster-shell"
       data-composer-started={composerStarted ? "true" : "false"}
       data-start-mode={startMode || "unstarted"}
       data-template-picker-open={templatePickerOpen ? "true" : "false"}
@@ -1909,312 +1921,294 @@ export default function CruorMonsterComposerMvp() {
           <>
             <button
               className="monster-frame-scrim is-open"
-              type="button"
-              aria-label="Close Monster Frame"
-              onClick={() => setFrameOpen(false)}
+          type="button"
+          aria-label="Close Monster Frame"
+          onClick={() => setFrameOpen(false)}
             />
 
             <aside
-              className="panel navigator monster-frame-drawer game-frame-drawer game-frame-drawer--fullscreen is-open cruor-ui-panel-surface cruor-side-panel cruor-scroll-surface"
-              role="dialog"
-              aria-modal="true"
+              className="panel navigator monster-frame-drawer game-frame-drawer is-open"
               aria-label="Monster Frame"
               aria-hidden="false"
             >
-              <div className="game-frame__hero game-frame__hero--fullscreen">
-                <div className="game-frame__status-row">
-                  <span className="game-frame__status">
-                    <span /> Live Frame
-                  </span>
-                  <button
-                    className="icon-btn"
-                    type="button"
-                    aria-label="Close Monster Frame"
-                    onClick={() => setFrameOpen(false)}
-                  >
-                    <X aria-hidden="true" />
-                  </button>
-                </div>
-                <p className="eyebrow">Monster Frame</p>
-                <h2>{computed.name}</h2>
-                <div className="game-frame__loadout" aria-label="Current frame summary">
-                  <span>
-                    <Skull aria-hidden="true" /> {creatureType.label}
-                  </span>
-                  <span>
-                    <Activity aria-hidden="true" /> {category}
-                  </span>
-                  <span>
-                    <Sword aria-hidden="true" /> {role.label}
-                  </span>
-                  <span>
-                    <Gauge aria-hidden="true" /> CR {targetCr}
-                  </span>
-                  <span>
-                    <Activity aria-hidden="true" /> {tacticalRole.label}
-                  </span>
-                  <span>
-                    <Sparkles aria-hidden="true" /> {monsterTier.label}
-                  </span>
-                  <span>
-                    <AlertTriangle aria-hidden="true" /> {tempoProfile.label}
-                  </span>
-                </div>
+          <div className="game-frame__hero">
+            <div className="game-frame__status-row">
+              <span className="game-frame__status">
+                <span /> Live Frame
+              </span>
+              <button
+                className="icon-btn"
+                type="button"
+                aria-label="Close Monster Frame"
+                onClick={() => setFrameOpen(false)}
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+            <p className="eyebrow">Monster Frame</p>
+            <h2>{computed.name}</h2>
+            <div className="game-frame__loadout" aria-label="Current frame summary">
+              <span>
+                <Skull aria-hidden="true" /> {creatureType.label}
+              </span>
+              <span>
+                <Activity aria-hidden="true" /> {category}
+              </span>
+              <span>
+                <Sword aria-hidden="true" /> {role.label}
+              </span>
+              <span>
+                <Gauge aria-hidden="true" /> CR {targetCr}
+              </span>
+              <span>
+                <Activity aria-hidden="true" /> {tacticalRole.label}
+              </span>
+              <span>
+                <Sparkles aria-hidden="true" /> {monsterTier.label}
+              </span>
+              <span>
+                <AlertTriangle aria-hidden="true" /> {tempoProfile.label}
+              </span>
+            </div>
+          </div>
+
+          <div className="game-frame__body">
+            <PanelGroup title="Creature Type" icon={Skull}>
+              <div className="game-type-grid">
+                {CREATURE_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  const active = type.id === typeId;
+                  const unavailable = isCreatureTypeUnavailable(type.id);
+                  return (
+                    <button
+                      key={type.id}
+                      type="button"
+                      disabled={unavailable}
+                      aria-disabled={unavailable}
+                      className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                      onClick={() => selectType(type.id)}
+                    >
+                      <span className="game-type-card__icon">
+                        <Icon aria-hidden="true" />
+                      </span>
+                      <span className="game-type-card__text">
+                        <strong>{type.label}</strong>
+                        <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
+                      </span>
+                      <span className="game-type-card__mark">
+                        {active ? "Active" : unavailable ? "Later" : "Select"}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="game-frame__body game-frame__body--fullscreen">
-                <PanelGroup title="Creature Type" icon={Skull} className="game-frame-section game-frame-section--type">
-                  <div className="game-type-grid">
-                    {CREATURE_TYPES.map((type) => {
-                      const Icon = type.icon;
-                      const active = type.id === typeId;
-                      const unavailable = isCreatureTypeUnavailable(type.id);
-                      return (
-                        <button
-                          key={type.id}
-                          type="button"
-                          disabled={unavailable}
-                          aria-disabled={unavailable}
-                          className={`game-type-card cruor-ui-card-surface ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                          onClick={() => selectType(type.id)}
-                        >
-                          <span className="game-type-card__icon">
-                            <Icon aria-hidden="true" />
-                          </span>
-                          <span className="game-type-card__text">
-                            <strong>{type.label}</strong>
-                            <small>
-                              {unavailable ? "Unavailable" : `${type.categories.length} variants`}
-                            </small>
-                          </span>
-                          <span className="game-type-card__mark">
-                            {active ? "Active" : unavailable ? "Later" : "Select"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="game-category-panel">
-                    <div className="game-frame__minihead">
-                      <span>Variant</span>
-                      <strong>{category}</strong>
-                    </div>
-                    <div
-                      className="game-category-grid"
-                      role="radiogroup"
-                      aria-label="Creature category"
-                    >
-                      {creatureType.categories.map((item) => {
-                        const unavailable = isCreatureCategoryUnavailable(typeId, item);
-                        return (
-                          <button
-                            key={item}
-                            type="button"
-                            role="radio"
-                            disabled={unavailable}
-                            aria-disabled={unavailable}
-                            aria-checked={item === category}
-                            className={`game-category-chip cruor-ui-chip-surface ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                            onClick={() => {
-                              if (unavailable) return;
-                              setCategory(item);
-                              setActivePresetId("");
-                            }}
-                          >
-                            {item}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </PanelGroup>
-
-                <PanelGroup title="Encounter Role" icon={Sword} className="game-frame-section game-frame-section--role">
-                  <div className="game-role-grid">
-                    {ROLES.map((item) => (
+              <div className="game-category-panel">
+                <div className="game-frame__minihead">
+                  <span>Variant</span>
+                  <strong>{category}</strong>
+                </div>
+                <div
+                  className="game-category-grid"
+                  role="radiogroup"
+                  aria-label="Creature category"
+                >
+                  {creatureType.categories.map((item) => {
+                    const unavailable = isCreatureCategoryUnavailable(typeId, item);
+                    return (
                       <button
-                        key={item.id}
+                        key={item}
                         type="button"
-                        className={`game-role-card cruor-ui-card-surface ${item.id === roleId ? "active" : ""}`}
+                        role="radio"
+                        disabled={unavailable}
+                        aria-disabled={unavailable}
+                        aria-checked={item === category}
+                        className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
                         onClick={() => {
-                          setRoleId(item.id);
+                          if (unavailable) return;
+                          setCategory(item);
                           setActivePresetId("");
                         }}
                       >
-                        <span className="game-role-card__top">
-                          <strong>{item.label}</strong>
-                          <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
-                        </span>
-                        <span className="game-role-card__summary">{item.summary}</span>
-                        <span className="game-role-card__stats">
-                          <span>HP {Math.round(item.hpMult * 100)}%</span>
-                          <span>DPR {Math.round(item.dprMult * 100)}%</span>
-                        </span>
+                        {item}
                       </button>
-                    ))}
-                  </div>
-                </PanelGroup>
+                    );
+                  })}
+                </div>
+              </div>
+            </PanelGroup>
 
-                <PanelGroup title="Design Profile" icon={Gauge} className="game-frame-section game-frame-section--profile">
-                  <div className="game-category-panel">
-                    <div className="game-frame__minihead">
-                      <span>Target CR</span>
-                      <strong>{targetCr}</strong>
-                    </div>
-                    <NumberField
-                      label="Target CR"
-                      value={targetCr}
-                      min={0}
-                      max={30}
-                      onChange={(value) => {
-                        setTargetCr(value);
+            <PanelGroup title="Encounter Role" icon={Sword}>
+              <div className="game-role-grid">
+                {ROLES.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`game-role-card ${item.id === roleId ? "active" : ""}`}
+                    onClick={() => {
+                      setRoleId(item.id);
+                      setActivePresetId("");
+                    }}
+                  >
+                    <span className="game-role-card__top">
+                      <strong>{item.label}</strong>
+                      <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
+                    </span>
+                    <span className="game-role-card__summary">{item.summary}</span>
+                    <span className="game-role-card__stats">
+                      <span>HP {Math.round(item.hpMult * 100)}%</span>
+                      <span>DPR {Math.round(item.dprMult * 100)}%</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </PanelGroup>
+
+            <PanelGroup title="Design Profile" icon={Gauge}>
+              <div className="game-category-panel">
+                <div className="game-frame__minihead">
+                  <span>Target CR</span>
+                  <strong>{targetCr}</strong>
+                </div>
+                <NumberField
+                  label="Target CR"
+                  value={targetCr}
+                  min={0}
+                  max={30}
+                  onChange={(value) => {
+                    setTargetCr(value);
+                    setActivePresetId("");
+                  }}
+                />
+              </div>
+
+              <div className="game-category-panel">
+                <div className="game-frame__minihead">
+                  <span>Tactical Role</span>
+                  <strong>{tacticalRole.label}</strong>
+                </div>
+                <div className="game-category-grid" role="radiogroup" aria-label="Tactical role">
+                  {TACTICAL_ROLES.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={item.id === tacticalRoleId}
+                      className={`game-category-chip ${item.id === tacticalRoleId ? "active" : ""}`}
+                      onClick={() => {
+                        setTacticalRoleId(item.id);
                         setActivePresetId("");
                       }}
-                    />
-                  </div>
-
-                  <div className="game-category-panel">
-                    <div className="game-frame__minihead">
-                      <span>Tactical Role</span>
-                      <strong>{tacticalRole.label}</strong>
-                    </div>
-                    <div
-                      className="game-category-grid"
-                      role="radiogroup"
-                      aria-label="Tactical role"
                     >
-                      {TACTICAL_ROLES.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={item.id === tacticalRoleId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === tacticalRoleId ? "active" : ""}`}
-                          onClick={() => {
-                            setTacticalRoleId(item.id);
-                            setActivePresetId("");
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="game-category-panel">
-                    <div className="game-frame__minihead">
-                      <span>Tier</span>
-                      <strong>{monsterTier.label}</strong>
-                    </div>
-                    <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
-                      {MONSTER_TIERS.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={item.id === monsterTierId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === monsterTierId ? "active" : ""}`}
-                          onClick={() => {
-                            setMonsterTierId(item.id);
-                            setActivePresetId("");
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="game-category-panel">
-                    <div className="game-frame__minihead">
-                      <span>Tempo</span>
-                      <strong>{tempoProfile.label}</strong>
-                    </div>
-                    <div
-                      className="game-category-grid"
-                      role="radiogroup"
-                      aria-label="Tempo profile"
-                    >
-                      {TEMPO_PROFILES.map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={item.id === tempoProfileId}
-                          className={`game-category-chip cruor-ui-chip-surface ${item.id === tempoProfileId ? "active" : ""}`}
-                          onClick={() => {
-                            setTempoProfileId(item.id);
-                            setActivePresetId("");
-                          }}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </PanelGroup>
-
-                <PanelGroup title="Danger" icon={AlertTriangle} className="game-frame-section game-frame-section--danger">
-                  <div className="game-threat-panel">
-                    <div
-                      className="game-threat-scale"
-                      role="radiogroup"
-                      aria-label="Monster danger"
-                    >
-                      {DANGERS.map((item, index) => (
-                        <button
-                          key={item.id}
-                          className={`game-threat-chip cruor-ui-card-surface ${item.id === dangerId ? "active" : ""}`}
-                          type="button"
-                          role="radio"
-                          aria-checked={item.id === dangerId}
-                          onClick={() => {
-                            setDangerId(item.id);
-                            setActivePresetId("");
-                          }}
-                        >
-                          <span>0{index + 1}</span>
-                          <strong>{item.label}</strong>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="game-frame__meters" aria-label="Current pressure readout">
-                      <div className="game-frame__meter">
-                        <span>
-                          <small>Pressure</small>
-                          <strong>
-                            {computed.pressure} / {computed.budget}
-                          </strong>
-                        </span>
-                        <i>
-                          <b
-                            className={computed.pressure > computed.budget ? "is-over" : ""}
-                            style={{ width: `${Math.min(pressurePercent, 100)}%` }}
-                          />
-                        </i>
-                      </div>
-                      <div className="game-frame__meter">
-                        <span>
-                          <small>Complexity</small>
-                          <strong>
-                            {computed.complexity} / {computed.complexityCap}
-                          </strong>
-                        </span>
-                        <i>
-                          <b
-                            className={
-                              computed.complexity > computed.complexityCap ? "is-over" : ""
-                            }
-                            style={{ width: `${Math.min(complexityPercent, 100)}%` }}
-                          />
-                        </i>
-                      </div>
-                    </div>
-                  </div>
-                </PanelGroup>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <div className="game-category-panel">
+                <div className="game-frame__minihead">
+                  <span>Tier</span>
+                  <strong>{monsterTier.label}</strong>
+                </div>
+                <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
+                  {MONSTER_TIERS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={item.id === monsterTierId}
+                      className={`game-category-chip ${item.id === monsterTierId ? "active" : ""}`}
+                      onClick={() => {
+                        setMonsterTierId(item.id);
+                        setActivePresetId("");
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="game-category-panel">
+                <div className="game-frame__minihead">
+                  <span>Tempo</span>
+                  <strong>{tempoProfile.label}</strong>
+                </div>
+                <div className="game-category-grid" role="radiogroup" aria-label="Tempo profile">
+                  {TEMPO_PROFILES.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={item.id === tempoProfileId}
+                      className={`game-category-chip ${item.id === tempoProfileId ? "active" : ""}`}
+                      onClick={() => {
+                        setTempoProfileId(item.id);
+                        setActivePresetId("");
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </PanelGroup>
+
+            <PanelGroup title="Danger" icon={AlertTriangle}>
+              <div className="game-threat-panel">
+                <div className="game-threat-scale" role="radiogroup" aria-label="Monster danger">
+                  {DANGERS.map((item, index) => (
+                    <button
+                      key={item.id}
+                      className={`game-threat-chip ${item.id === dangerId ? "active" : ""}`}
+                      type="button"
+                      role="radio"
+                      aria-checked={item.id === dangerId}
+                      onClick={() => {
+                        setDangerId(item.id);
+                        setActivePresetId("");
+                      }}
+                    >
+                      <span>0{index + 1}</span>
+                      <strong>{item.label}</strong>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="game-frame__meters" aria-label="Current pressure readout">
+                  <div className="game-frame__meter">
+                    <span>
+                      <small>Pressure</small>
+                      <strong>
+                        {computed.pressure} / {computed.budget}
+                      </strong>
+                    </span>
+                    <i>
+                      <b
+                        className={computed.pressure > computed.budget ? "is-over" : ""}
+                        style={{ width: `${Math.min(pressurePercent, 100)}%` }}
+                      />
+                    </i>
+                  </div>
+                  <div className="game-frame__meter">
+                    <span>
+                      <small>Complexity</small>
+                      <strong>
+                        {computed.complexity} / {computed.complexityCap}
+                      </strong>
+                    </span>
+                    <i>
+                      <b
+                        className={computed.complexity > computed.complexityCap ? "is-over" : ""}
+                        style={{ width: `${Math.min(complexityPercent, 100)}%` }}
+                      />
+                    </i>
+                  </div>
+                </div>
+              </div>
+            </PanelGroup>
+          </div>
             </aside>
           </>
         ) : null}
@@ -2512,6 +2506,8 @@ export default function CruorMonsterComposerMvp() {
   );
 }
 
+
+
 function GraftInspector({
   slot,
   features,
@@ -2605,11 +2601,9 @@ function GraftInspector({
   );
 }
 
-function PanelGroup({ title, icon: Icon, className = "", children }) {
-  const sectionClassName = ["monster-panel-group", className].filter(Boolean).join(" ");
-
+function PanelGroup({ title, icon: Icon, children }) {
   return (
-    <section className={sectionClassName}>
+    <section className="monster-panel-group">
       <div className="monster-panel-group__head">
         <Icon aria-hidden="true" />
         <h3>{title}</h3>

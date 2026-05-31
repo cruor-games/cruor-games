@@ -1,0 +1,33 @@
+{
+  "step": "Step 10 \u2014 State Persistence / Draft Snapshot",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "notes": [
+    "Adds browser-local save/load/reset controls.",
+    "Stores serialized composer draft in localStorage.",
+    "Restores Sets and slot assignments when loading.",
+    "Adds beforeunload protection for unsaved changes.",
+    "Reset asks for confirmation and does not delete saved draft.",
+    "No Supabase/backend/router/Monster/map-generator changes."
+  ],
+  "checks": {
+    "useRef imported": true,
+    "draft storage key added": true,
+    "draft serialization added": true,
+    "draft restore added": true,
+    "save draft action added": true,
+    "load draft action added": true,
+    "reset composer action added": true,
+    "beforeunload protection added": true,
+    "draft controls rendered": true,
+    "localStorage only persistence": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "CSS draft strip added": true,
+    "CSS braces balanced": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

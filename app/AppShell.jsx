@@ -123,9 +123,7 @@ export default function AppShell({
       </header>
 
       <main className="app-shell__workspace">
-        {activeSection === "home" ? (
-          <section aria-label="Home">{homeContent}</section>
-        ) : null}
+        {activeSection === "home" ? <section aria-label="Home">{homeContent}</section> : null}
 
         {activeSection === "crucible" ? (
           <section aria-label="Crucible workspace">{crucibleContent}</section>

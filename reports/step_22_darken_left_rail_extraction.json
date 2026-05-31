@@ -1,0 +1,47 @@
+{
+  "step": "Step 22 \u2014 Darken Composer Left Rail Extraction",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "features/darken-location/composer/components/LocationCompilePreview.jsx",
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "features/darken-location/composer/components/LocationWorkflowGuide.jsx",
+    "features/darken-location/composer/model/location-composer-draft.js",
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "notes": [
+    "Extracted LocationBriefPanel into a dedicated component file.",
+    "Moved context/horror/intrusion option constants into LocationBriefPanel.jsx because only the left rail uses them.",
+    "Kept behavior and CSS unchanged.",
+    "No map pipeline, router, backend, or Monster changes."
+  ],
+  "line_reduction": {
+    "before": 319,
+    "after": 235,
+    "removed": 84
+  },
+  "checks": {
+    "page imports LocationBriefPanel": true,
+    "page renders LocationBriefPanel": true,
+    "page still has default export": true,
+    "page no longer defines LocationBriefPanel": true,
+    "brief component exports LocationBriefPanel": true,
+    "brief component owns constants": true,
+    "brief component imports source anchors": true,
+    "brief component imports toggle helpers": true,
+    "main page under 250 lines": true,
+    "CSS unchanged": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "JS braces roughly balanced": true,
+    "page import section removed brief-only symbols": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

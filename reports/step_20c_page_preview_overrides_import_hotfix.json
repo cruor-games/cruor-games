@@ -1,0 +1,32 @@
+{
+  "step": "Step 20c \u2014 Page Preview Overrides Import Hotfix",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx"
+  ],
+  "cause": "The page-level map preview generation still called createEmptyManualOverrides(), but Step 20 removed its import from DarkenLocationComposerPage.jsx.",
+  "fix": "Restored `import { createEmptyManualOverrides } from \"../map-generator/map-generator.state.js\";` in DarkenLocationComposerPage.jsx.",
+  "occurrences": [
+    [
+      "DarkenLocationComposerPage.jsx",
+      6
+    ],
+    [
+      "DarkenLocationComposerPage.jsx",
+      455
+    ]
+  ],
+  "checks": {
+    "page imports createEmptyManualOverrides": true,
+    "page still uses createEmptyManualOverrides for generateMap": true,
+    "only page references createEmptyManualOverrides": true,
+    "LocationMapStage no longer references createEmptyManualOverrides": true,
+    "LocationMapStage local manualOverrides object remains": true,
+    "LocationMapStage imports LocationCompilePreview": true,
+    "page imports LocationMapStage": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "JS braces roughly balanced": true
+  }
+}

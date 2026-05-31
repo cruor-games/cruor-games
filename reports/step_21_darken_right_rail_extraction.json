@@ -1,0 +1,49 @@
+{
+  "step": "Step 21 \u2014 Darken Composer Right Rail Extraction",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "features/darken-location/composer/components/LocationCompilePreview.jsx",
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/components/LocationWorkflowGuide.jsx",
+    "features/darken-location/composer/model/location-composer-draft.js",
+    "features/darken-location/composer/model/location-composer-output.js"
+  ],
+  "notes": [
+    "Extracted LocationSlotRail, AssignedSlotStack, and RegionFocusPanel into LocationSlotRail.jsx.",
+    "Kept behavior and CSS unchanged.",
+    "Did not split ComponentBrowserPanel yet because no separate function existed in the baseline.",
+    "No map pipeline, router, backend, or Monster changes."
+  ],
+  "line_reduction": {
+    "before": 613,
+    "after": 319,
+    "removed": 294
+  },
+  "checks": {
+    "page imports LocationSlotRail": true,
+    "page renders LocationSlotRail": true,
+    "page still has default export": true,
+    "page no longer defines AssignedSlotStack": true,
+    "page no longer defines RegionFocusPanel": true,
+    "page no longer defines LocationSlotRail": true,
+    "slot rail exports LocationSlotRail": true,
+    "slot rail contains AssignedSlotStack": true,
+    "slot rail contains RegionFocusPanel": true,
+    "slot rail imports assignment helpers": true,
+    "slot rail imports generated room helpers": true,
+    "main page under 500 lines": true,
+    "CSS unchanged": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "JS braces roughly balanced": true,
+    "slot rail location regions import path fixed": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

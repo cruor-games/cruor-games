@@ -1,0 +1,53 @@
+{
+  "step": "Step 20 \u2014 Darken Composer Component Extraction",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationCompilePreview.jsx",
+    "features/darken-location/composer/components/LocationDraftControls.jsx",
+    "features/darken-location/composer/components/LocationWorkflowGuide.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "features/darken-location/composer/model/location-composer-output.js",
+    "features/darken-location/composer/model/location-composer-draft.js"
+  ],
+  "notes": [
+    "Extracted Compile Preview, Draft Controls, Workflow Guide, and Map Stage into dedicated component files.",
+    "Kept behavior and CSS unchanged.",
+    "Main page file now focuses on orchestration, left rail, right rail, and remaining slot/region panels.",
+    "No map pipeline, router, backend, or Monster changes."
+  ],
+  "line_reduction": {
+    "before": 1076,
+    "after": 612,
+    "removed": 464
+  },
+  "checks": {
+    "page imports LocationCompilePreview": true,
+    "page imports LocationDraftControls": true,
+    "page imports LocationWorkflowGuide": true,
+    "page imports LocationMapStage": true,
+    "page renders LocationMapStage": true,
+    "page no longer defines extracted components": true,
+    "compile component exports": true,
+    "draft component exports": true,
+    "workflow component exports": true,
+    "map stage component exports": true,
+    "map stage owns map sync and preview": true,
+    "compile component owns copy helpers": true,
+    "draft component owns timestamp format import": true,
+    "workflow component owns slot/region imports": true,
+    "main page under 650 lines": true,
+    "CSS unchanged": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "page no longer imports MapViewport directly": true,
+    "page no longer imports output helpers directly": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

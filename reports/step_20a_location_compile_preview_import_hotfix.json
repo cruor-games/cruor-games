@@ -1,0 +1,20 @@
+{
+  "step": "Step 20a \u2014 LocationCompilePreview Import Hotfix",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationMapStage.jsx"
+  ],
+  "cause": "Step 20 extracted LocationCompilePreview but LocationMapStage still rendered it without importing it.",
+  "fix": "Added import { LocationCompilePreview } from \"./LocationCompilePreview.jsx\" to LocationMapStage.jsx.",
+  "checks": {
+    "LocationMapStage imports LocationCompilePreview": true,
+    "LocationMapStage still renders LocationCompilePreview": true,
+    "compile component exists and exports": true,
+    "page imports LocationMapStage": true,
+    "page no longer defines extracted components": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "JS braces roughly balanced": true
+  }
+}

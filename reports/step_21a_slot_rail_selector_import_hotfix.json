@@ -1,0 +1,21 @@
+{
+  "step": "Step 21a \u2014 Slot Rail Selector Import Hotfix",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationSlotRail.jsx"
+  ],
+  "cause": "Step 21 imported getComponentAssignment and isComponentAssignedToSlot from location-composer-state.js, but those are selector exports.",
+  "fix": "Moved getComponentAssignment and isComponentAssignedToSlot to the location-composer-selectors.js import block.",
+  "checks": {
+    "state import no longer asks for getComponentAssignment": true,
+    "state import no longer asks for isComponentAssignedToSlot": true,
+    "selector import includes getComponentAssignment": true,
+    "selector import includes isComponentAssignedToSlot": true,
+    "slot rail still uses getComponentAssignment": true,
+    "slot rail still uses isComponentAssignedToSlot": true,
+    "page imports LocationSlotRail": true,
+    "root remains location composer": true,
+    "no Supabase/backend calls": true,
+    "no monster-shell": true,
+    "JS braces roughly balanced": true
+  }
+}

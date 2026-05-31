@@ -1,0 +1,27 @@
+{
+  "step": "Step 22a \u2014 Import Preamble Syntax Hotfix",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx"
+  ],
+  "cause": "Step 22 generated a corrupted import preamble with `; ,` artifacts and indented `import` statements.",
+  "fix": "Rebuilt the import preamble of DarkenLocationComposerPage.jsx with clean ES module imports and only the helpers still used by the page.",
+  "checks": {
+    "page import preamble has no semicolon comma artifact": true,
+    "page import preamble has no indented import artifact": true,
+    "page imports React hooks cleanly": true,
+    "page imports map generator helpers": true,
+    "page imports composer state helpers": true,
+    "page imports composer selector helpers": true,
+    "page imports extracted components": true,
+    "page still has default export": true,
+    "page renders LocationBriefPanel": true,
+    "page renders LocationSlotRail": true,
+    "page renders LocationMapStage": true,
+    "root remains location composer": true,
+    "no Supabase/backend calls": true,
+    "no monster-shell": true,
+    "JS braces roughly balanced": true,
+    "body symbols covered by import preamble": true
+  },
+  "missing_symbols": []
+}

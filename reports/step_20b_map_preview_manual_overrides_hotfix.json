@@ -1,0 +1,23 @@
+{
+  "step": "Step 20b \u2014 Map Preview Manual Overrides Hotfix",
+  "changed_files": [
+    "features/darken-location/composer/components/LocationMapStage.jsx"
+  ],
+  "cause": "After extraction, LocationMapStage used createEmptyManualOverrides at runtime, causing the embedded map to fall back with `createEmptyManualOverrides is not defined`.",
+  "fix": "Removed the helper dependency and created the empty manualOverrides shape locally inside LocationMapPreview.",
+  "checks": {
+    "createEmptyManualOverrides removed from LocationMapStage": true,
+    "LEVEL_VIEW_ALL import preserved": true,
+    "manualOverrides object created locally": true,
+    "MapViewport still receives manualOverrides": true,
+    "LocationMapStage imports LocationCompilePreview": true,
+    "LocationMapStage still renders LocationCompilePreview": true,
+    "compile component exists and exports": true,
+    "page imports LocationMapStage": true,
+    "no Supabase/backend calls": true,
+    "root remains location composer": true,
+    "no monster-shell": true,
+    "output module export async syntax valid": true,
+    "JS braces roughly balanced": true
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "step": "Step 23 \u2014 Darken Composer Model Responsibility Cleanup",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/model/location-composer-preview.js"
+  ],
+  "notes": [
+    "Moved map preview model derivation out of the page and into location-composer-preview.js.",
+    "Page no longer imports map request, map config, map generation, manual override helpers, or unused LocationCompilePreview directly.",
+    "Kept UI/CSS unchanged.",
+    "No router, Monster, backend, or Supabase changes."
+  ],
+  "line_counts": {
+    "page_before": 207,
+    "page_after": 194,
+    "preview_model": 34
+  },
+  "checks": {
+    "page imports preview model": true,
+    "page uses createLocationPreviewModel": true,
+    "page uses getLocationPreviewResetKey": true,
+    "page no longer imports map request helper directly": true,
+    "page no longer imports map input helpers directly": true,
+    "page no longer imports generateMap directly": true,
+    "page no longer imports createEmptyManualOverrides directly": true,
+    "page no longer imports unused LocationCompilePreview": true,
+    "map stage still imports LocationCompilePreview": true,
+    "preview model owns map request helper": true,
+    "preview model owns map config helper": true,
+    "preview model owns generateMap": true,
+    "preview model exports reset key helper": true,
+    "page still has default export": true,
+    "page renders extracted shell components": true,
+    "root remains location composer": true,
+    "no Supabase/backend calls": true,
+    "no monster-shell": true,
+    "JS braces roughly balanced": true,
+    "page import preamble clean": true,
+    "main page under 220 lines": true,
+    "no border-color shorthand misuse": true
+  },
+  "bad_border_contexts": []
+}

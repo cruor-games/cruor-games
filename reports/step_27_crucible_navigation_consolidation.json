@@ -1,0 +1,52 @@
+{
+  "step": "Step 27 \u2014 Crucible Navigation Consolidation",
+  "changed_files": [
+    "app/router.jsx",
+    "app/app-shell.css",
+    "features/crucible/components/CrucibleTopbar.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "app/AppShell.jsx"
+  ],
+  "baseline_note": "Uploaded router was still using activeSection='darken' while AppShell expects home/crucible/inspirations. Step 27 restores that contract.",
+  "constraints": [
+    "Keep Patreon placeholder.",
+    "Keep current legacy Crucible renderer for Darken.",
+    "Do not touch Darken internals.",
+    "Do not touch Monster internals.",
+    "Do not touch Inspirations internals."
+  ],
+  "baseline_checks": {
+    "AppShell uses home/crucible/inspirations contract": true,
+    "AppShell keeps Patreon placeholder": true,
+    "AppShell uses compact mode select": true,
+    "uploaded router imports legacy Crucible": true,
+    "uploaded router imports MonsterComposerPage": true,
+    "uploaded router imports InspirationsPage": true,
+    "uploaded router incompatible active section detected": true
+  },
+  "checks": {
+    "AppShell receives home/crucible/inspirations content": true,
+    "router starts on Home": true,
+    "router keeps activeUiMode": true,
+    "router imports CrucibleTopbar": true,
+    "router imports legacy Crucible renderer": true,
+    "router renders legacy Crucible in Darken panel": true,
+    "router renders MonsterComposerPage": true,
+    "router renders InspirationsPage": true,
+    "router defines generator config": true,
+    "router uses CrucibleTopbar component": true,
+    "duplicated hardcoded topbar removed": true,
+    "CrucibleTopbar has tool select": true,
+    "CrucibleTopbar has no visible state row": true,
+    "CrucibleTopbar keeps legacy slot support": true,
+    "AppShell keeps Patreon placeholder": true,
+    "CSS has Step 26 override": true,
+    "CSS has Step 27 override": true,
+    "CSS styles mode select": true,
+    "CSS styles tool select": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

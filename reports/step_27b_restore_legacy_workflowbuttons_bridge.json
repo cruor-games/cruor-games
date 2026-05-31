@@ -1,0 +1,31 @@
+{
+  "step": "Step 27b \u2014 Restore Legacy workflowButtons Bridge",
+  "changed_files": [
+    "app/router.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "app/AppShell.jsx",
+    "app/app-shell.css",
+    "features/crucible/components/CrucibleTopbar.jsx"
+  ],
+  "cause": "Step 27 introduced CrucibleTopbar but did not pass the hidden #workflowButtons node required by the legacy Crucible DOM runtime. crucible.events.js still calls addEventListener on els.workflowButtons during attachEvents().",
+  "fix": "Pass legacyWorkflowSlot to CrucibleTopbar with the hidden #workflowButtons node.",
+  "checks": {
+    "router passes legacyWorkflowSlot": true,
+    "router restores #workflowButtons node": true,
+    "workflowButtons has expected legacy classes": true,
+    "CrucibleTopbar renders hidden legacy slot": true,
+    "CSS hides legacy workflow slot": true,
+    "router still uses CrucibleTopbar": true,
+    "router still imports legacy Crucible renderer": true,
+    "router still renders legacy Crucible in Darken panel": true,
+    "router still renders MonsterComposerPage": true,
+    "router still renders InspirationsPage": true,
+    "AppShell keeps Patreon placeholder": true,
+    "CSS keeps full AppShell visual rules": true,
+    "CSS keeps Step 27 override": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

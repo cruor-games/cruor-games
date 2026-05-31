@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import AppShell from "./AppShell.jsx";
+import CrucibleTopbar from "../features/crucible/components/CrucibleTopbar.jsx";
 import DarkenLocationComposerPage from "../features/darken-location/composer/index.js";
 import InspirationsPage from "../features/inspirations/index.js";
 import MonsterComposerPage from "../features/monster-composer/index.js";
@@ -9,8 +10,50 @@ const CruorMapGeneratorMvp = lazy(
   () => import("../features/darken-location/map-generator/index.js")
 );
 
+const CRUCIBLE_GENERATORS = [
+  {
+    id: "darken",
+    label: "Darken a Location",
+    icon: "fa-solid fa-location-dot",
+    tooltip: "Darken a Location",
+  },
+  {
+    id: "monster",
+    label: "Build a Monster",
+    icon: "fa-solid fa-skull",
+    tooltip: "Build a Monster",
+  },
+];
+
+const DARKEN_VIEWS = [
+  {
+    id: "composer",
+    label: "Composer",
+    icon: "fa-solid fa-wand-magic-sparkles",
+    tooltip: "Composer",
+    panelId: "darkenComposerPanel",
+  },
+  {
+    id: "map-generator",
+    label: "Map",
+    icon: "fa-solid fa-map",
+    tooltip: "Map",
+    panelId: "darkenMapGeneratorPanel",
+  },
+];
+
+const MONSTER_VIEWS = [
+  {
+    id: "composer",
+    label: "Composer",
+    icon: "fa-solid fa-dna",
+    tooltip: "Composer",
+    panelId: "monsterComposerPanel",
+  },
+];
+
 export default function AppRouter() {
-  const [activeSection, setActiveSection] = useState("crucible");
+  const [activeSection, setActiveSection] = useState("home");
   const [activeUiMode, setActiveUiMode] = useState("simple");
   const [activeCrucibleGenerator, setActiveCrucibleGenerator] = useState("darken");
   const [activeDarkenTab, setActiveDarkenTab] = useState("composer");
@@ -45,6 +88,7 @@ export default function AppRouter() {
     setHasOpenedMapGenerator(true);
     setActiveCrucibleGenerator("darken");
     setActiveDarkenTab("map-generator");
+    setActiveSection("crucible");
   }, [createMapRequestFromSnapshot, hasOpenedMapGenerator]);
 
   const openMapGenerator = useCallback(
@@ -53,6 +97,7 @@ export default function AppRouter() {
       setHasOpenedMapGenerator(true);
       setActiveCrucibleGenerator("darken");
       setActiveDarkenTab("map-generator");
+      setActiveSection("crucible");
     },
     [initializeMapRequest]
   );
@@ -84,35 +129,37 @@ export default function AppRouter() {
     }
   }, []);
 
-  const homeContent = (
-    <section className="app-shell__home" aria-label="Cruor Games home">
-      <div className="app-shell__home-panel panel">
-        <p className="app-shell__home-eyebrow">Cruor Games</p>
-        <h1>Drop-in horror workbenches for tabletop prep.</h1>
-        <p>
-          Build monsters, darken locations, browse inspiration packs, and turn horror
-          components into material you can use directly at the table.
-        </p>
+  const openCrucibleTool = useCallback(
+    (generatorId) => {
+      activateCrucibleGenerator(generatorId);
+    },
+    [activateCrucibleGenerator]
+  );
 
-        <div className="app-shell__home-actions">
+  const homeContent = (
+    <section className="app-shell__home" aria-labelledby="cruorHomeTitle">
+      <div className="app-shell__home-panel panel">
+        <h1 id="cruorHomeTitle">Build drop-in horror for the session you already prepared.</h1>
+
+        <div className="app-shell__home-actions" aria-label="Choose what you need">
           <button
             className="app-shell__home-action"
             type="button"
-            onClick={() => activateCrucibleGenerator("darken")}
+            onClick={() => openCrucibleTool("darken")}
           >
-            <span>Crucible</span>
+            <i className="fa-solid fa-book-open" aria-hidden="true" />
             <strong>Darken a Location</strong>
-            <small>Open the new location composer shell and haunted map board.</small>
+            <span>Haunted regions and map</span>
           </button>
 
           <button
             className="app-shell__home-action"
             type="button"
-            onClick={() => activateCrucibleGenerator("monster")}
+            onClick={() => openCrucibleTool("monster")}
           >
-            <span>Crucible</span>
+            <i className="fa-solid fa-skull" aria-hidden="true" />
             <strong>Build a Monster</strong>
-            <small>Open the monster composer with the current compatible root.</small>
+            <span>Body, pressure, weakness</span>
           </button>
 
           <button
@@ -120,9 +167,9 @@ export default function AppRouter() {
             type="button"
             onClick={() => setActiveSection("inspirations")}
           >
-            <span>Library</span>
-            <strong>Inspirations</strong>
-            <small>Browse the source anchors and horror packs used by the tools.</small>
+            <i className="fa-solid fa-book-skull" aria-hidden="true" />
+            <strong>Browse Inspirations</strong>
+            <span>Sources and motifs</span>
           </button>
         </div>
       </div>
@@ -139,120 +186,21 @@ export default function AppRouter() {
       aria-label="Crucible workspace"
       data-active-generator={activeCrucibleGenerator}
     >
-      <div className="darken-workspace__topbar">
-        <header className="darken-topbar crucible-topbar-shell" data-active-generator={activeCrucibleGenerator}>
-          <div className="darken-topbar__primary crucible-topbar__primary">
-            <p className="darken-topbar__eyebrow crucible-topbar__eyebrow">Crucible</p>
-
-            <h1 className="darken-topbar__title">
-              <span className="darken-topbar__title-prefix">I need to</span>
-              <span id="needValue" className="darken-topbar__need-value">
-                {activeCrucibleGenerator === "monster" ? "Build a Monster" : "Darken a Location"}
-              </span>
-            </h1>
-
-            <div className="darken-topbar__control-row crucible-topbar__control-row">
-              <div
-                className="mode-switch darken-topbar__mode-switch crucible-generator-switch crucible-topbar__generator-switch"
-                aria-label="Choose Crucible tool"
-              >
-                <button
-                  className={
-                    activeCrucibleGenerator === "darken"
-                      ? "mode-btn crucible-topbar__generator-btn active"
-                      : "mode-btn crucible-topbar__generator-btn"
-                  }
-                  type="button"
-                  aria-pressed={activeCrucibleGenerator === "darken"}
-                  onClick={() => activateCrucibleGenerator("darken")}
-                  title="Darken a Location"
-                >
-                  <i className="fa-solid fa-location-dot" aria-hidden="true" />
-                  <span>Location</span>
-                </button>
-
-                <button
-                  className={
-                    activeCrucibleGenerator === "monster"
-                      ? "mode-btn crucible-topbar__generator-btn active"
-                      : "mode-btn crucible-topbar__generator-btn"
-                  }
-                  type="button"
-                  aria-pressed={activeCrucibleGenerator === "monster"}
-                  onClick={() => activateCrucibleGenerator("monster")}
-                  title="Build a Monster"
-                >
-                  <i className="fa-solid fa-skull" aria-hidden="true" />
-                  <span>Monster</span>
-                </button>
-              </div>
-
-              {activeCrucibleGenerator === "darken" ? (
-                <div
-                  className="darken-workspace__tabs crucible-workspace__tabs crucible-view-tabs"
-                  role="tablist"
-                  aria-label="Darken a Location views"
-                >
-                  <button
-                    className={
-                      activeDarkenTab === "composer"
-                        ? "darken-workspace__tab crucible-view-tabs__btn is-active"
-                        : "darken-workspace__tab crucible-view-tabs__btn"
-                    }
-                    type="button"
-                    role="tab"
-                    aria-selected={activeDarkenTab === "composer"}
-                    aria-controls="darkenComposerPanel"
-                    id="darkenComposerTab"
-                    onClick={() => activateDarkenTab("composer")}
-                    title="Composer"
-                  >
-                    <i className="fa-solid fa-wand-magic-sparkles" aria-hidden="true" />
-                    <span>Composer</span>
-                  </button>
-
-                  <button
-                    className={
-                      activeDarkenTab === "map-generator"
-                        ? "darken-workspace__tab crucible-view-tabs__btn is-active"
-                        : "darken-workspace__tab crucible-view-tabs__btn"
-                    }
-                    type="button"
-                    role="tab"
-                    aria-selected={activeDarkenTab === "map-generator"}
-                    aria-controls="darkenMapGeneratorPanel"
-                    id="darkenMapGeneratorTab"
-                    onClick={() => activateDarkenTab("map-generator")}
-                    title="Map"
-                  >
-                    <i className="fa-solid fa-map" aria-hidden="true" />
-                    <span>Map</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="darken-workspace__tabs crucible-workspace__tabs crucible-view-tabs" aria-label="Build a Monster views">
-                  <button
-                    className="darken-workspace__tab crucible-view-tabs__btn is-active"
-                    type="button"
-                    aria-current="page"
-                    title="Composer"
-                  >
-                    <i className="fa-solid fa-dna" aria-hidden="true" />
-                    <span>Composer</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-      </div>
+      <CrucibleTopbar
+        activeGeneratorId={activeCrucibleGenerator}
+        activeViewId={activeCrucibleGenerator === "darken" ? activeDarkenTab : "composer"}
+        generators={CRUCIBLE_GENERATORS}
+        onGeneratorChange={activateCrucibleGenerator}
+        onViewChange={activeCrucibleGenerator === "darken" ? activateDarkenTab : undefined}
+        views={activeCrucibleGenerator === "darken" ? DARKEN_VIEWS : MONSTER_VIEWS}
+      />
 
       {activeCrucibleGenerator === "darken" ? (
         <>
           <div
             id="darkenComposerPanel"
             role="tabpanel"
-            aria-labelledby="darkenComposerTab"
+            aria-labelledby="crucibleViewTab-darken-composer"
             hidden={activeDarkenTab !== "composer"}
           >
             <DarkenLocationComposerPage
@@ -267,7 +215,7 @@ export default function AppRouter() {
               id="darkenMapGeneratorPanel"
               className="map-generator-view"
               role="tabpanel"
-              aria-labelledby="darkenMapGeneratorTab"
+              aria-labelledby="crucibleViewTab-darken-map-generator"
               hidden={activeDarkenTab !== "map-generator"}
             >
               <Suspense fallback={<div className="status">Loading map generator...</div>}>
@@ -284,7 +232,7 @@ export default function AppRouter() {
         <section
           id="monsterComposerPanel"
           role="tabpanel"
-          aria-label="Build a Monster composer"
+          aria-labelledby="crucibleViewTab-monster-composer"
         >
           <MonsterComposerPage uiMode={activeUiMode} />
         </section>

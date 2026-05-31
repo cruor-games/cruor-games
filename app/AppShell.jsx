@@ -1,22 +1,7 @@
 const APP_MODE_OPTIONS = [
-  {
-    id: "simple",
-    label: "Simple",
-    icon: "fa-solid fa-feather",
-    description: "Focused table-ready controls",
-  },
-  {
-    id: "advanced",
-    label: "Advanced",
-    icon: "fa-solid fa-sliders",
-    description: "Expanded composition controls",
-  },
-  {
-    id: "debug",
-    label: "Debug",
-    icon: "fa-solid fa-code",
-    description: "Development and inspection mode",
-  },
+  { id: "simple", label: "Simple" },
+  { id: "advanced", label: "Advanced" },
+  { id: "debug", label: "Debug" },
 ];
 
 const APP_SECTIONS = [
@@ -57,7 +42,6 @@ export default function AppShell({
 
             <div className="app-shell__brand-copy">
               <strong>Cruor Games</strong>
-              <span className="app-shell__eyebrow">Drop-in horror workbench</span>
             </div>
           </div>
 
@@ -82,30 +66,22 @@ export default function AppShell({
             </nav>
 
             <div className="app-shell__right-rail">
-              <div className="app-shell__mode-cluster">
-                <span className="app-shell__mode-label">Mode</span>
-
-                <div className="app-shell__mode-switch" role="group" aria-label="Interface mode">
-                  {APP_MODE_OPTIONS.map((mode) => (
-                    <button
-                      key={mode.id}
-                      className={
-                        activeUiMode === mode.id
-                          ? "app-shell__mode-item is-active"
-                          : "app-shell__mode-item"
-                      }
-                      type="button"
-                      aria-pressed={activeUiMode === mode.id}
-                      aria-label={mode.description}
-                      title={mode.description}
-                      onClick={() => onUiModeChange?.(mode.id)}
-                    >
-                      <i className={mode.icon} aria-hidden="true" />
-                      <span>{mode.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <label className="sr-only" htmlFor="appShellMode">
+                Interface mode
+              </label>
+              <select
+                id="appShellMode"
+                className="app-shell__mode-select"
+                value={activeUiMode}
+                aria-label="Interface mode"
+                onChange={(event) => onUiModeChange?.(event.target.value)}
+              >
+                {APP_MODE_OPTIONS.map((mode) => (
+                  <option key={mode.id} value={mode.id}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
 
               <button
                 className="app-shell__patreon-login"
@@ -115,7 +91,6 @@ export default function AppShell({
               >
                 <i className="fa-brands fa-patreon" aria-hidden="true" />
                 <span>Patreon</span>
-                <strong>Sign in</strong>
               </button>
             </div>
           </div>

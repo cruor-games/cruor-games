@@ -1,0 +1,29 @@
+{
+  "step": "Step 26a Restart \u2014 Homogeneous Crucible Tool Panels",
+  "changed_files": [
+    "app/app-shell.css"
+  ],
+  "included_for_baseline_integrity": [
+    "app/AppShell.jsx",
+    "app/router.jsx"
+  ],
+  "cause": "Darken and Monster were mounted inside different visual containers, so switching tools produced a visible jump in width/background/border.",
+  "fix": "Add a shared outer frame for #darkenComposerPanel and #monsterComposerPanel, normalize internal root backgrounds, and keep the Monster internal topbar hidden inside the shared Crucible frame.",
+  "checks": {
+    "router still imports DarkenLocationComposerPage": true,
+    "router still renders DarkenLocationComposerPage": true,
+    "router still imports MonsterComposerPage": true,
+    "router still renders MonsterComposerPage": true,
+    "AppShell keeps Patreon placeholder": true,
+    "AppShell keeps compact mode select": true,
+    "CSS has homogeneous panel block": true,
+    "CSS frames both panels together": true,
+    "CSS gives both panels same border": true,
+    "CSS gives both panels same background": true,
+    "CSS normalizes internal shell backgrounds": true,
+    "CSS hides monster internal topbar": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

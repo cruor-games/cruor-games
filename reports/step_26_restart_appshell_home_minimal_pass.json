@@ -1,0 +1,49 @@
+{
+  "step": "Step 26 Restart \u2014 AppShell + Home Minimal Pass",
+  "changed_files": [
+    "app/AppShell.jsx",
+    "app/app-shell.css",
+    "app/router.jsx"
+  ],
+  "discarded_after_step_24": [
+    "old Step 26",
+    "Step 26a",
+    "Step 26b",
+    "Step 26c"
+  ],
+  "constraints": [
+    "Do not remove Patreon placeholder.",
+    "Do not change tool mounts.",
+    "Do not touch Darken internals.",
+    "Preserve router mounting of DarkenLocationComposerPage, MonsterComposerPage, and InspirationsPage."
+  ],
+  "baseline_checks": {
+    "current router imports DarkenLocationComposerPage": true,
+    "current router renders DarkenLocationComposerPage": true,
+    "current router imports MonsterComposerPage": true,
+    "current router imports InspirationsPage": true,
+    "current AppShell contains Patreon placeholder": true,
+    "current CSS contains darken workspace layout": true,
+    "current Darken page root intact": true
+  },
+  "checks": {
+    "router still imports DarkenLocationComposerPage": true,
+    "router still renders DarkenLocationComposerPage": true,
+    "router still passes uiMode to DarkenLocationComposerPage": true,
+    "router still imports MonsterComposerPage": true,
+    "router still imports InspirationsPage": true,
+    "router starts on Home": true,
+    "home copy is minimal": true,
+    "home long copy removed": true,
+    "AppShell keeps Patreon placeholder": true,
+    "AppShell uses compact mode select": true,
+    "AppShell old mode cluster removed from markup": true,
+    "AppShell brand eyebrow removed from markup": true,
+    "Darken page untouched root intact": true,
+    "CSS has minimal override": true,
+    "CSS keeps darken workspace section": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

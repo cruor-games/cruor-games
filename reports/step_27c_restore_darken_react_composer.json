@@ -1,0 +1,47 @@
+{
+  "step": "Step 27c \u2014 Restore Darken React Composer",
+  "changed_files": [
+    "app/router.jsx"
+  ],
+  "included_for_baseline_integrity": [
+    "app/AppShell.jsx",
+    "app/app-shell.css",
+    "features/crucible/components/CrucibleTopbar.jsx"
+  ],
+  "diagnostics": {
+    "router currently imports legacy Crucible": true,
+    "router currently renders legacy Crucible in Darken panel": true,
+    "router currently does not import Darken React page": true,
+    "mount overwrites root with legacy template": true,
+    "template is legacy workbench": true,
+    "legacy runtime expects workflowButtons": true,
+    "Darken React page root is location composer": true,
+    "Darken React page exposes snapshot provider": true
+  },
+  "fix": [
+    "Replace legacy Crucible import with DarkenLocationComposerPage import.",
+    "Render DarkenLocationComposerPage in #darkenComposerPanel.",
+    "Remove hidden #workflowButtons bridge because legacy Crucible runtime is no longer mounted for Darken."
+  ],
+  "checks": {
+    "router imports DarkenLocationComposerPage": true,
+    "router renders DarkenLocationComposerPage": true,
+    "router no longer imports legacy Crucible": true,
+    "router no longer renders legacy Crucible in Darken panel": true,
+    "router no longer injects workflowButtons bridge": true,
+    "router keeps map generator lazy import": true,
+    "router keeps map request helper": true,
+    "router keeps snapshot provider bridge": true,
+    "router keeps openMapGenerator bridge": true,
+    "router still renders MonsterComposerPage": true,
+    "router still renders InspirationsPage": true,
+    "AppShell keeps Patreon placeholder": true,
+    "CSS unchanged keeps Step 27 override": true,
+    "CSS unchanged keeps homogeneous panel styles": true,
+    "CrucibleTopbar remains available": true,
+    "Darken React page is expected location composer": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

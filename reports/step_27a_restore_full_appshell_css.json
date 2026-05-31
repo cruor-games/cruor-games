@@ -1,0 +1,32 @@
+{
+  "step": "Step 27a \u2014 Restore Full AppShell CSS",
+  "changed_files": [
+    "app/app-shell.css"
+  ],
+  "included_for_baseline_integrity": [
+    "app/AppShell.jsx",
+    "app/router.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx"
+  ],
+  "cause": "Step 27 generated a shortened app-shell.css that dropped existing AppShell/Home visual rules, breaking bar layout, home title typography, and action card backgrounds.",
+  "fix": "Restore the full current app-shell.css and append only the Step 27 Crucible navigation override.",
+  "checks": {
+    "CSS restored full size": true,
+    "CSS keeps AppShell visual polish": true,
+    "CSS keeps Step 26 restart override": true,
+    "CSS keeps homogeneous panel override": true,
+    "CSS has Step 27 override": true,
+    "CSS has app-shell__bar-inner grid display": true,
+    "CSS has app-shell__bar-actions grid display": true,
+    "CSS has home title font family": true,
+    "CSS has home action dark background": true,
+    "router still uses CrucibleTopbar": true,
+    "router still renders Crucible legacy for Darken": true,
+    "router still renders MonsterComposerPage": true,
+    "AppShell keeps Patreon placeholder": true,
+    "CrucibleTopbar has tool select": true,
+    "CSS braces balanced": true,
+    "JS braces roughly balanced": true,
+    "no Supabase/backend calls added": true
+  }
+}

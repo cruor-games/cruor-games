@@ -1146,3 +1146,329 @@
     min-width: 0;
   }
 }
+
+/* Step 26 Restart — Minimal AppShell/Home override.
+   Keep the current tool mounts intact; reduce global shell and home clutter only. */
+.app-shell {
+  --app-shell-bar-height: 60px;
+}
+
+.app-shell__bar {
+  height: var(--app-shell-bar-height);
+}
+
+.app-shell__bar-inner {
+  grid-template-columns: minmax(170px, auto) minmax(0, 1fr);
+}
+
+.app-shell__brand-copy {
+  display: block;
+}
+
+.app-shell__eyebrow,
+.app-shell__home-eyebrow,
+.app-shell__home-panel > p,
+.app-shell__mode-cluster,
+.app-shell__mode-label,
+.app-shell__mode-switch,
+.app-shell__mode-item {
+  display: none !important;
+}
+
+.app-shell__right-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-shell__mode-select {
+  min-height: 30px;
+  border: 1px solid rgba(95, 7, 22, 0.5);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(22, 6, 9, 0.92), rgba(8, 5, 6, 0.86)),
+    rgba(8, 5, 6, 0.84);
+  color: rgba(240, 215, 220, 0.78);
+  padding: 0 28px 0 10px;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-shell__mode-select:focus-visible {
+  border-color: rgba(190, 64, 82, 0.72);
+  outline: none;
+}
+
+.app-shell__patreon-login {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.app-shell__patreon-login strong {
+  display: none;
+}
+
+.app-shell__home {
+  place-items: center;
+  padding: clamp(24px, 6vw, 76px);
+}
+
+.app-shell__home-panel {
+  display: grid;
+  gap: clamp(26px, 4vw, 44px);
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-shell__home-panel h1 {
+  max-width: 900px;
+  font-size: clamp(46px, 7vw, 92px);
+}
+
+.app-shell__home-actions {
+  margin-top: 0;
+  gap: clamp(12px, 2vw, 18px);
+}
+
+.app-shell__home-action {
+  align-content: end;
+  min-height: 210px;
+  padding: clamp(18px, 2.6vw, 26px);
+}
+
+.app-shell__home-action i {
+  color: rgba(208, 162, 170, 0.76);
+  font-size: 18px;
+}
+
+.app-shell__home-action > span {
+  color: var(--cruor-color-muted, var(--muted));
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.app-shell__home-action small {
+  display: none;
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    --app-shell-bar-height: 100px;
+  }
+
+  .app-shell__bar-inner {
+    grid-template-columns: 1fr auto;
+    gap: 10px 16px;
+  }
+
+  .app-shell__bar-actions {
+    grid-column: 1 / -1;
+    grid-template-columns: 1fr auto;
+  }
+
+  .app-shell__nav {
+    justify-self: stretch;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    --app-shell-bar-height: 112px;
+  }
+
+  .app-shell__right-rail {
+    width: 100%;
+  }
+
+  .app-shell__mode-select,
+  .app-shell__patreon-login {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .app-shell__home-action {
+    min-height: 150px;
+  }
+}
+
+/* Step 26a Restart — Homogeneous Crucible tool panels.
+   Darken and Monster must share the same outer frame when switching tools. */
+#darkenComposerPanel,
+#monsterComposerPanel {
+  box-sizing: border-box;
+  width: min(
+    var(--darken-workspace-max, 1540px),
+    calc(100% - clamp(36px, 6vw, 60px))
+  );
+  margin-inline: auto;
+  border: 1px solid rgba(95, 7, 22, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.018), transparent 18rem),
+    radial-gradient(circle at 10% 0%, rgba(122, 26, 40, 0.08), transparent 34%),
+    rgba(5, 5, 6, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 242, 0.026),
+    0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+#darkenComposerPanel {
+  padding: 0;
+}
+
+#monsterComposerPanel {
+  padding: 0;
+}
+
+#darkenComposerPanel > .cruor-composer-shell,
+#monsterComposerPanel > .monster-shell {
+  min-height: auto;
+  background: transparent;
+  background-image: none;
+}
+
+#darkenComposerPanel > .cruor-composer-shell::before,
+#monsterComposerPanel > .monster-shell::before {
+  display: none;
+}
+
+#darkenComposerPanel .cruor-composer-workspace,
+#monsterComposerPanel .monster-workspace {
+  box-sizing: border-box;
+  width: 100%;
+  padding-inline: 0;
+}
+
+#monsterComposerPanel .monster-topbar-wrap {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  #darkenComposerPanel,
+  #monsterComposerPanel {
+    width: calc(100% - clamp(28px, 8vw, 44px));
+  }
+}
+
+/* Step 27 — Crucible Navigation Consolidation.
+   One quiet tool selector + compact view controls. */
+.crucible-topbar {
+  padding: 16px 18px;
+}
+
+.crucible-topbar__primary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 2vw, 22px);
+}
+
+.crucible-topbar__heading {
+  min-width: 0;
+}
+
+.crucible-topbar__title {
+  align-items: center;
+  gap: 9px;
+}
+
+.crucible-topbar__tool-select {
+  max-width: min(54vw, 520px);
+  min-height: 42px;
+  border: 0;
+  border-bottom: 1px solid rgba(190, 64, 82, 0.42);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.035), transparent),
+    rgba(0, 0, 0, 0.14);
+  color: #fff0f2;
+  padding: 0 36px 0 10px;
+  font-family: var(--display);
+  font-size: clamp(30px, 3vw, 48px);
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  text-shadow:
+    0 0 22px rgba(122, 26, 40, 0.34),
+    0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+.crucible-topbar__tool-select:focus-visible {
+  outline: 1px solid rgba(190, 64, 82, 0.72);
+  outline-offset: 3px;
+}
+
+.crucible-topbar__summary,
+.crucible-topbar__state,
+.crucible-topbar__eyebrow,
+.crucible-topbar__control-label,
+.crucible-topbar__generator-switch,
+.crucible-topbar__control-group--generators {
+  display: none !important;
+}
+
+.crucible-topbar__legacy-workflow-slot,
+.crucible-topbar__legacy-workflow-slot[hidden] {
+  display: none !important;
+}
+
+.crucible-topbar__control-row {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  margin: 0;
+}
+
+.crucible-topbar__control-group--views {
+  min-width: auto;
+}
+
+.crucible-view-tabs {
+  min-width: auto;
+}
+
+.crucible-view-tabs__btn,
+.darken-workspace__tab.crucible-view-tabs__btn {
+  width: var(--darken-control-height);
+  min-width: var(--darken-control-height);
+  padding: 0;
+  font-size: 0;
+}
+
+.crucible-view-tabs__btn i {
+  color: currentColor;
+  font-size: 14px;
+  line-height: 1;
+}
+
+@media (max-width: 980px) {
+  .crucible-topbar__primary {
+    display: grid;
+    justify-content: stretch;
+    gap: 10px;
+  }
+
+  .crucible-topbar__tool-select {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .crucible-topbar__control-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .crucible-topbar__tool-select {
+    min-height: 38px;
+    font-size: clamp(26px, 8vw, 36px);
+  }
+}
+

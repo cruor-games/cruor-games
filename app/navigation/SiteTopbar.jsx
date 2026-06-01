@@ -1,0 +1,434 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import {
+  APP_MODE_OPTIONS,
+  SITE_NAV_ITEMS,
+  getCrucibleMenuItemId,
+  getModeLabel,
+} from "./site-navigation.data.js";
+import SiteMegaMenu from "./SiteMegaMenu.jsx";
+
+function cx(...parts) {
+  return parts.filter(Boolean).join(" ");
+}
+
+export default function SiteTopbar({
+  activeSection = "home",
+  activeUiMode = "simple",
+  activeCrucibleGenerator = "darken",
+  onSectionChange,
+  onUiModeChange,
+  onOpenCrucibleTool,
+}) {
+  const topbarRef = useRef(null);
+  const megaMenuRef = useRef(null);
+  const megaTriggerRefs = useRef({});
+  const closeMenuTimerRef = useRef(null);
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [megaMenuPosition, setMegaMenuPosition] = useState({ left: 0, top: 0 });
+  const [activePreviewId, setActivePreviewId] = useState(() =>
+    getCrucibleMenuItemId(activeCrucibleGenerator)
+  );
+  const [isUtilityOpen, setIsUtilityOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const crucibleMenu = useMemo(
+    () => SITE_NAV_ITEMS.find((item) => item.id === "crucible"),
+    []
+  );
+
+  const activeCrucibleMenuItemId = getCrucibleMenuItemId(activeCrucibleGenerator);
+
+  useEffect(() => {
+    setActivePreviewId(activeCrucibleMenuItemId);
+  }, [activeCrucibleMenuItemId]);
+
+  useEffect(() => {
+    function handleDocumentPointerDown(event) {
+      const isInsideTopbar = topbarRef.current?.contains(event.target);
+      const isInsideMegaMenu = megaMenuRef.current?.contains(event.target);
+
+      if (!isInsideTopbar && !isInsideMegaMenu) {
+        closeTransientNavigation();
+      }
+    }
+
+    function handleDocumentKeyDown(event) {
+      if (event.key === "Escape") {
+        closeTransientNavigation();
+      }
+    }
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+    document.addEventListener("keydown", handleDocumentKeyDown);
+
+    return () => {
+      clearCloseMenuTimer();
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+      document.removeEventListener("keydown", handleDocumentKeyDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!openMenuId) return undefined;
+
+    updateMegaMenuPosition(openMenuId);
+
+    function handleViewportChange() {
+      updateMegaMenuPosition(openMenuId);
+    }
+
+    window.addEventListener("resize", handleViewportChange);
+    window.addEventListener("scroll", handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener("resize", handleViewportChange);
+      window.removeEventListener("scroll", handleViewportChange, true);
+    };
+  }, [openMenuId]);
+
+  function updateMegaMenuPosition(itemId = openMenuId) {
+    if (!itemId || typeof window === "undefined") return;
+
+    const trigger = megaTriggerRefs.current[itemId];
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = Math.min(760, Math.max(0, window.innerWidth - 32));
+    const minLeft = 16 + menuWidth / 2;
+    const maxLeft = window.innerWidth - 16 - menuWidth / 2;
+    const rawLeft = rect.left + rect.width / 2;
+    const nextLeft = Math.min(Math.max(rawLeft, minLeft), maxLeft);
+
+    setMegaMenuPosition({
+      left: Math.round(nextLeft),
+      top: Math.round(rect.bottom + 11),
+    });
+  }
+
+  function clearCloseMenuTimer() {
+    if (!closeMenuTimerRef.current) return;
+    window.clearTimeout(closeMenuTimerRef.current);
+    closeMenuTimerRef.current = null;
+  }
+
+  function closeTransientNavigation() {
+    clearCloseMenuTimer();
+    setOpenMenuId(null);
+    setIsUtilityOpen(false);
+    setIsMobileOpen(false);
+  }
+
+  function scheduleMegaMenuClose() {
+    clearCloseMenuTimer();
+    closeMenuTimerRef.current = window.setTimeout(() => {
+      setOpenMenuId(null);
+      closeMenuTimerRef.current = null;
+    }, 140);
+  }
+
+  function openMegaMenu(itemId) {
+    clearCloseMenuTimer();
+    updateMegaMenuPosition(itemId);
+    setOpenMenuId(itemId);
+    setIsUtilityOpen(false);
+    setIsMobileOpen(false);
+  }
+
+  function handleAction(action) {
+    if (!action) return;
+
+    if (action.type === "section") {
+      onSectionChange?.(action.sectionId);
+      closeTransientNavigation();
+      return;
+    }
+
+    if (action.type === "crucible-tool") {
+      onOpenCrucibleTool?.(action.toolId, action.viewId);
+      closeTransientNavigation();
+    }
+  }
+
+  function handleNavItemClick(item) {
+    if (item.type === "mega") {
+      if (openMenuId === item.id) {
+        setOpenMenuId(null);
+      } else {
+        openMegaMenu(item.id);
+      }
+      return;
+    }
+
+    handleAction({ type: "section", sectionId: item.sectionId });
+  }
+
+  function handleMegaTriggerKeyDown(event, item) {
+    if (item.type !== "mega") return;
+
+    if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openMegaMenu(item.id);
+      window.requestAnimationFrame(() => {
+        const firstMenuItem = document
+          .getElementById(`siteMegaMenu-${item.id}`)
+          ?.querySelector("[data-site-mega-item]");
+        firstMenuItem?.focus();
+      });
+    }
+  }
+
+  function handleCrucibleTriggerFocus() {
+    clearCloseMenuTimer();
+    setActivePreviewId(activeCrucibleMenuItemId);
+  }
+
+  function renderDesktopNavItem(item) {
+    const isActive = item.type === "mega" ? activeSection === "crucible" : activeSection === item.id;
+    const isOpen = openMenuId === item.id;
+
+    if (item.type === "mega") {
+      return (
+        <div
+          key={item.id}
+          className="site-topbar__nav-popover"
+          onMouseEnter={() => openMegaMenu(item.id)}
+          onMouseLeave={scheduleMegaMenuClose}
+        >
+          <button
+            ref={(node) => {
+              megaTriggerRefs.current[item.id] = node;
+            }}
+            className={cx(
+              "app-shell__nav-item site-topbar__nav-button",
+              isActive && "is-active",
+              isOpen && "is-open"
+            )}
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded={isOpen}
+            aria-controls={`siteMegaMenu-${item.id}`}
+            aria-current={isActive ? "page" : undefined}
+            onFocus={handleCrucibleTriggerFocus}
+            onClick={() => handleNavItemClick(item)}
+            onKeyDown={(event) => handleMegaTriggerKeyDown(event, item)}
+          >
+            <i className={item.icon} aria-hidden="true" />
+            <span>{item.label}</span>
+            <i className="fa-solid fa-chevron-down site-topbar__chevron" aria-hidden="true" />
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={item.id}
+        className={cx("app-shell__nav-item site-topbar__nav-button", isActive && "is-active")}
+        type="button"
+        aria-current={isActive ? "page" : undefined}
+        onClick={() => handleNavItemClick(item)}
+      >
+        <i className={item.icon} aria-hidden="true" />
+        <span>{item.label}</span>
+      </button>
+    );
+  }
+
+  const openMegaMenuItem =
+    openMenuId && SITE_NAV_ITEMS.find((item) => item.id === openMenuId && item.type === "mega");
+
+  return (
+    <header className="app-shell__bar site-topbar" ref={topbarRef}>
+      <div className="app-shell__bar-inner site-topbar__inner">
+        <button
+          className="app-shell__brand site-topbar__brand"
+          type="button"
+          aria-label="Go to Cruor Games home"
+          onClick={() => handleAction({ type: "section", sectionId: "home" })}
+        >
+          <span className="app-shell__logo-mark" aria-hidden="true">
+            <img className="app-shell__logo-image" src="/assets/icons/cruor-logo-small.png" alt="" />
+          </span>
+
+          <span className="app-shell__brand-copy">
+            <strong>Cruor Games</strong>
+          </span>
+        </button>
+
+        <div className="app-shell__bar-actions site-topbar__bar-actions">
+          <nav className="app-shell__nav site-topbar__nav" aria-label="Primary sections">
+            {SITE_NAV_ITEMS.map(renderDesktopNavItem)}
+          </nav>
+
+          <div className="site-topbar__right-rail">
+            <button
+              className="site-topbar__utility-button"
+              type="button"
+              aria-label="Open interface options"
+              aria-haspopup="menu"
+              aria-expanded={isUtilityOpen}
+              aria-controls="siteUtilityMenu"
+              onClick={() => {
+                setIsUtilityOpen((value) => !value);
+                setOpenMenuId(null);
+                setIsMobileOpen(false);
+              }}
+            >
+              <i className="fa-solid fa-ellipsis" aria-hidden="true" />
+              <span>{getModeLabel(activeUiMode)}</span>
+            </button>
+
+            {isUtilityOpen ? (
+              <div
+                className="site-topbar__utility-menu"
+                id="siteUtilityMenu"
+                role="menu"
+                aria-label="Interface options"
+              >
+                <span className="site-topbar__utility-label">Interface Mode</span>
+
+                <div className="site-topbar__mode-list" role="group" aria-label="Interface mode">
+                  {APP_MODE_OPTIONS.map((mode) => (
+                    <button
+                      key={mode.id}
+                      className={cx(
+                        "site-topbar__mode-option",
+                        activeUiMode === mode.id && "is-active"
+                      )}
+                      type="button"
+                      role="menuitemradio"
+                      aria-checked={activeUiMode === mode.id}
+                      title={mode.description}
+                      onClick={() => {
+                        onUiModeChange?.(mode.id);
+                        setIsUtilityOpen(false);
+                      }}
+                    >
+                      <span>{mode.label}</span>
+                      <small>{mode.description}</small>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <button
+              className="site-topbar__login-placeholder"
+              type="button"
+              disabled
+              aria-label="Login placeholder"
+              title="Login placeholder"
+            >
+              <i className="fa-solid fa-user-lock" aria-hidden="true" />
+              <span>Login</span>
+            </button>
+
+            <button
+              className="site-topbar__mobile-toggle"
+              type="button"
+              aria-label={isMobileOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isMobileOpen}
+              aria-controls="siteMobileMenu"
+              onClick={() => {
+                setIsMobileOpen((value) => !value);
+                setOpenMenuId(null);
+                setIsUtilityOpen(false);
+              }}
+            >
+              <i className={isMobileOpen ? "fa-solid fa-xmark" : "fa-solid fa-bars"} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {isMobileOpen ? (
+        <nav className="site-topbar__mobile-menu" id="siteMobileMenu" aria-label="Mobile navigation">
+          <button
+            className={cx("site-topbar__mobile-link", activeSection === "home" && "is-active")}
+            type="button"
+            onClick={() => handleAction({ type: "section", sectionId: "home" })}
+          >
+            <i className="fa-solid fa-house-chimney" aria-hidden="true" />
+            <span>Home</span>
+          </button>
+
+          <div className="site-topbar__mobile-group">
+            <span className="site-topbar__mobile-group-label">Crucible</span>
+            {crucibleMenu?.items?.map((item) => (
+              <button
+                key={item.id}
+                className={cx(
+                  "site-topbar__mobile-link site-topbar__mobile-link--nested",
+                  activeSection === "crucible" && activeCrucibleMenuItemId === item.id && "is-active"
+                )}
+                type="button"
+                onClick={() => handleAction(item.action)}
+              >
+                <i className={item.icon} aria-hidden="true" />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.mobileDescription || item.description}</small>
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <button
+            className={cx(
+              "site-topbar__mobile-link",
+              activeSection === "inspirations" && "is-active"
+            )}
+            type="button"
+            onClick={() => handleAction({ type: "section", sectionId: "inspirations" })}
+          >
+            <i className="fa-solid fa-book-skull" aria-hidden="true" />
+            <span>Inspirations</span>
+          </button>
+
+          <div className="site-topbar__mobile-mode">
+            <span className="site-topbar__mobile-group-label">Interface Mode</span>
+            <div className="site-topbar__mode-list">
+              {APP_MODE_OPTIONS.map((mode) => (
+                <button
+                  key={mode.id}
+                  className={cx("site-topbar__mode-option", activeUiMode === mode.id && "is-active")}
+                  type="button"
+                  aria-pressed={activeUiMode === mode.id}
+                  onClick={() => {
+                    onUiModeChange?.(mode.id);
+                    setIsMobileOpen(false);
+                  }}
+                >
+                  <span>{mode.label}</span>
+                  <small>{mode.description}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+        </nav>
+      ) : null}
+
+      {openMegaMenuItem && typeof document !== "undefined"
+        ? createPortal(
+            <SiteMegaMenu
+              menu={openMegaMenuItem}
+              activeItemId={activePreviewId}
+              selectedItemId={activeCrucibleMenuItemId}
+              menuRef={megaMenuRef}
+              style={{
+                "--site-mega-menu-left": `${megaMenuPosition.left}px`,
+                "--site-mega-menu-top": `${megaMenuPosition.top}px`,
+              }}
+              onMouseEnter={clearCloseMenuTimer}
+              onMouseLeave={scheduleMegaMenuClose}
+              onPreviewChange={setActivePreviewId}
+              onAction={handleAction}
+              onRequestClose={closeTransientNavigation}
+            />,
+            document.body
+          )
+        : null}
+    </header>
+  );
+}

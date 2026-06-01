@@ -1,13 +1,18 @@
 import { useMemo } from "react";
 import { LocationCompilePreview } from "./LocationCompilePreview.jsx";
+import { LocationRoomRecapCard } from "./LocationRoomRecapCard.jsx";
 import { MapViewport } from "../../map-generator/map-generator.page.jsx";
 import { LEVEL_VIEW_ALL } from "../../map-generator/map-generator.state.js";
 import { toArray } from "../model/location-composer-state.js";
-import { getAssignedComponentsForRegion } from "../model/location-composer-selectors.js";
+import {
+  getAssignedComponentsForRegion,
+  getRegionById,
+} from "../model/location-composer-selectors.js";
 import {
   getGeneratedRoomForRegion,
   getGeneratedRoomForRegionIndex,
   getGeneratedRoomPositionStyle,
+  getGeneratedRoomSurfaceLabel,
 } from "../model/location-composer-map-preview.js";
 import { getMapSyncStatus } from "../model/location-composer-output.js";
 
@@ -80,9 +85,11 @@ export function LocationMapStage({
   const regions = state.locationRegions || [];
   const selectedSources = toArray(state.sourceAnchors);
   const selectedHorrors = toArray(state.horrors);
+  const activeRegion = getRegionById(state, state.activeRegionId);
   const activeRegionComponents = getAssignedComponentsForRegion(state, state.activeRegionId);
   const activeGeneratedRoom = getGeneratedRoomForRegion(generatedMapPreview, state.activeRegionId);
   const mapSyncStatus = getMapSyncStatus(mapRequest, generatedMapPreview, regions);
+  const activeSurfaceLabel = activeGeneratedRoom ? getGeneratedRoomSurfaceLabel(activeGeneratedRoom) : "";
 
   return (
     <main className="cruor-composer-stage location-composer__stage" aria-label="Location map stage">
@@ -109,13 +116,22 @@ export function LocationMapStage({
           viewResetKey={previewResetKey}
         />
 
-        <div className="location-map-stage__head location-map-stage__head--compact">
-          <p className="location-kicker">Map</p>
-          <h2>{state.title || "Cursed Location"}</h2>
-          {showStageDetails ? (
-            <p>{state.context} · {selectedHorrors[0] || "Horror"} · {selectedSources[0] || "Source"}</p>
-          ) : null}
+        <div className="location-room-recap-anchor">
+          <LocationRoomRecapCard
+            activeRegion={activeRegion}
+            assignedComponents={activeRegionComponents}
+            generatedRoom={activeGeneratedRoom}
+            surfaceLabel={activeSurfaceLabel}
+          />
         </div>
+
+        {showStageDetails ? (
+          <div className="location-map-stage__head location-map-stage__head--compact">
+            <p className="location-kicker">Map</p>
+            <h2>{state.title || "Cursed Location"}</h2>
+            <p>{state.context} · {selectedHorrors[0] || "Horror"} · {selectedSources[0] || "Source"}</p>
+          </div>
+        ) : null}
 
         <div className="location-region-board" aria-label="Generated location regions">
           {regions.map((region, index) => {

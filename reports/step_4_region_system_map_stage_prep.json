@@ -8,7 +8,7 @@
     "features/darken-location/darken-location.map-request.js"
   ],
   "untouched_uploaded_files": [
-    "features/darken-location/map-generator/index.js",
+    "features/darken-location/map-generator/map-generator.index.js",
     "features/darken-location/map-generator/map-generator.page.jsx",
     "features/darken-location/map-generator/map-generator.styles.css",
     "features/crucible/crucible.location-regions.js"

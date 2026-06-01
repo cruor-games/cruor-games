@@ -1,43 +1,54 @@
-/* Step 28g — Darken Layout Consolidation Pass. Consolidated CSS replacing Step 28a–28f override stack. */
 .location-composer {
-  --location-stage-min-height: clamp(660px, 72vh, 900px);
-  --location-panel-bg: rgba(5, 5, 6, 0.42);
-  --location-panel-bg-soft: rgba(0, 0, 0, 0.18);
-  --location-panel-border: rgba(255, 238, 242, 0.075);
-  --location-panel-border-strong: rgba(190, 64, 82, 0.34);
-  --location-text: var(--cruor-color-text, #eeeeee);
-  --location-text-strong: #fff0f2;
-  --location-text-soft: rgba(238, 238, 238, 0.52);
-  --location-muted: #8f7278;
-  --location-accent: #d0a2aa;
+  --location-stage-min-height: clamp(680px, 72vh, 900px);
   position: relative;
   min-height: calc(100dvh - var(--cruor-shell-bar-height, 52px));
-  color: var(--location-text);
+  color: var(--cruor-color-text, #eeeeee);
   font-family: var(--cruor-font-body, Inter, ui-sans-serif, system-ui, sans-serif);
 }
 
 .location-composer__workspace {
-  width: 100%;
-  padding: 8px clamp(16px, 2.6vw, 28px) 40px;
+  padding: 0 clamp(18px, 3vw, 30px) 42px;
 }
 
+.location-composer__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 520px);
+  gap: 18px;
+  align-items: end;
+  width: min(var(--cruor-composer-workspace-max), 100%);
+  margin: 0 auto 18px;
+  padding-top: 12px;
+}
 
+.location-composer__intro h1 {
+  margin: 4px 0 0;
+  color: #fff0f2;
+  font-family: var(--cruor-font-display, "Lovato-Black", Georgia, serif);
+  font-size: clamp(34px, 4.8vw, 72px);
+  line-height: 0.9;
+  letter-spacing: -0.055em;
+  text-shadow: 0 0 28px rgba(122, 26, 40, 0.44);
+}
 
+.location-composer__intro p {
+  margin: 0;
+  color: rgba(238, 238, 238, 0.52);
+  font-size: 13px;
+  line-height: 1.45;
+}
 
 .location-kicker {
   margin: 0;
-  color: var(--location-accent);
-  font-size: 9px;
+  color: #d0a2aa;
+  font-size: 10px;
   font-weight: 950;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .location-composer__frame {
-  display: grid;
-  grid-template-columns: minmax(240px, 0.68fr) minmax(520px, 1.62fr) minmax(260px, 0.7fr);
-  gap: 10px;
+  grid-template-columns: minmax(270px, 0.78fr) minmax(420px, 1.34fr) minmax(310px, 0.88fr);
   align-items: start;
   width: min(var(--cruor-composer-workspace-max), 100%);
   margin: 0 auto;
@@ -45,130 +56,41 @@
 
 .location-composer__rail {
   display: grid;
-  align-content: start;
-  gap: 10px;
+  gap: 12px;
   min-height: var(--location-stage-min-height);
 }
-
-.location-composer__stage,
-.location-map-stage {
-  min-height: var(--location-stage-min-height);
-}
-
-/* Panels */
 
 .location-panel {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   align-content: start;
-  padding: 12px;
-  border: var(--cruor-composer-panel-border);
-  border-top: var(--cruor-composer-panel-border-top);
-  background: var(--location-panel-bg);
-  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
-  backdrop-filter: blur(16px) saturate(118%);
-  -webkit-backdrop-filter: blur(16px) saturate(118%);
+  padding: 14px;
+  backdrop-filter: blur(18px) saturate(124%);
+  -webkit-backdrop-filter: blur(18px) saturate(124%);
 }
 
 .location-panel h2 {
-  margin: 0;
-  color: var(--location-text-strong);
-  font-size: 14px;
+  margin: 4px 0 0;
+  color: #fff0f2;
+  font-size: 18px;
   font-weight: 950;
   line-height: 1.05;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
 }
 
 .location-panel p {
   margin: 0;
-  color: var(--location-text-soft);
-  font-size: 11px;
-  line-height: 1.35;
+  color: rgba(238, 238, 238, 0.52);
+  font-size: 12px;
+  line-height: 1.42;
 }
 
-.location-panel-head,
-.location-panel-head--compact {
+.location-panel-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 8px;
+  gap: 12px;
 }
-
-.location-brief-panel,
-.location-slot-panel,
-.location-active-slot-panel {
-  gap: 10px;
-}
-
-.location-brief-panel__meta,
-.location-component-count,
-.location-region-count {
-  display: grid;
-  place-items: center;
-  min-width: 32px;
-  min-height: 26px;
-  border: 1px solid var(--location-panel-border-strong);
-  background: rgba(95, 7, 22, 0.16);
-  color: #f0d7dc;
-  font-size: 9px;
-  font-weight: 950;
-}
-
-/* Header Draft Controls */
-
-.location-draft-strip {
-  display: grid;
-  justify-content: end;
-  gap: 6px;
-  width: auto;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-}
-
-.location-draft-strip__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 5px;
-}
-
-.location-draft-btn {
-  min-height: 32px;
-  padding-inline: 10px;
-  color: rgba(240, 215, 220, 0.72);
-  font-size: 9px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.location-draft-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.42;
-}
-
-.location-draft-strip__feedback {
-  margin: 0;
-  color: rgba(208, 162, 170, 0.72);
-  font-size: 10px;
-  font-weight: 850;
-  letter-spacing: 0.04em;
-  text-align: right;
-}
-
-.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--ghost,
-.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--danger,
-.location-composer[data-cruor-ui-mode="simple"] .location-draft-strip__feedback {
-  display: none;
-}
-
-/* Left Rail */
 
 .location-field,
 .location-source-stack,
@@ -177,15 +99,14 @@
 .location-active-region,
 .location-map-request-card {
   display: grid;
-  gap: 7px;
+  gap: 8px;
 }
 
 .location-field > span,
 .location-map-request-card > span,
 .location-active-region > span,
-.location-component-card span,
-.location-slot-target-note span {
-  color: var(--location-muted);
+.location-component-card span {
+  color: #8f7278;
   font-size: 9px;
   font-weight: 950;
   letter-spacing: 0.1em;
@@ -193,34 +114,21 @@
   text-transform: uppercase;
 }
 
-.location-field--select {
-  gap: 5px;
-}
-
-.location-select {
-  width: 100%;
-  min-height: 34px;
-  padding-inline: 10px 28px;
-  color: #f0d7dc;
-  font-size: 11px;
-  font-weight: 850;
-}
-
 .location-chip-grid,
 .location-segment-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 6px;
 }
 
 .location-chip,
 .location-segment {
-  min-height: 28px;
-  padding: 0 8px;
+  min-height: 30px;
+  padding: 0 9px;
   color: rgba(238, 238, 238, 0.56);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 900;
-  letter-spacing: 0.055em;
+  letter-spacing: 0.035em;
   text-align: left;
 }
 
@@ -228,32 +136,50 @@
 .location-segment.is-active {
   border: var(--cruor-composer-control-border-active);
   background: var(--cruor-composer-control-bg-active);
-  color: var(--location-text-strong);
+  color: #fff0f2;
 }
 
-.location-map-request-card,
-.location-map-request-card--compact,
-.location-active-region,
-.location-empty {
-  border: 1px solid var(--location-panel-border);
-  background: var(--location-panel-bg-soft);
-  padding: 9px;
+.location-source-card,
+.location-slot,
+.location-component-card {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  text-align: left;
 }
 
-.location-map-request-card--compact {
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-}
-
-.location-map-request-card strong,
-.location-active-region strong {
-  color: var(--location-text-strong);
-  font-size: 11px;
+.location-source-card strong,
+.location-slot strong,
+.location-component-card strong,
+.location-active-region strong,
+.location-map-request-card strong {
+  color: #fff0f2;
+  font-size: 12px;
   font-weight: 950;
   line-height: 1.15;
 }
 
-/* Stage */
+.location-source-card small,
+.location-slot small,
+.location-active-region small,
+.location-map-request-card small {
+  color: rgba(238, 238, 238, 0.46);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.location-map-request-card,
+.location-active-region,
+.location-empty {
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 10px;
+}
+
+.location-composer__stage,
+.location-map-stage {
+  min-height: var(--location-stage-min-height);
+}
 
 .location-map-stage {
   position: relative;
@@ -261,19 +187,19 @@
   border: var(--cruor-composer-panel-border);
   border-top: var(--cruor-composer-panel-border-top);
   background:
-    radial-gradient(circle at 50% 28%, rgba(190, 64, 82, 0.12), transparent 22rem),
-    radial-gradient(circle at 50% 86%, rgba(95, 7, 22, 0.18), transparent 20rem),
-    rgba(0, 0, 0, 0.18);
-  box-shadow:
-    0 26px 80px rgba(0, 0, 0, 0.44),
-    inset 0 1px 0 rgba(255, 238, 242, 0.045);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    radial-gradient(circle at 50% 28%, rgba(190, 64, 82, 0.18), transparent 22rem),
+    radial-gradient(circle at 50% 86%, rgba(95, 7, 22, 0.24), transparent 20rem),
+    rgba(0, 0, 0, 0.2);
+  background-size: 34px 34px, 34px 34px, auto, auto, auto;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 238, 242, 0.045);
 }
 
 .location-map-stage__backdrop {
   position: absolute;
   inset: 0;
-  z-index: 0;
-  opacity: 0.28;
+  opacity: 0.78;
   pointer-events: none;
 }
 
@@ -317,85 +243,36 @@
 .location-map-stage__vein--two { transform: rotate(141deg); }
 .location-map-stage__vein--three { transform: rotate(278deg); }
 
-.location-map-stage__head,
-.location-map-stage__head--compact {
+.location-map-stage__head {
   position: relative;
   z-index: 2;
   display: grid;
-  gap: 6px;
-  max-width: 360px;
-  padding: 14px;
-  background: linear-gradient(90deg, rgba(0, 0, 0, 0.34), transparent);
+  gap: 7px;
+  max-width: 620px;
+  padding: 18px;
 }
 
-.location-map-stage__head h2,
-.location-map-stage__head--compact h2 {
+.location-map-stage__head h2 {
   margin: 0;
-  color: var(--location-text-strong);
+  color: #fff0f2;
   font-family: var(--cruor-font-display, "Lovato-Black", Georgia, serif);
-  font-size: clamp(24px, 3vw, 42px);
+  font-size: clamp(38px, 5vw, 78px);
   line-height: 0.9;
   letter-spacing: -0.055em;
-  text-shadow: 0 0 26px rgba(122, 26, 40, 0.36);
+  text-shadow: 0 0 30px rgba(122, 26, 40, 0.48);
 }
 
 .location-map-stage__head p {
   margin: 0;
   color: rgba(238, 238, 238, 0.56);
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.location-map-preview {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  overflow: hidden;
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.location-map-preview--fallback {
-  display: grid;
-  place-items: center;
-  opacity: 0.5;
-}
-
-.location-map-preview__fallback-card {
-  display: grid;
-  place-items: center;
-  min-width: min(320px, 70%);
-  min-height: 140px;
-  border: 1px solid rgba(255, 238, 242, 0.08);
-  background: rgba(0, 0, 0, 0.22);
-  color: rgba(240, 215, 220, 0.56);
-}
-
-.location-map-preview--live .map-viewport,
-.location-map-preview--live .map-pan-layer {
-  width: 100%;
-  height: 100%;
-}
-
-.location-map-preview--live .map-viewport.is-embedded-preview {
-  cursor: default;
-  outline: none;
-  pointer-events: none;
-}
-
-.location-map-preview--live .map-canvas-bottombar,
-.location-map-preview--live .zoom-toolbar,
-.location-map-preview--live .zoom-hint,
-.location-map-preview--live .map-context-menu,
-.location-map-preview--live .room-style-menu,
-.location-map-preview--live .door-context-menu {
-  display: none;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .location-region-board {
   position: absolute;
   inset: 0;
-  z-index: 4;
+  z-index: 3;
 }
 
 .location-region-node {
@@ -403,33 +280,32 @@
   left: var(--region-x);
   top: var(--region-y);
   display: grid;
-  gap: 3px;
-  width: min(150px, 24%);
-  min-height: 58px;
-  border: 1px solid rgba(255, 238, 242, 0.07);
-  background: rgba(5, 5, 6, 0.54);
+  gap: 4px;
+  width: min(190px, 30%);
+  min-height: 92px;
+  border: 1px solid rgba(255, 238, 242, 0.09);
+  background: rgba(5, 5, 6, 0.72);
   color: rgba(238, 238, 238, 0.62);
-  padding: 8px;
+  padding: 10px;
   text-align: left;
-  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transform: translate(-50%, -50%);
   transition: border-color 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
 }
 
 .location-region-node:hover,
 .location-region-node.is-active {
-  border-color: rgba(190, 64, 82, 0.52);
-  background: rgba(95, 7, 22, 0.42);
-  color: var(--location-text-strong);
-  box-shadow:
-    0 0 0 1px rgba(190, 64, 82, 0.12),
-    0 0 24px rgba(122, 26, 40, 0.28);
+  border-color: rgba(190, 64, 82, 0.62);
+  background: rgba(95, 7, 22, 0.46);
+  color: #fff0f2;
+  box-shadow: 0 0 0 1px rgba(190, 64, 82, 0.12), 0 0 24px rgba(122, 26, 40, 0.3);
 }
 
-.location-region-node span {
-  color: var(--location-muted);
+.location-region-node span,
+.location-stage-footer span {
+  color: #8f7278;
   font-size: 8px;
   font-weight: 950;
   letter-spacing: 0.1em;
@@ -437,66 +313,453 @@
 }
 
 .location-region-node strong {
-  color: var(--location-text-strong);
-  font-size: 11px;
+  color: #fff0f2;
+  font-size: 13px;
   font-weight: 950;
   line-height: 1.1;
 }
 
-.location-region-node__target {
-  align-self: end;
-  color: rgba(208, 162, 170, 0.72);
-  font-size: 7px;
-  font-style: normal;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+.location-region-node small {
+  color: rgba(238, 238, 238, 0.48);
+  font-size: 10px;
+  line-height: 1.25;
 }
-
-/* Advanced surfaces kept for non-simple modes. */
 
 .location-stage-footer {
   position: absolute;
   left: 16px;
-  right: auto;
+  right: 16px;
   bottom: 16px;
-  z-index: 5;
+  z-index: 4;
   display: grid;
-  grid-template-columns: repeat(3, minmax(92px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
-  max-width: 460px;
 }
 
 .location-stage-footer > div {
   display: grid;
-  justify-items: center;
-  gap: 0;
-  border: 1px solid var(--location-panel-border);
+  gap: 4px;
+  border: 1px solid rgba(255, 238, 242, 0.075);
   background: rgba(0, 0, 0, 0.32);
-  padding: 7px;
+  padding: 9px;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-}
-
-.location-stage-footer span {
-  color: var(--location-muted);
-  font-size: 8px;
-  font-weight: 950;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .location-stage-footer strong {
   overflow: hidden;
   color: #f0d7dc;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 950;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.location-region-attachment-strip {
-  z-index: 6;
+.location-icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0;
+}
+
+.location-slot > span {
+  color: #d0a2aa;
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.location-slot.is-filled:not(.is-active) {
+  border-color: rgba(143, 150, 148, 0.34);
+}
+
+.location-component-card p {
+  margin: 5px 0 0;
+}
+
+.location-component-card__action {
+  min-height: 30px;
+  padding: 0 9px;
+  color: #f0d7dc;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.location-empty {
+  border-style: dashed;
+}
+
+@media (max-width: 1320px) {
+  .location-composer__frame {
+    grid-template-columns: 1fr;
+  }
+
+  .location-composer__rail,
+  .location-composer__stage,
+  .location-map-stage {
+    min-height: auto;
+  }
+
+  .location-map-stage {
+    min-height: 620px;
+  }
+}
+
+@media (max-width: 720px) {
+  .location-composer__intro,
+  .location-stage-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .location-region-node {
+    width: min(210px, 44%);
+  }
+}
+
+/* Step 28a — Darken Minimal Visibility Pass.
+   Scope: Darken default surface only. Keep routing, map bridge, saves, and component logic intact. */
+.location-composer {
+  --location-stage-min-height: clamp(660px, 72vh, 900px);
+}
+
+.location-composer__workspace {
+  padding-top: 8px;
+}
+
+.location-composer__intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(12px, 2vw, 20px);
+  width: min(var(--cruor-composer-workspace-max), 100%);
+  margin: 0 auto 10px;
+  padding-block: 0 8px;
+}
+
+.location-composer__intro h1 {
+  margin: 0;
+  color: #fff0f2;
+  font-family: var(--cruor-font-display, "Lovato-Black", Georgia, serif);
+  font-size: clamp(25px, 2.5vw, 40px);
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+  text-shadow: none;
+}
+
+.location-composer__intro > p,
+.location-composer__intro .location-kicker {
+  display: none !important;
+}
+
+.location-composer__intro .location-draft-strip,
+.location-draft-strip {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: auto;
+  justify-content: end;
+  align-items: center;
+  gap: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.location-draft-strip__main,
+.location-draft-strip__scope,
+.location-draft-strip__status {
+  display: none !important;
+}
+
+.location-draft-strip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.location-draft-btn {
+  min-height: 32px;
+  padding-inline: 10px;
+  color: rgba(240, 215, 220, 0.72);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--ghost,
+.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--danger {
+  display: none !important;
+}
+
+.location-workflow-guide,
+.location-audit-strip,
+.location-system-legend {
+  display: none !important;
+}
+
+.location-composer__frame {
+  margin-top: 0;
+  gap: 10px;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-panel > p,
+.location-composer[data-cruor-ui-mode="simple"] .location-panel-head p,
+.location-composer[data-cruor-ui-mode="simple"] .location-source-card small,
+.location-composer[data-cruor-ui-mode="simple"] .location-slot small,
+.location-composer[data-cruor-ui-mode="simple"] .location-component-card p,
+.location-composer[data-cruor-ui-mode="simple"] .location-component-card small,
+.location-composer[data-cruor-ui-mode="simple"] .location-map-request-card,
+.location-composer[data-cruor-ui-mode="simple"] .location-empty--action,
+.location-composer[data-cruor-ui-mode="simple"] .location-slot-target-note small,
+.location-composer[data-cruor-ui-mode="simple"] .location-region-detail p,
+.location-composer[data-cruor-ui-mode="simple"] .location-generated-room-card small,
+.location-composer[data-cruor-ui-mode="simple"] .location-map-sync-status small,
+.location-composer[data-cruor-ui-mode="simple"] .location-map-sync-status dl,
+.location-composer[data-cruor-ui-mode="simple"] .location-map-sync-status > span {
+  display: none !important;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-chip-grid,
+.location-composer[data-cruor-ui-mode="simple"] .location-segment-row {
+  gap: 5px;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-chip,
+.location-composer[data-cruor-ui-mode="simple"] .location-segment {
+  min-height: 28px;
+  padding-inline: 8px;
+  font-size: 9px;
+  letter-spacing: 0.055em;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-source-card,
+.location-composer[data-cruor-ui-mode="simple"] .location-slot,
+.location-composer[data-cruor-ui-mode="simple"] .location-component-card {
+  gap: 4px;
+  padding: 9px;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-source-card strong,
+.location-composer[data-cruor-ui-mode="simple"] .location-slot strong,
+.location-composer[data-cruor-ui-mode="simple"] .location-component-card strong {
+  font-size: 11px;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-compile-preview:not([open]):not(.is-open),
+.location-composer[data-cruor-ui-mode="simple"] .location-map-sync-status:not([open]) {
+  display: none !important;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-map-stage__head p,
+.location-composer[data-cruor-ui-mode="simple"] .location-stage-footer span,
+.location-composer[data-cruor-ui-mode="simple"] .location-region-node small {
+  display: none !important;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-stage-footer {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-stage-footer > div {
+  padding: 7px;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-stage-footer strong {
+  font-size: 10px;
+}
+
+.location-composer[data-cruor-ui-mode="advanced"] .location-draft-strip,
+.location-composer[data-cruor-ui-mode="debug"] .location-draft-strip {
+  display: grid;
+}
+
+@media (max-width: 980px) {
+  .location-composer__intro {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .location-composer__intro .location-draft-strip,
+  .location-draft-strip,
+  .location-draft-strip__actions {
+    justify-content: start;
+  }
+
+  .location-composer[data-cruor-ui-mode="simple"] .location-stage-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .location-draft-strip__actions {
+    width: 100%;
+  }
+
+  .location-draft-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .location-composer[data-cruor-ui-mode="simple"] .location-stage-footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Step 28b — Darken Draft Controls Cleanup.
+   Draft controls are now natively compact; no technical browser/backend copy is rendered. */
+.location-composer__intro .location-draft-strip,
+.location-draft-strip {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.location-draft-strip__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.location-draft-btn {
+  min-height: 32px;
+  padding-inline: 10px;
+  color: rgba(240, 215, 220, 0.72);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.location-draft-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--ghost,
+.location-composer[data-cruor-ui-mode="simple"] .location-draft-btn--danger {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .location-composer__intro .location-draft-strip,
+  .location-draft-strip,
+  .location-draft-strip__actions {
+    justify-content: start;
+  }
+}
+
+@media (max-width: 720px) {
+  .location-draft-strip,
+  .location-draft-strip__actions {
+    width: 100%;
+  }
+
+  .location-draft-btn {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+/* Step 28c — Darken Simple Mode Structure Pass.
+   JSX now renders fewer default elements; these rules only normalize density and layout. */
+.location-brief-panel,
+.location-slot-panel,
+.location-active-slot-panel,
+.location-region-panel--summary {
+  gap: 10px;
+}
+
+.location-panel-head--compact {
+  align-items: center;
+}
+
+.location-panel-head--compact h2 {
+  margin-top: 0;
+  font-size: 15px;
+}
+
+.location-brief-panel__meta,
+.location-component-count,
+.location-region-count {
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid rgba(190, 64, 82, 0.34);
+  background: rgba(95, 7, 22, 0.16);
+  color: #f0d7dc;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.location-field--select {
+  gap: 5px;
+}
+
+.location-select {
+  width: 100%;
+  min-height: 34px;
+  padding-inline: 10px 28px;
+  color: #f0d7dc;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.location-map-request-card--compact {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.location-map-stage__head--compact {
+  max-width: 520px;
+}
+
+.location-map-stage__head--compact h2 {
+  font-size: clamp(28px, 3.5vw, 54px);
+}
+
+.location-stage-footer--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.location-stage-footer--compact > div {
+  justify-items: center;
+  gap: 0;
+}
+
+.location-region-node {
+  min-height: 76px;
+}
+
+.location-region-node__target {
+  align-self: end;
+  color: rgba(208, 162, 170, 0.72);
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 950;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .location-advanced-output {
@@ -516,146 +779,261 @@
   text-transform: uppercase;
 }
 
-.location-composer[data-cruor-ui-mode="simple"] .location-advanced-output,
-.location-composer[data-cruor-ui-mode="simple"] .location-stage-footer,
-.location-composer[data-cruor-ui-mode="simple"] .location-region-attachment-strip {
-  display: none;
+.location-composer[data-cruor-ui-mode="simple"] .location-advanced-output {
+  display: none !important;
 }
 
-/* Right Rail */
-
-.location-icon-btn {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  min-width: 34px;
-  min-height: 34px;
-  padding: 0;
-}
-
-.location-slot-list,
 .location-slot-list--compact,
-.location-slot-list--polished {
-  display: grid;
-  gap: 5px;
+.location-component-list--compact {
+  gap: 6px;
 }
 
-.location-slot,
-.location-slot-list--polished .location-slot {
-  display: grid;
+.location-slot-list--compact .location-slot {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
+}
+
+.location-slot-list--compact .location-slot span,
+.location-slot-list--compact .location-slot strong {
+  min-width: 0;
+}
+
+.location-slot-target-note--compact {
+  display: grid;
   gap: 4px;
-  min-height: 34px;
-  padding: 7px 8px;
-  text-align: left;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 9px;
 }
 
-.location-slot > span {
-  overflow: hidden;
-  color: var(--location-accent);
-  font-size: 9px;
-  font-weight: 950;
-  letter-spacing: 0.08em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.location-slot strong {
-  color: var(--location-text-strong);
-  font-size: 10px;
-  font-weight: 950;
-  line-height: 1.1;
-}
-
-.location-slot.is-filled:not(.is-active) {
-  border-color: rgba(143, 150, 148, 0.34);
-}
-
-.location-slot-target-note,
-.location-slot-target-note--compact,
-.location-slot-target-note--polished {
-  display: grid;
+.location-component-list--compact .location-component-card {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 4px 8px;
-  border: 1px solid var(--location-panel-border);
-  background: var(--location-panel-bg-soft);
+}
+
+.location-component-list--compact .location-component-card__action {
+  min-width: 64px;
+}
+
+.location-assigned-card {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.location-region-panel--summary .location-generated-room-card {
   padding: 8px;
 }
 
-.location-slot-target-note span {
-  grid-column: 1 / -1;
+.location-region-panel--summary .location-generated-room-card small {
+  display: block !important;
 }
 
-.location-slot-target-note strong {
+@media (max-width: 720px) {
+  .location-stage-footer--compact,
+  .location-component-list--compact .location-component-card,
+  .location-slot-list--compact .location-slot,
+  .location-assigned-card {
+    grid-template-columns: 1fr;
+  }
+
+  .location-component-list--compact .location-component-card__action {
+    width: 100%;
+  }
+}
+
+/* Step 29 — Slot Picker Modal + Persistent Room Recap. */
+.location-composer__rail--picker {
+  align-content: start;
+}
+
+.location-slot-panel--picker {
+  gap: 9px;
+}
+
+.location-slot-list--picker {
+  display: grid;
+  gap: 6px;
+}
+
+.location-slot-picker-trigger {
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-height: 44px;
+  padding: 9px;
+}
+
+.location-slot-picker-trigger em {
+  grid-column: 1 / -1;
   overflow: hidden;
-  color: var(--location-text-strong);
-  font-size: 11px;
-  font-weight: 950;
+  color: rgba(240, 215, 220, 0.44);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 750;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.location-slot-target-note small {
-  color: rgba(208, 162, 170, 0.66);
+.location-active-slot-panel,
+.location-region-panel--summary,
+.location-component-list--compact,
+.location-slot-target-note--compact {
+  display: none !important;
+}
+
+.location-picker-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 3vw, 42px);
+}
+
+.location-picker-modal__scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.72);
+  cursor: default;
+}
+
+.location-picker-modal__panel.component-navigator-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 32px));
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: 10px;
+  border: 1px solid rgba(240, 185, 194, 0.24);
+  background:
+    radial-gradient(circle at 14% 0%, rgba(190, 64, 82, 0.14), transparent 42%),
+    linear-gradient(180deg, rgba(2, 2, 3, 0.985), rgba(10, 4, 6, 0.96)),
+    rgba(0, 0, 0, 0.96);
+  box-shadow:
+    0 32px 120px rgba(0, 0, 0, 0.78),
+    0 0 38px rgba(122, 26, 40, 0.24),
+    inset 0 1px 0 rgba(255, 238, 242, 0.06);
+  padding: 14px;
+}
+
+.location-picker-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.location-picker-modal__head h2 {
+  margin: 4px 0 0;
+  color: #fff0f2;
+  font-size: clamp(20px, 3vw, 34px);
+  font-weight: 950;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.location-picker-modal__close {
+  display: grid;
+  place-items: center;
+}
+
+.location-picker-modal__target {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px;
+}
+
+.location-picker-modal__target span,
+.location-picker-modal__assigned > span {
+  color: var(--location-muted);
   font-size: 9px;
-  font-weight: 850;
+  font-weight: 950;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.location-target-card__switcher,
-.location-target-card__switcher--compact {
+.location-picker-modal__target strong {
+  display: block;
+  margin-top: 4px;
+  color: #fff0f2;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.location-picker-modal__target small {
+  display: block;
+  margin-top: 3px;
+  color: rgba(240, 215, 220, 0.56);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.location-picker-modal__region-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 5px;
 }
 
-.location-region-inline-btn {
+.location-picker-modal__tools {
   min-width: 0;
-  min-height: 28px;
-  padding: 0;
-  font-size: 9px;
-  font-weight: 950;
 }
 
-.location-assigned-stack,
-.location-assigned-stack--compact,
-.location-component-list,
-.location-component-list--compact,
-.location-component-list--polished {
+.location-picker-modal__assigned {
   display: grid;
+  gap: 6px;
+}
+
+.location-picker-modal__assigned > div {
+  display: flex;
+  flex-wrap: wrap;
   gap: 5px;
 }
 
-.location-assigned-card,
-.location-assigned-card--compact,
-.location-component-card {
+.location-picker-modal__assigned-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  max-width: 100%;
+  padding-inline: 9px;
+  color: rgba(240, 215, 220, 0.78);
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.location-picker-modal__list {
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 0;
+  padding-right: 3px;
+}
+
+.location-picker-option {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
   align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 8px;
-  text-align: left;
+  padding: 10px;
 }
 
-.location-assigned-card small,
-.location-assigned-card--compact small {
-  display: none;
-}
-
-.location-component-card__meta {
+.location-picker-option__meta {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 
-.location-component-card__meta em {
-  color: rgba(208, 162, 170, 0.58);
+.location-picker-option__meta span,
+.location-picker-option__meta em {
+  color: rgba(208, 162, 170, 0.62);
   font-size: 8px;
   font-style: normal;
   font-weight: 950;
@@ -663,200 +1041,101 @@
   text-transform: uppercase;
 }
 
-.location-component-card span {
-  color: var(--location-muted);
+.location-picker-option h3 {
+  margin: 0;
+  color: #fff0f2;
+  font-size: 14px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.location-picker-option p {
+  display: block;
+  margin: 6px 0 0;
+  color: rgba(240, 215, 220, 0.58);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.location-picker-option__action {
+  min-width: 78px;
+  min-height: 32px;
+  padding-inline: 10px;
+  color: #f0d7dc;
   font-size: 9px;
   font-weight: 950;
-  letter-spacing: 0.1em;
-  line-height: 1;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
-.location-component-card strong {
+.location-room-recap-anchor {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  z-index: 6;
+  width: min(340px, calc(100% - 28px));
+  pointer-events: none;
+}
+
+.location-room-recap-card.cruor-tooltip-region-card.region-card {
+  width: 100%;
+  max-width: 100%;
+  pointer-events: none;
+}
+
+.location-room-recap-card .region-card__title {
+  min-width: 0;
+}
+
+.location-room-recap-card .region-card__title h3 {
   overflow: hidden;
-  display: block;
-  color: var(--location-text-strong);
-  font-size: 11px;
-  font-weight: 950;
-  line-height: 1.15;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.location-component-card p,
-.location-component-card small {
+.location-map-stage.is-simple-surface .location-map-stage__head {
   display: none;
 }
 
-.location-component-card__action {
-  min-width: 58px;
-  min-height: 28px;
-  padding-inline: 8px;
-  color: #f0d7dc;
-  font-size: 9px;
-  font-weight: 950;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-}
-
-.location-empty,
-.location-empty--quiet {
-  margin: 0;
-  border: 1px dashed var(--location-panel-border);
-  background: rgba(0, 0, 0, 0.14);
-  color: rgba(238, 238, 238, 0.42);
-  padding: 8px;
-  font-size: 11px;
-}
-
-.location-region-panel--summary {
-  display: none;
-}
-
-/* Legacy/advanced debug leftovers: hide when still present in Simple due stale HMR. */
-
-.location-composer[data-cruor-ui-mode="simple"] .location-workflow-guide,
-.location-composer[data-cruor-ui-mode="simple"] .location-audit-strip,
-.location-composer[data-cruor-ui-mode="simple"] .location-system-legend,
-.location-composer[data-cruor-ui-mode="simple"] .location-map-sync-status,
-.location-composer[data-cruor-ui-mode="simple"] .location-compile-preview:not(.is-open),
-.location-composer[data-cruor-ui-mode="simple"] .location-panel > p,
-.location-composer[data-cruor-ui-mode="simple"] .location-panel-head p,
-.location-composer[data-cruor-ui-mode="simple"] .location-source-card small,
-.location-composer[data-cruor-ui-mode="simple"] .location-slot small,
-.location-composer[data-cruor-ui-mode="simple"] .location-map-request-card small,
-.location-composer[data-cruor-ui-mode="simple"] .location-region-detail p,
-.location-composer[data-cruor-ui-mode="simple"] .location-generated-room-card small,
-.location-composer[data-cruor-ui-mode="simple"] .location-region-node small {
-  display: none;
-}
-
-/* Responsive */
-
-@media (max-width: 1320px) {
-  .location-composer__frame {
-    grid-template-columns: 1fr;
-  }
-
-  .location-composer__rail,
-  .location-composer__stage,
-  .location-map-stage {
-    min-height: auto;
-  }
-
-  .location-map-stage {
-    min-height: 620px;
-  }
+.location-map-stage.is-simple-surface .location-region-node {
+  z-index: 4;
 }
 
 @media (max-width: 980px) {
-  
-
-  
-  .location-draft-strip,
-  .location-draft-strip__actions {
-    justify-content: start;
+  .location-picker-modal__target {
+    grid-template-columns: 1fr;
   }
 
-  .location-stage-footer {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    right: 16px;
-    max-width: none;
+  .location-room-recap-anchor {
+    width: min(340px, calc(100% - 20px));
   }
 }
 
 @media (max-width: 720px) {
-  .location-composer__workspace {
-    padding-inline: 12px;
+  .location-picker-modal {
+    padding: 10px;
   }
 
-  .location-draft-strip,
-  .location-draft-strip__actions {
-    width: 100%;
+  .location-picker-modal__panel.component-navigator-modal__panel {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
   }
 
-  .location-draft-btn {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-
-  .location-map-stage {
-    min-height: 560px;
-  }
-
-  .location-map-preview {
-    opacity: 0.45;
-  }
-
-  .location-region-node {
-    width: min(150px, 38%);
-  }
-
-  .location-stage-footer,
-  .location-slot-target-note,
-  .location-component-card,
-  .location-assigned-card {
+  .location-picker-option {
     grid-template-columns: 1fr;
   }
 
-  .location-component-card__action {
+  .location-picker-option__action {
     width: 100%;
   }
 
-  .location-draft-strip__feedback {
-    text-align: left;
-  }
-}
-
-/* Step 28h — Darken Header Removal / Draft Controls Relocation. */
-.location-composer__workspace {
-  padding-top: 8px;
-}
-
-.location-composer__frame {
-  margin-top: 0;
-}
-
-.location-brief-panel__head {
-  align-items: center;
-}
-
-.location-brief-panel__draft {
-  display: grid;
-  width: 100%;
-  min-width: 0;
-}
-
-.location-brief-panel__draft .location-draft-strip {
-  display: grid;
-  width: 100%;
-  justify-content: stretch;
-}
-
-.location-brief-panel__draft .location-draft-strip__actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: 100%;
-  justify-content: stretch;
-  gap: 5px;
-}
-
-.location-brief-panel__draft .location-draft-btn {
-  width: 100%;
-  min-width: 0;
-  min-height: 30px;
-  padding-inline: 8px;
-}
-
-@media (max-width: 1320px) {
-  .location-brief-panel__draft .location-draft-strip__actions {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
-  }
-}
-
-@media (max-width: 720px) {
-  .location-brief-panel__draft .location-draft-strip__actions {
-    grid-template-columns: 1fr;
+  .location-room-recap-anchor {
+    position: relative;
+    left: auto;
+    top: auto;
+    z-index: 6;
+    width: auto;
+    margin: 10px;
   }
 }
 

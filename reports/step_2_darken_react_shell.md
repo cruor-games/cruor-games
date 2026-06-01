@@ -2,7 +2,7 @@
 
 ## Changed Files
 - `app/router.jsx`
-- `features/darken-location/composer/index.js`
+- `features/darken-location/composer/darken-location-composer.index.js`
 - `features/darken-location/composer/DarkenLocationComposerPage.jsx`
 - `features/darken-location/composer/darken-location-composer.styles.css`
 - `features/darken-location/composer/model/location-composer-state.js`

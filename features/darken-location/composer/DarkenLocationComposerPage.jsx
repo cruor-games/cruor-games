@@ -12,6 +12,7 @@ import { LOCATION_REGION_TEMPLATES } from "../../crucible/crucible.location-regi
 import {
   createDraftFingerprint,
   deleteStoredLocationDraftWithStatus,
+  getLocalDraftStorageStatus,
   getStoredDraftSummary,
   readStoredLocationDraft,
   restoreLocationDraftState,
@@ -27,6 +28,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   const [state, setState] = useState(() => createInitialLocationComposerState(LOCATION_REGION_TEMPLATES));
   const [draftStatus, setDraftStatus] = useState("");
   const [draftSummary, setDraftSummary] = useState(() => getStoredDraftSummary());
+  const [draftStorageStatus, setDraftStorageStatus] = useState(() => getLocalDraftStorageStatus());
   const [savedDraftFingerprint, setSavedDraftFingerprint] = useState("");
   const draftStatusTimeoutRef = useRef(null);
 
@@ -47,9 +49,10 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
 
   const saveDraft = useCallback(() => {
     const result = saveLocationDraftWithStatus(state);
+    setDraftStorageStatus(getLocalDraftStorageStatus());
 
     if (!result.ok) {
-      setTransientDraftStatus(result.reason || "Draft save unavailable");
+      setTransientDraftStatus(result.reason || "Save unavailable");
       return;
     }
 
@@ -59,6 +62,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   }, [setTransientDraftStatus, state]);
 
   const loadDraft = useCallback(() => {
+    setDraftStorageStatus(getLocalDraftStorageStatus());
     const storedDraft = readStoredLocationDraft();
     if (!storedDraft) {
       setTransientDraftStatus("No draft found");
@@ -66,7 +70,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
     }
 
     if (hasUnsavedChanges) {
-      const confirmed = window.confirm("Load the saved draft and discard current unsaved changes?");
+      const confirmed = window.confirm("Load saved draft and discard current changes?");
       if (!confirmed) return;
     }
 
@@ -84,10 +88,11 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
       return;
     }
 
-    const confirmed = window.confirm("Clear the saved draft? The current composer will stay open.");
+    const confirmed = window.confirm("Clear saved draft?");
     if (!confirmed) return;
 
     const result = deleteStoredLocationDraftWithStatus();
+    setDraftStorageStatus(getLocalDraftStorageStatus());
 
     if (!result.ok) {
       setTransientDraftStatus(result.reason || "Unable to clear draft");
@@ -100,7 +105,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   }, [draftSummary, setTransientDraftStatus, state]);
 
   const resetComposer = useCallback(() => {
-    const confirmed = window.confirm("Reset the current composer? Your saved draft will remain available.");
+    const confirmed = window.confirm("Reset current composer?");
     if (!confirmed) return;
 
     const resetState = createInitialLocationComposerState(LOCATION_REGION_TEMPLATES);
@@ -131,6 +136,10 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   }, []);
 
   useEffect(() => {
+    setDraftStorageStatus(getLocalDraftStorageStatus());
+  }, []);
+
+  useEffect(() => {
     if (!onSnapshotProviderReady) return undefined;
     onSnapshotProviderReady(() => snapshot);
     return () => onSnapshotProviderReady(null);
@@ -147,7 +156,10 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
             draftControls={
               <LocationDraftControls
                 canLoadDraft={Boolean(draftSummary)}
+                draftStorageStatus={draftStorageStatus}
+                draftSummary={draftSummary}
                 draftStatus={draftStatus}
+                hasUnsavedChanges={hasUnsavedChanges}
                 uiMode={uiMode}
                 onClearDraft={clearSavedDraft}
                 onLoadDraft={loadDraft}

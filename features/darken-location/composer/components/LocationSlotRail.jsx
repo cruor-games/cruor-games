@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   assignComponentToSlot,
   removeComponentFromSlot,
@@ -7,70 +7,59 @@ import {
   getAssignedComponentsForSlot,
   getComponentsForSlot,
   getLocationSlots,
-  getRegionById,
   getSlotCapacityLabel,
   getSlotFilledCount,
   getSlotStatus,
-  isComponentAssignedToSlot,
 } from "../model/location-composer-selectors.js";
 import {
   getGeneratedRoomForRegion,
 } from "../model/location-composer-map-preview.js";
+import { LocationComponentPickerModal } from "./LocationComponentPickerModal.jsx";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-function AssignedSlotStack({ state, slot, setState }) {
-  const assigned = getAssignedComponentsForSlot(state, slot.id);
-
-  if (!assigned.length) {
-    return null;
-  }
-
-  return (
-    <div className="location-assigned-stack location-assigned-stack--compact" aria-label="Assigned components">
-      {assigned.map((component) => (
-        <article className="location-assigned-card location-assigned-card--compact" key={`${slot.id}-${component.id}`}>
-          <div>
-            <span>{component.type}</span>
-            <strong>{component.title}</strong>
-            <small>{getRegionById(state, component.assignment.regionId)?.name || "No region linked"}</small>
-          </div>
-          <button
-            className="cruor-composer-control location-component-card__action"
-            type="button"
-            onClick={() => setState((current) => removeComponentFromSlot(current, component.id, slot.id))}
-          >
-            Remove
-          </button>
-        </article>
-      ))}
-    </div>
-  );
-}
-
 export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot, generatedMapPreview }) {
   const slots = getLocationSlots();
-  const activeSlot = slots.find((slot) => slot.id === state.activeSlot) || slots[0];
-  const compatibleComponents = getComponentsForSlot(activeSlot?.id, state);
+  const [pickerSlotId, setPickerSlotId] = useState("");
+
+  const activeSlotId = pickerSlotId || state.activeSlot || slots[0]?.id;
+  const activeSlot = slots.find((slot) => slot.id === activeSlotId) || slots[0];
+  const compatibleComponents = activeSlot ? getComponentsForSlot(activeSlot.id, state) : [];
+  const assignedComponents = activeSlot ? getAssignedComponentsForSlot(state, activeSlot.id) : [];
   const activeRegion = state.locationRegions?.find((region) => region.id === state.activeRegionId);
   const activeGeneratedRoom = getGeneratedRoomForRegion(generatedMapPreview, state.activeRegionId);
   const activeSlotFilled = getSlotFilledCount(state, activeSlot?.id);
   const activeSlotIsFull = activeSlotFilled >= (activeSlot?.max || 1);
-  const regionOptions = (state.locationRegions || []).slice(0, 4);
+
+  const selectedBySlot = useMemo(() => {
+    return slots.reduce((acc, slot) => {
+      acc[slot.id] = getAssignedComponentsForSlot(state, slot.id);
+      return acc;
+    }, {});
+  }, [slots, state]);
+
+  const openSlotPicker = useCallback((slotId) => {
+    setState((current) => ({ ...current, activeSlot: slotId }));
+    setPickerSlotId(slotId);
+  }, [setState]);
+
+  const closeSlotPicker = useCallback(() => setPickerSlotId(""), []);
 
   const addComponent = useCallback((component) => {
+    if (!activeSlot) return;
     setState((current) => assignComponentToSlot(current, component, activeSlot, current.activeRegionId));
   }, [activeSlot, setState]);
 
   const removeComponent = useCallback((componentId) => {
-    setState((current) => removeComponentFromSlot(current, componentId, activeSlot?.id));
-  }, [activeSlot?.id, setState]);
+    if (!activeSlot) return;
+    setState((current) => removeComponentFromSlot(current, componentId, activeSlot.id));
+  }, [activeSlot, setState]);
 
   return (
-    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--right location-composer__rail--polished" aria-label="Location slots and components">
-      <section className="cruor-composer-panel location-panel location-slot-panel location-slot-panel--polished">
+    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--right location-composer__rail--picker" aria-label="Location slots and components">
+      <section className="cruor-composer-panel location-panel location-slot-panel location-slot-panel--picker">
         <div className="location-panel-head location-panel-head--compact">
           <div>
             <p className="location-kicker">Build</p>
@@ -81,80 +70,40 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
           </button>
         </div>
 
-        <div className="location-slot-list location-slot-list--compact location-slot-list--polished">
+        <div className="location-slot-list location-slot-list--picker">
           {slots.map((slot) => {
             const status = getSlotStatus(state, slot);
+            const assigned = selectedBySlot[slot.id] || [];
             return (
               <button
-                className={cx("cruor-composer-slot location-slot", state.activeSlot === slot.id && "is-active", status === "full" && "is-filled", status === "partial" && "is-partial")}
+                className={cx("cruor-composer-slot location-slot location-slot-picker-trigger", state.activeSlot === slot.id && "is-active", status === "full" && "is-filled", status === "partial" && "is-partial")}
                 key={slot.id}
                 type="button"
-                onClick={() => setState((current) => ({ ...current, activeSlot: slot.id }))}
+                onClick={() => openSlotPicker(slot.id)}
               >
                 <span>{slot.label}</span>
                 <strong>{getSlotCapacityLabel(state, slot)}</strong>
+                {assigned[0] ? <em>{assigned[0].title || assigned[0].name}</em> : <em>Pick option</em>}
               </button>
             );
           })}
         </div>
       </section>
 
-      <section className="cruor-composer-panel location-panel location-active-slot-panel location-active-slot-panel--polished">
-        <div className="location-panel-head location-panel-head--compact">
-          <div>
-            <p className="location-kicker">Slot</p>
-            <h2>{activeSlot?.label || "Slot"}</h2>
-          </div>
-          <strong className="location-component-count">{activeSlotFilled}/{activeSlot?.max || 1}</strong>
-        </div>
-
-        <div className="location-slot-target-note location-slot-target-note--compact location-slot-target-note--polished">
-          <span>Target</span>
-          <strong>{activeRegion?.name || "No region selected"}</strong>
-          {activeGeneratedRoom ? <small>Room {activeGeneratedRoom.number || "—"}</small> : null}
-        </div>
-
-        <div className="location-target-card__switcher location-target-card__switcher--compact" aria-label="Choose default target region">
-          {regionOptions.map((region, index) => (
-            <button
-              className={cx("cruor-composer-control location-region-inline-btn", state.activeRegionId === region.id && "is-active")}
-              key={region.id}
-              type="button"
-              title={`Set ${region.name} as default target`}
-              onClick={() => setState((current) => ({ ...current, activeRegionId: region.id }))}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
-
-        <AssignedSlotStack state={state} slot={activeSlot} setState={setState} />
-
-        <div className="location-component-list location-component-list--compact location-component-list--polished">
-          {compatibleComponents.length ? compatibleComponents.map((component) => {
-            const selected = isComponentAssignedToSlot(state, component.id, activeSlot.id);
-            return (
-              <article className={cx("cruor-composer-card location-component-card", selected && "is-active")} key={component.id}>
-                <div>
-                  <div className="location-component-card__meta">
-                    <span>{component.type}</span>
-                    <em>{selected ? "Assigned" : activeSlotIsFull ? "Replace" : "Available"}</em>
-                  </div>
-                  <strong>{component.title}</strong>
-                </div>
-
-                <button
-                  className="cruor-composer-control location-component-card__action"
-                  type="button"
-                  onClick={() => (selected ? removeComponent(component.id) : addComponent(component))}
-                >
-                  {selected ? "Remove" : activeSlotIsFull ? "Replace" : "Add"}
-                </button>
-              </article>
-            );
-          }) : <p className="location-empty location-empty--quiet">No compatible components.</p>}
-        </div>
-      </section>
+      <LocationComponentPickerModal
+        activeRegion={activeRegion}
+        assignedComponents={assignedComponents}
+        components={compatibleComponents}
+        generatedRoom={activeGeneratedRoom}
+        isSlotFull={activeSlotIsFull}
+        open={Boolean(pickerSlotId)}
+        regions={state.locationRegions || []}
+        slot={activeSlot}
+        onAddComponent={addComponent}
+        onClose={closeSlotPicker}
+        onRemoveComponent={removeComponent}
+        onSelectRegion={(regionId) => setState((current) => ({ ...current, activeRegionId: regionId }))}
+      />
     </aside>
   );
 }

@@ -1,0 +1,58 @@
+{
+  "step": "Step 29 \u2014 Darken Slot Picker Modal + Persistent Room Recap",
+  "changed_files": [
+    "features/darken-location/composer/DarkenLocationComposerPage.jsx",
+    "features/darken-location/composer/components/LocationBriefPanel.jsx",
+    "features/darken-location/composer/components/LocationSlotRail.jsx",
+    "features/darken-location/composer/components/LocationComponentPickerModal.jsx",
+    "features/darken-location/composer/components/LocationMapStage.jsx",
+    "features/darken-location/composer/components/LocationRoomRecapCard.jsx",
+    "features/darken-location/composer/darken-location-composer.styles.css"
+  ],
+  "not_touched": [
+    "app/router.jsx",
+    "app/AppShell.jsx",
+    "features/crucible/components/CrucibleTopbar.jsx",
+    "features/darken-location/map-generator/map-generator.page.jsx",
+    "Monster Composer",
+    "legacy Crucible runtime",
+    "backend/Supabase"
+  ],
+  "reference_files": [
+    "features/monster-composer/components/navigator.jsx",
+    "shared/tooltips/tooltip.renderers.js",
+    "shared/styles/tooltips.css"
+  ],
+  "checks": {
+    "page_no_header_intro": true,
+    "page_passes_draft_controls_to_brief": true,
+    "brief_accepts_draft_controls": true,
+    "brief_uses_compact_selects": true,
+    "slot_imports_picker_modal": true,
+    "slot_no_active_panel_render": true,
+    "slot_no_permanent_component_list": true,
+    "slot_opens_picker_from_slot": true,
+    "picker_modal_uses_navigator_panel_classes": true,
+    "picker_modal_has_search": true,
+    "picker_modal_can_add_remove": true,
+    "stage_imports_room_recap": true,
+    "stage_mounts_room_recap": true,
+    "stage_receives_ui_mode": true,
+    "room_recap_uses_tooltip_region_classes": true,
+    "room_recap_has_fact_list": true,
+    "css_step29_present": true,
+    "css_modal_styles_present": true,
+    "css_recap_styles_present": true,
+    "css_hides_old_active_panel": true,
+    "css_braces_balanced": true,
+    "page_braces_balanced": true,
+    "brief_braces_balanced": true,
+    "slot_braces_balanced": true,
+    "picker_braces_balanced": true,
+    "stage_braces_balanced": true,
+    "recap_braces_balanced": true,
+    "no_router_appshell_topbar_touched": true,
+    "no_map_generator_touched": true,
+    "no_supabase_backend_added": true
+  }
+}

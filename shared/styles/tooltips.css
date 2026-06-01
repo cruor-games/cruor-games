@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 10000;
+  z-index: var(--cruor-z-tooltip, 600);
   pointer-events: none;
   will-change: transform;
 }

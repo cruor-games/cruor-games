@@ -2,6 +2,17 @@ function cx(...parts) {
   return parts.filter(Boolean).join(" ");
 }
 
+const CRUCIBLE_TOOL_COPY = {
+  darken: {
+    label: "Darken a Location",
+    icon: "fa-solid fa-location-dot",
+  },
+  monster: {
+    label: "Build a Monster",
+    icon: "fa-solid fa-skull",
+  },
+};
+
 function getIconClass(item, fallback = "fa-solid fa-circle") {
   return item?.icon || item?.iconClass || fallback;
 }
@@ -14,18 +25,28 @@ function getTooltipDescription(item) {
   return item?.tooltipDescription || item?.summary || item?.description || "";
 }
 
+function getActiveTool(activeGeneratorId, generators = []) {
+  const configuredTool = generators.find((generator) => generator.id === activeGeneratorId);
+  const fallbackTool = CRUCIBLE_TOOL_COPY[activeGeneratorId] || {};
+
+  return {
+    id: activeGeneratorId || configuredTool?.id || "crucible",
+    label: configuredTool?.label || configuredTool?.shortLabel || fallbackTool.label || "Crucible",
+    icon: getIconClass(configuredTool || fallbackTool, "fa-solid fa-flask-vial"),
+  };
+}
+
+
 export default function CrucibleTopbar({
-  titlePrefix = "I need to",
   generators = [],
   activeGeneratorId,
-  onGeneratorChange,
   views = [],
   activeViewId,
   onViewChange,
-  legacyWorkflowSlot = null,
 }) {
-  const activeGenerator = generators.find((generator) => generator.id === activeGeneratorId);
-  const currentGeneratorLabel = activeGenerator?.label || "Crucible";
+  const currentTool = getActiveTool(activeGeneratorId, generators);
+  const shouldShowViewTabs = views.length > 1;
+  const singleView = views.length === 1 ? views[0] : null;
 
   return (
     <div
@@ -33,44 +54,34 @@ export default function CrucibleTopbar({
       data-active-generator={activeGeneratorId || ""}
       data-active-view={activeViewId || ""}
     >
-      <header className="darken-topbar crucible-topbar" aria-label="Crucible">
+      <header className="darken-topbar crucible-topbar" aria-label={currentTool.label}>
         <div className="darken-topbar__primary crucible-topbar__primary">
           <div className="crucible-topbar__heading">
             <h1 className="darken-topbar__title crucible-topbar__title">
-              <span className="darken-topbar__title-prefix">{titlePrefix}</span>
+              <span className="crucible-topbar__tool-icon" aria-hidden="true">
+                <i className={currentTool.icon} />
+              </span>
 
-              <label className="sr-only" htmlFor="crucibleGeneratorSelect">
-                Crucible tool
-              </label>
-              <select
-                id="crucibleGeneratorSelect"
-                className="crucible-topbar__tool-select"
-                value={activeGeneratorId || ""}
-                aria-label="Crucible tool"
-                onChange={(event) => onGeneratorChange?.(event.target.value)}
-              >
-                {generators.map((generator) => (
-                  <option key={generator.id} value={generator.id}>
-                    {generator.label || generator.shortLabel || generator.id}
-                  </option>
-                ))}
-              </select>
+              <span className="crucible-topbar__tool-label">
+                <span className="crucible-topbar__tool-label-prefix">I need to</span>
+                <span className="crucible-topbar__tool-switch">{currentTool.label}</span>
+              </span>
             </h1>
+
+            {singleView ? (
+              <span id={`crucibleViewTab-${activeGeneratorId}-${singleView.id}`} className="sr-only">
+                {currentTool.label} {singleView.label || singleView.id}
+              </span>
+            ) : null}
           </div>
 
-          {legacyWorkflowSlot ? (
-            <div className="crucible-topbar__legacy-workflow-slot" hidden aria-hidden="true">
-              {legacyWorkflowSlot}
-            </div>
-          ) : null}
-
-          {views.length ? (
+          {shouldShowViewTabs ? (
             <div className="darken-topbar__control-row crucible-topbar__control-row">
               <div className="crucible-topbar__control-group crucible-topbar__control-group--views">
                 <div
                   className="darken-workspace__tabs crucible-workspace__tabs crucible-view-tabs"
                   role="tablist"
-                  aria-label={`${currentGeneratorLabel} views`}
+                  aria-label={`${currentTool.label} views`}
                   data-crucible-control="view-tabs"
                 >
                   {views.map((view) => {

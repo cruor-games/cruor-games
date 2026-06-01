@@ -117,15 +117,21 @@
   --cruor-drawer-width: 390px;
   --cruor-modal-width: 1080px;
 
+  /* Layering scale.
+     Shell > command topbar. Dropdowns/popovers > shell. Tooltips > UI overlays.
+     Context menus stay highest because they are pointer-driven command surfaces. */
   --cruor-z-base: 0;
   --cruor-z-content: 1;
-  --cruor-z-shell: 80;
   --cruor-z-topbar: 70;
+  --cruor-z-shell: 80;
   --cruor-z-dropdown: 340;
+  --cruor-z-popover: 340;
   --cruor-z-drawer: 400;
   --cruor-z-modal: 420;
   --cruor-z-tooltip: 600;
   --cruor-z-context-menu: 10000;
+  --cruor-z-fullscreen-scrim: 2390;
+  --cruor-z-fullscreen-modal: 2400;
 
   --font:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,

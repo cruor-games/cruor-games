@@ -1,13 +1,13 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import AppShell from "./AppShell.jsx";
 import CrucibleTopbar from "../features/crucible/components/CrucibleTopbar.jsx";
-import DarkenLocationComposerPage from "../features/darken-location/composer/index.js";
-import InspirationsPage from "../features/inspirations/index.js";
-import MonsterComposerPage from "../features/monster-composer/index.js";
+import DarkenLocationComposerPage from "../features/darken-location/composer/darken-location-composer.index.js";
+import InspirationsPage from "../features/inspirations/inspirations.index.js";
+import MonsterComposerPage from "../features/monster-composer/monster-composer.index.js";
 import { createMapRequestFromDarkenLocationState } from "../features/darken-location/darken-location.map-request.js";
 
 const CruorMapGeneratorMvp = lazy(
-  () => import("../features/darken-location/map-generator/index.js")
+  () => import("../features/darken-location/map-generator/map-generator.index.js")
 );
 
 const CRUCIBLE_GENERATORS = [
@@ -114,6 +114,7 @@ export default function AppRouter() {
         setHasOpenedMapGenerator(true);
       }
 
+      setActiveSection("crucible");
       setActiveCrucibleGenerator("darken");
       setActiveDarkenTab(tabId);
     },
@@ -125,15 +126,20 @@ export default function AppRouter() {
     setActiveCrucibleGenerator(generatorId);
 
     if (generatorId === "darken") {
-      setActiveDarkenTab((currentTab) => currentTab || "composer");
+      setActiveDarkenTab("composer");
     }
   }, []);
 
   const openCrucibleTool = useCallback(
-    (generatorId) => {
+    (generatorId, viewId) => {
+      if (generatorId === "darken" && viewId) {
+        activateDarkenTab(viewId);
+        return;
+      }
+
       activateCrucibleGenerator(generatorId);
     },
-    [activateCrucibleGenerator]
+    [activateCrucibleGenerator, activateDarkenTab]
   );
 
   const homeContent = (
@@ -145,7 +151,7 @@ export default function AppRouter() {
           <button
             className="app-shell__home-action"
             type="button"
-            onClick={() => openCrucibleTool("darken")}
+            onClick={() => openCrucibleTool("darken", "composer")}
           >
             <i className="fa-solid fa-book-open" aria-hidden="true" />
             <strong>Darken a Location</strong>
@@ -244,8 +250,10 @@ export default function AppRouter() {
     <AppShell
       activeSection={activeSection}
       activeUiMode={activeUiMode}
+      activeCrucibleGenerator={activeCrucibleGenerator}
       onSectionChange={setActiveSection}
       onUiModeChange={setActiveUiMode}
+      onOpenCrucibleTool={openCrucibleTool}
       homeContent={homeContent}
       crucibleContent={crucibleContent}
       inspirationsContent={<InspirationsPage />}

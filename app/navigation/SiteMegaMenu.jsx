@@ -1,0 +1,145 @@
+function cx(...parts) {
+  return parts.filter(Boolean).join(" ");
+}
+
+function focusMenuItem(menuElement, nextIndex) {
+  const items = Array.from(menuElement.querySelectorAll("[data-site-mega-item]:not(:disabled)"));
+  if (!items.length) return;
+
+  const clampedIndex = (nextIndex + items.length) % items.length;
+  items[clampedIndex]?.focus();
+}
+
+export default function SiteMegaMenu({
+  menu,
+  activeItemId,
+  selectedItemId,
+  menuRef,
+  style,
+  onMouseEnter,
+  onMouseLeave,
+  onPreviewChange,
+  onAction,
+  onRequestClose,
+}) {
+  if (!menu?.items?.length) return null;
+
+  const activeItem =
+    menu.items.find((item) => item.id === activeItemId) ||
+    menu.items.find((item) => !item.disabled) ||
+    menu.items[0];
+
+  function handleMenuKeyDown(event) {
+    const itemButtons = Array.from(
+      event.currentTarget.querySelectorAll("[data-site-mega-item]:not(:disabled)")
+    );
+    const currentIndex = itemButtons.indexOf(document.activeElement);
+
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      focusMenuItem(event.currentTarget, currentIndex + 1);
+    }
+
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      focusMenuItem(event.currentTarget, currentIndex - 1);
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      focusMenuItem(event.currentTarget, 0);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      focusMenuItem(event.currentTarget, itemButtons.length - 1);
+    }
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      onRequestClose?.();
+    }
+  }
+
+  function handleAction(item) {
+    if (item.disabled) return;
+    onAction?.(item.action);
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      className="site-mega-menu"
+      id={`siteMegaMenu-${menu.id}`}
+      role="menu"
+      aria-label={`${menu.label} tools`}
+      style={style}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      onKeyDown={handleMenuKeyDown}
+    >
+      <div className="site-mega-menu__grid">
+        <div className="site-mega-menu__list" aria-label={`${menu.label} options`}>
+          {menu.items.map((item) => {
+            const isPreviewed = activeItem?.id === item.id;
+            const isSelected = selectedItemId === item.id;
+
+            return (
+              <button
+                key={item.id}
+                className={cx(
+                  "site-mega-menu__item",
+                  isPreviewed && "is-active",
+                  isSelected && "is-selected",
+                  item.disabled && "is-disabled"
+                )}
+                type="button"
+                role="menuitem"
+                disabled={item.disabled}
+                aria-current={isSelected ? "page" : undefined}
+                data-site-mega-item
+                data-site-mega-item-id={item.id}
+                onMouseEnter={() => onPreviewChange?.(item.id)}
+                onFocus={() => onPreviewChange?.(item.id)}
+                onClick={() => handleAction(item)}
+              >
+                <span className="site-mega-menu__item-icon" aria-hidden="true">
+                  <i className={item.icon || "fa-solid fa-diamond"} />
+                </span>
+
+                <span className="site-mega-menu__item-copy">
+                  <strong>{item.label}</strong>
+                  <span>{item.description}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {activeItem ? (
+          <aside className="site-mega-menu__preview" aria-live="polite">
+            <div
+              className={cx(
+                "site-mega-menu__preview-art",
+                `site-mega-menu__preview-art--${activeItem.previewVariant || activeItem.id}`
+              )}
+              aria-hidden="true"
+            >
+              <span className="site-mega-menu__preview-sigil">
+                <i className={activeItem.icon || "fa-solid fa-diamond"} />
+              </span>
+              <span className="site-mega-menu__preview-grid" />
+              <span className="site-mega-menu__preview-orbit site-mega-menu__preview-orbit--one" />
+              <span className="site-mega-menu__preview-orbit site-mega-menu__preview-orbit--two" />
+            </div>
+
+            <div className="site-mega-menu__preview-copy">
+              <strong>{activeItem.previewTitle || activeItem.label}</strong>
+              <p>{activeItem.previewText || activeItem.description}</p>
+            </div>
+          </aside>
+        ) : null}
+      </div>
+    </div>
+  );
+}

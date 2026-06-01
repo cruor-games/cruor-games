@@ -402,7 +402,7 @@
   position: absolute;
   right: 0;
   bottom: calc(100% + 10px);
-  z-index: 30;
+  z-index: var(--cruor-z-tooltip, 600);
   width: max-content;
   max-width: 260px;
   border: 1px solid rgba(190, 64, 82, .46);

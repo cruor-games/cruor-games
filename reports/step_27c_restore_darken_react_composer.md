@@ -6,7 +6,7 @@
 - The uploaded `DarkenLocationComposerPage.jsx` is the React location composer and exposes the snapshot provider needed by the map flow.
 
 ## Fix
-- `app/router.jsx` now imports `DarkenLocationComposerPage` from `features/darken-location/composer/index.js`.
+- `app/router.jsx` now imports `DarkenLocationComposerPage` from `features/darken-location/composer/darken-location-composer.index.js`.
 - `#darkenComposerPanel` now renders `DarkenLocationComposerPage` again.
 - Removed the hidden `#workflowButtons` bridge because the legacy DOM runtime should not mount for Darken.
 - No CSS, AppShell, topbar, Monster, Inspirations, Map Generator internals, or backend code changed.

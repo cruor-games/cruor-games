@@ -221,7 +221,7 @@ To add a new bundled pack:
 2. Export the pack and its arrays.
 3. Import the pack in `shared/content/static-registry.js`.
 4. Add the pack to `STATIC_CONTENT_PACKS`.
-5. Export the pack from `shared/content/index.js` if external modules need direct access.
+5. Export the pack from `shared/content/content.index.js` if external modules need direct access.
 6. If Monster Composer should consume its components, add it to `monster-content-pack-feed.js` or generalize that feed if multiple packs are active.
 
 ## Validation

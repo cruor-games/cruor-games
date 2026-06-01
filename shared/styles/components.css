@@ -50,12 +50,17 @@
   --cruor-ui-chip-bg: rgba(255, 255, 255, 0.025);
   --cruor-ui-chip-text: rgba(238, 238, 238, 0.56);
 
+  /* Mirror the global layering scale for shared primitives. */
   --cruor-z-base: 0;
   --cruor-z-content: 1;
   --cruor-z-topbar: 70;
+  --cruor-z-shell: 80;
+  --cruor-z-dropdown: 340;
   --cruor-z-popover: 340;
   --cruor-z-drawer: 400;
   --cruor-z-modal: 420;
+  --cruor-z-tooltip: 600;
+  --cruor-z-context-menu: 10000;
   --cruor-z-fullscreen-scrim: 2390;
   --cruor-z-fullscreen-modal: 2400;
 }
@@ -306,7 +311,7 @@
   top: calc(100% + 7px);
   left: 0;
   right: 0;
-  z-index: 340;
+  z-index: var(--cruor-z-popover, 340);
   display: grid;
   gap: 6px;
   max-height: 300px;
@@ -356,7 +361,7 @@
 
 .context-menu {
   position: fixed;
-  z-index: 200;
+  z-index: var(--cruor-z-context-menu, 10000);
   min-width: 184px;
   border: 1px solid rgba(95, 7, 22, 0.9);
   background-color: rgba(7, 5, 6, 0.88);

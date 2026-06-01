@@ -3,7 +3,7 @@ import {
   STATIC_CONTENT_PACK_PROVENANCE,
   STATIC_CONTENT_REGISTRY,
   getSourceAnchorId,
-} from "../../shared/content/index.js";
+} from "../../shared/content/content.index.js";
 import "./inspirations.styles.css";
 
 const ANY_PACK = "Any Pack";

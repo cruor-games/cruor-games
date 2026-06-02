@@ -4415,13 +4415,6 @@
   opacity: .45;
 }
 
-.monster-shell .component-impact-line {
-  margin: -2px 0 0;
-  color: #8f7278;
-  font-size: 10px;
-  font-weight: 850;
-  line-height: 1.3;
-}
 
 .monster-shell .component-details {
   margin-top: 8px;
@@ -5534,7 +5527,6 @@
 
 .monster-shell .component-navigator-modal__list .component-card .card-top,
 .monster-shell .component-navigator-modal__list .component-card .summary,
-.monster-shell .component-navigator-modal__list .component-card .component-impact-line,
 .monster-shell .component-navigator-modal__list .component-card .compatibility-note,
 .monster-shell .component-navigator-modal__list .component-card .component-details {
   min-width: 0;
@@ -5613,24 +5605,7 @@
   white-space: nowrap;
 }
 
-.monster-shell .component-pack-badge {
-  display: inline-flex;
-  width: fit-content;
-  max-width: 100%;
-  border: 1px solid rgba(95, 7, 22, .5);
-  background: rgba(51, 3, 12, .22);
-  color: #d0a2aa;
-  padding: 3px 6px;
-  font-size: 8px;
-  font-weight: 950;
-  letter-spacing: .08em;
-  line-height: 1.1;
-  text-transform: uppercase;
-}
 
-.monster-shell .smart-pick-card .component-pack-badge {
-  margin: -2px 0 2px;
-}
 
 .monster-shell .meta-value.pack-chip {
   border-color: rgba(190, 64, 82, .52);
@@ -6449,14 +6424,6 @@
   text-shadow: 0 0 30px rgba(122, 26, 40, 0.42);
 }
 
-.monster-shell .component-navigator-modal__subtitle {
-  max-width: 760px;
-  margin: 0;
-  color: rgba(238, 238, 238, 0.54);
-  font-size: 13px;
-  font-weight: 650;
-  line-height: 1.42;
-}
 
 .monster-shell .component-navigator-modal__head > .icon-btn {
   position: static;
@@ -6750,11 +6717,6 @@
     font-size: 24px;
     line-height: 1;
     letter-spacing: -0.045em;
-  }
-
-  .monster-shell .component-navigator-modal__subtitle {
-    padding-right: 48px;
-    font-size: 12px;
   }
 
   .monster-shell .component-navigator-modal__head > .icon-btn {
@@ -7205,6 +7167,1767 @@
   }
 
   .monster-shell .game-frame-drawer--fullscreen .game-role-card__top {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Step 5.7 — Component Navigator portal top-layer safety.
+   The graft navigator is rendered through a body portal, so this host preserves
+   Monster Composer tokens while keeping the overlay above app/crucible topbars. */
+.monster-shell.component-navigator-modal-portal,
+.monster-shell.component-navigator-modal-portal * {
+  box-sizing: border-box;
+}
+
+.monster-shell.component-navigator-modal-portal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cruor-z-fullscreen-modal, 2400);
+  width: 100vw;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+  background-image: none;
+  color: var(--cruor-color-text, var(--text));
+  font-family: var(--font);
+  line-height: 1.45;
+}
+
+.monster-shell.component-navigator-modal-portal::before {
+  display: none;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: stretch;
+  width: 100vw;
+  height: 100dvh;
+  padding: clamp(14px, 2vw, 28px);
+  isolation: isolate;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 12%, rgba(190, 64, 82, 0.18), transparent 34rem),
+    radial-gradient(circle at 18% 72%, rgba(95, 7, 22, 0.2), transparent 30rem),
+    rgba(0, 0, 0, 0.78);
+  padding: 0;
+  backdrop-filter: blur(14px) saturate(112%);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "rail list"
+    "tabs list"
+    "smart list";
+  gap: clamp(12px, 1.35vw, 18px);
+  align-self: center;
+  justify-self: center;
+  width: min(1760px, 100%);
+  height: min(980px, calc(100dvh - clamp(28px, 4vw, 56px)));
+  max-width: none;
+  max-height: none;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  padding: clamp(14px, 1.6vw, 22px);
+  border: 1px solid rgba(240, 185, 194, 0.18);
+  border-top-color: rgba(240, 185, 194, 0.22);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.14), transparent 26rem),
+    radial-gradient(circle at 82% 100%, rgba(95, 7, 22, 0.2), transparent 30rem),
+    linear-gradient(180deg, rgba(18, 12, 14, 0.99), rgba(7, 5, 6, 0.98));
+  background-blend-mode: screen, screen, normal;
+  box-shadow:
+    0 54px 150px rgba(0, 0, 0, 0.92),
+    0 0 0 1px rgba(255, 238, 242, 0.06),
+    0 0 96px rgba(122, 26, 40, 0.26),
+    inset 0 1px 0 rgba(255, 238, 242, 0.07);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head {
+  grid-area: head;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: 0;
+  min-height: 0;
+  border-bottom: 1px solid rgba(255, 238, 242, 0.075);
+  padding: 0 0 14px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head-copy {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head h2 {
+  margin: 0;
+  color: #fff0f2;
+  font-family: var(--display);
+  font-size: clamp(34px, 4vw, 68px);
+  font-weight: 950;
+  letter-spacing: -0.06em;
+  line-height: 0.9;
+  text-shadow: 0 0 30px rgba(122, 26, 40, 0.42);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head > .icon-btn {
+  position: static;
+  flex: 0 0 auto;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-color: rgba(255, 238, 242, 0.11);
+  background: rgba(0, 0, 0, 0.24);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail {
+  grid-area: rail;
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 12rem),
+    rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  overflow: auto;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px 46px;
+  gap: 8px;
+  align-items: center;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .search-wrap input {
+  min-height: 38px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-btn,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-count {
+  width: 38px;
+  min-width: 38px;
+  min-height: 38px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-count {
+  width: auto;
+  min-width: 46px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .tag-filter-row.monster-source-grid-open {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.18);
+  padding: 10px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .filter-chip-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-chip {
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 32px;
+  text-align: left;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__slot-tabs {
+  grid-area: tabs;
+  align-self: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  max-height: 150px;
+  margin: 0;
+  border-top: 1px solid rgba(255, 238, 242, 0.07);
+  padding: 12px 0 0;
+  overflow: auto;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__slot-tabs {
+  display: none;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal .smart-slot-picks {
+  grid-area: smart;
+  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  margin: 0;
+  border-color: rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(143, 150, 148, 0.035), transparent 12rem),
+    rgba(0, 0, 0, 0.16);
+  overflow: auto;
+}
+
+.monster-shell.component-navigator-modal-portal .smart-slot-picks__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.monster-shell.component-navigator-modal-portal .smart-pick-card {
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+}
+
+.monster-shell.component-navigator-modal-portal .smart-pick-card h3 {
+  font-size: 12.5px;
+}
+
+.monster-shell.component-navigator-modal-portal .smart-pick-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list {
+  grid-area: list;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.026), transparent 14rem),
+    rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .empty {
+  grid-column: 1 / -1;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card {
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  align-content: start;
+  overflow: visible;
+  border-width: 1px;
+  padding: 14px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .card-top {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-title-stack {
+  min-width: 0;
+  padding-right: 72px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card h3 {
+  color: #fff0f2;
+  font-size: 15px;
+  font-weight: 950;
+  line-height: 1.12;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .summary {
+  color: rgba(238, 238, 238, 0.62);
+  font-size: 12.5px;
+  line-height: 1.44;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-toggle-btn {
+  top: 12px;
+  right: 12px;
+  min-height: 27px;
+  border-color: rgba(190, 64, 82, 0.42);
+  background: rgba(95, 7, 22, 0.22);
+  white-space: nowrap;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card.in-build .component-toggle-btn {
+  min-width: 58px;
+  padding-inline: 7px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-details {
+  display: block;
+  min-width: 0;
+  overflow: visible;
+  margin-top: 8px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-details[open],
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-details[open] .meta-list {
+  display: grid;
+  visibility: visible;
+  opacity: 1;
+  max-height: none;
+  overflow: visible;
+  transform: none;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .meta-row {
+  grid-template-columns: minmax(74px, 0.34fr) minmax(0, 1fr);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .meta-value {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1380px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__list {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+@media (max-width: 1040px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "rail"
+      "tabs"
+      "smart"
+      "list";
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__rail {
+    max-height: 260px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__slot-tabs {
+    max-height: none;
+    padding-top: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal {
+    padding: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    width: 100%;
+    height: calc(100dvh - 20px);
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__head {
+    padding-bottom: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__head h2 {
+    padding-right: 48px;
+    font-family: var(--font);
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.045em;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__head > .icon-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__rail {
+    max-height: 238px;
+    padding: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-search-row {
+    grid-template-columns: minmax(0, 1fr) 38px 44px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__list {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-title-stack {
+    padding-right: 64px;
+  }
+}
+
+/* Component Navigator modal card impact refactor. */
+.monster-shell .component-navigator-modal__head-copy {
+  gap: 0;
+}
+
+.monster-shell .component-navigator-modal__list .component-card,
+.monster-shell .smart-pick-card {
+  position: relative;
+}
+
+.monster-shell .component-navigator-modal__list .component-card {
+  padding-bottom: 52px;
+}
+
+.monster-shell .smart-pick-card {
+  padding-bottom: 42px;
+}
+
+.monster-shell .component-impact-dock {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  max-width: calc(100% - 20px);
+  pointer-events: none;
+}
+
+.monster-shell .component-impact-dock.is-compact {
+  right: 9px;
+  bottom: 9px;
+  gap: 4px;
+}
+
+.monster-shell .component-impact-metric {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 30px;
+  min-height: 24px;
+  border: 1px solid rgba(255, 238, 242, 0.085);
+  background: rgba(0, 0, 0, 0.36);
+  color: rgba(240, 215, 220, 0.78);
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 950;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 238, 242, 0.035);
+}
+
+.monster-shell .component-impact-dock.is-compact .component-impact-metric {
+  min-width: 26px;
+  min-height: 22px;
+  padding-inline: 5px;
+  font-size: 9px;
+}
+
+.monster-shell .component-impact-metric svg {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.monster-shell .component-impact-dock.is-compact .component-impact-metric svg {
+  width: 12px;
+  height: 12px;
+}
+
+.monster-shell .component-impact-metric--pressure {
+  border-color: rgba(190, 64, 82, 0.35);
+  color: #f0b9c2;
+}
+
+.monster-shell .component-impact-metric--complexity {
+  border-color: rgba(208, 162, 170, 0.24);
+  color: #d0a2aa;
+}
+
+.monster-shell .component-impact-metric--counterplay {
+  width: 24px;
+  min-width: 24px;
+  padding-inline: 0;
+}
+
+.monster-shell .component-impact-metric--counterplay.is-positive {
+  border-color: rgba(143, 150, 148, 0.42);
+  background: rgba(143, 150, 148, 0.09);
+  color: #bec8c5;
+}
+
+.monster-shell .component-impact-metric--counterplay.is-negative {
+  border-color: rgba(240, 185, 194, 0.58);
+  background: rgba(122, 26, 40, 0.28);
+  color: #f0b9c2;
+}
+
+.monster-shell .component-impact-mini-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 84px;
+}
+
+.monster-shell .component-impact-mini-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  border: 1px solid rgba(255, 238, 242, 0.07);
+  background: rgba(255, 255, 255, 0.022);
+  color: rgba(238, 238, 238, 0.48);
+  padding: 0 5px;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.045em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.monster-shell .component-impact-mini-meta strong {
+  margin-left: 3px;
+  color: #f0d7dc;
+  font-weight: 950;
+}
+
+@media (max-width: 640px) {
+  .monster-shell .component-navigator-modal__list .component-card {
+    padding-bottom: 58px;
+  }
+
+  .monster-shell .component-impact-dock {
+    right: 8px;
+    bottom: 8px;
+  }
+
+  .monster-shell .component-impact-mini-meta {
+    padding-right: 0;
+  }
+}
+
+/* Component Navigator Details hover overlay.
+   The metadata panel opens on hover/focus and stays out of the grid flow, so
+   neighboring cards do not inherit the opened panel height. */
+.monster-shell .component-navigator-modal__list {
+  align-items: start;
+  grid-auto-rows: min-content;
+}
+
+.monster-shell .component-navigator-modal__list .component-card,
+.monster-shell .component-navigator-modal__list .component-card.details-open {
+  overflow: visible;
+}
+
+.monster-shell .component-navigator-modal__list .component-card:hover,
+.monster-shell .component-navigator-modal__list .component-card.details-open {
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-card.details-open,
+.monster-shell .component-navigator-modal__list .component-card:has(.component-details:hover),
+.monster-shell .component-navigator-modal__list .component-card:has(.component-details:focus-within) {
+  z-index: 30;
+}
+
+.monster-shell .component-navigator-modal__list .component-details {
+  position: relative;
+  z-index: 6;
+  display: inline-grid;
+  justify-self: start;
+  align-self: start;
+  min-width: 0;
+  width: max-content;
+  margin-top: 8px;
+  overflow: visible;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-details::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 39;
+  display: none;
+  height: 10px;
+}
+
+.monster-shell .component-navigator-modal__list .component-details:hover::after,
+.monster-shell .component-navigator-modal__list .component-details:focus-within::after,
+.monster-shell .component-navigator-modal__list .component-card.details-open .component-details::after {
+  display: block;
+}
+
+.monster-shell .component-navigator-modal__list .component-details__trigger {
+  position: relative;
+  z-index: 41;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  min-height: 22px;
+  border: 0;
+  border-bottom: 1px dotted rgba(208, 162, 170, 0.78);
+  background: transparent;
+  color: #8f7278;
+  padding: 0 0 2px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .1em;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: help;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-details:hover .component-details__trigger,
+.monster-shell .component-navigator-modal__list .component-details:focus-within .component-details__trigger,
+.monster-shell .component-navigator-modal__list .component-card.details-open .component-details__trigger {
+  border-bottom-color: rgba(240, 185, 194, 0.92);
+  color: #d0a2aa;
+}
+
+.monster-shell .component-navigator-modal__list .component-details > .meta-list,
+.monster-shell .component-navigator-modal__list .component-details__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: auto;
+  z-index: 40;
+  display: grid;
+  width: max(100%, 300px);
+  max-height: min(380px, calc(100dvh - 240px));
+  overflow: auto;
+  margin-top: 0;
+  border: 1px solid rgba(190, 64, 82, 0.42);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.055), transparent 72%),
+    radial-gradient(circle at 0% 0%, rgba(122, 26, 40, 0.16), transparent 16rem),
+    rgba(6, 5, 6, 0.97);
+  padding: 10px;
+  box-shadow:
+    0 24px 56px rgba(0, 0, 0, 0.72),
+    0 0 0 1px rgba(255, 238, 242, 0.045),
+    0 0 32px rgba(122, 26, 40, 0.28),
+    inset 0 1px 0 rgba(255, 238, 242, 0.06);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: none;
+  backdrop-filter: blur(16px) saturate(122%);
+}
+
+.monster-shell .component-navigator-modal__list .component-details:hover > .meta-list,
+.monster-shell .component-navigator-modal__list .component-details:focus-within > .meta-list,
+.monster-shell .component-navigator-modal__list .component-card.details-open .component-details > .meta-list {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: none;
+}
+
+.monster-shell .component-navigator-modal__list .component-card.details-open .component-impact-dock {
+  z-index: 5;
+}
+
+@media (max-width: 720px) {
+  .monster-shell .component-navigator-modal__list .component-details > .meta-list,
+  .monster-shell .component-navigator-modal__list .component-details__panel {
+    width: min(300px, calc(100vw - 44px));
+    max-height: min(360px, calc(100dvh - 220px));
+  }
+}
+
+
+/* Component Navigator filter-only rail refinement.
+   Best Picks no longer occupies its own column; it is exposed as a filter group. */
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "rail list"
+    "tabs list";
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal .smart-slot-picks,
+.monster-shell .component-navigator-modal .smart-slot-picks {
+  display: none !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-section,
+.monster-shell .component-navigator-modal__rail .navigator-filter-section {
+  min-width: 0;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-toggle-btn,
+.monster-shell .component-navigator-modal__list .component-toggle-btn {
+  top: 6px;
+  right: 6px;
+  z-index: 8;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-title-stack,
+.monster-shell .component-navigator-modal__list .component-title-stack {
+  padding-right: 82px;
+}
+
+.monster-shell .component-impact-metric,
+.monster-shell .component-impact-metric--counterplay,
+.monster-shell .component-impact-metric--counterplay.is-positive,
+.monster-shell .component-impact-metric--counterplay.is-negative {
+  min-width: 0;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  border: 0;
+  background: transparent;
+  padding: 0 2px;
+  box-shadow: none;
+}
+
+.monster-shell .component-impact-dock.is-compact .component-impact-metric {
+  min-width: 0;
+  min-height: 0;
+  padding-inline: 2px;
+}
+
+.monster-shell .component-impact-metric svg {
+  width: 14px;
+  height: 14px;
+}
+
+.monster-shell .component-impact-metric strong {
+  line-height: 1;
+}
+
+@media (max-width: 1040px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "rail"
+      "tabs"
+      "list";
+  }
+}
+
+@media (max-width: 720px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-toggle-btn,
+  .monster-shell .component-navigator-modal__list .component-toggle-btn {
+    top: 5px;
+    right: 5px;
+  }
+}
+
+/* Component Navigator filter drawer and multi-inspiration refinement. */
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head-actions,
+.monster-shell .component-navigator-modal__head-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head-actions > .icon-btn,
+.monster-shell .component-navigator-modal__head-actions > .icon-btn {
+  position: relative;
+  flex: 0 0 auto;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__head-actions .navigator-filter-btn[data-active-count="1"]::after,
+.monster-shell .component-navigator-modal__head-actions .navigator-filter-btn[data-active-count="1"]::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  background: #d0a2aa;
+  box-shadow: 0 0 10px rgba(208, 162, 170, 0.82);
+  pointer-events: none;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"][data-navigator-mode="global"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="false"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="false"][data-navigator-mode="global"] .component-navigator-modal__panel {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head"
+    "tabs"
+    "list";
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"][data-navigator-mode="global"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="true"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="true"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+.monster-shell .component-navigator-modal[data-filters-open="true"][data-navigator-mode="global"] .component-navigator-modal__panel {
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-areas:
+    "head head"
+    "rail list"
+    "tabs list";
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__rail,
+.monster-shell .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__rail {
+  display: none;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-search-row,
+.monster-shell .component-navigator-modal__rail .navigator-search-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-btn,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-count,
+.monster-shell .component-navigator-modal__rail .navigator-filter-btn,
+.monster-shell .component-navigator-modal__rail .navigator-count,
+.monster-shell .navigator-count {
+  display: none !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__rail .navigator-filter-chip.active,
+.monster-shell .component-navigator-modal__rail .navigator-filter-chip.active {
+  border-color: rgba(190, 64, 82, 0.82);
+  background: rgba(95, 7, 22, 0.36);
+  color: #fff0f2;
+  box-shadow: 0 0 18px rgba(122, 26, 40, 0.18), inset 0 1px 0 rgba(255, 238, 242, 0.05);
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-toggle-btn,
+.monster-shell .component-navigator-modal__list .component-toggle-btn {
+  top: 4px;
+  right: 4px;
+  z-index: 8;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.12s ease,
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    background 0.12s ease,
+    color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card:hover .component-toggle-btn,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card:focus-within .component-toggle-btn,
+.monster-shell .component-navigator-modal__list .component-card:hover .component-toggle-btn,
+.monster-shell .component-navigator-modal__list .component-card:focus-within .component-toggle-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+@media (max-width: 1040px) {
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="true"][data-navigator-mode="global"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="true"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="true"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="true"][data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "rail"
+      "tabs"
+      "list";
+  }
+
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell.component-navigator-modal-portal .component-navigator-modal[data-filters-open="false"][data-navigator-mode="global"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="false"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="false"][data-navigator-mode="slot"] .component-navigator-modal__panel,
+  .monster-shell .component-navigator-modal[data-filters-open="false"][data-navigator-mode="global"] .component-navigator-modal__panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "tabs"
+      "list";
+  }
+}
+
+/* Step 5.8 — Monster Frame fullscreen portal modal.
+   The frame editor is mounted through document.body so it cannot be trapped by
+   workspace stacking contexts, topbars, or parent overflow rules. */
+.monster-shell.monster-frame-modal-portal,
+.monster-shell.monster-frame-modal-portal * {
+  box-sizing: border-box;
+}
+
+.monster-shell.monster-frame-modal-portal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cruor-z-fullscreen-modal, 2400);
+  width: 100vw;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background: transparent;
+  background-image: none;
+  color: var(--cruor-color-text, var(--text));
+  font-family: var(--font);
+  line-height: 1.45;
+}
+
+.monster-shell.monster-frame-modal-portal::before {
+  display: none;
+}
+
+.monster-shell.monster-frame-modal-portal .monster-frame-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--cruor-z-fullscreen-modal, 2400);
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  padding: clamp(14px, 2vw, 28px);
+}
+
+.monster-shell.monster-frame-modal-portal .monster-frame-modal__scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  border: 0;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(190, 64, 82, 0.18), transparent 34rem),
+    radial-gradient(circle at 16% 76%, rgba(95, 7, 22, 0.18), transparent 28rem),
+    rgba(0, 0, 0, 0.76);
+  padding: 0;
+  backdrop-filter: blur(14px) saturate(112%);
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+}
+
+.monster-shell.monster-frame-modal-portal .monster-frame-drawer.game-frame-drawer--fullscreen {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+  grid-template-areas: "hero body";
+  gap: clamp(14px, 1.5vw, 22px);
+  width: min(1760px, 100%);
+  max-width: min(1760px, calc(100vw - clamp(28px, 4vw, 56px)));
+  height: min(980px, calc(100dvh - clamp(28px, 4vw, 56px)));
+  max-height: calc(100dvh - clamp(28px, 4vw, 56px));
+  margin: 0;
+  overflow: hidden;
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+  border: 1px solid rgba(240, 185, 194, 0.18);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(190, 64, 82, 0.14), transparent 26rem),
+    radial-gradient(circle at 82% 100%, rgba(95, 7, 22, 0.2), transparent 30rem),
+    linear-gradient(180deg, rgba(18, 12, 14, 0.99), rgba(7, 5, 6, 0.98));
+  padding: clamp(14px, 1.6vw, 22px);
+  box-shadow:
+    0 54px 150px rgba(0, 0, 0, 0.92),
+    0 0 0 1px rgba(255, 238, 242, 0.06),
+    0 0 96px rgba(122, 26, 40, 0.26),
+    inset 0 1px 0 rgba(255, 238, 242, 0.07);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero {
+  grid-area: hero;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.045), transparent 15rem),
+    radial-gradient(circle at 34% 0%, rgba(190, 64, 82, 0.2), transparent 18rem),
+    rgba(0, 0, 0, 0.18);
+  padding: clamp(14px, 1.5vw, 20px);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__body {
+  grid-area: body;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: min-content;
+  gap: clamp(12px, 1.2vw, 16px);
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.026), transparent 16rem),
+    rgba(0, 0, 0, 0.12);
+  padding: clamp(12px, 1.25vw, 18px);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.034), transparent 12rem),
+    rgba(0, 0, 0, 0.15);
+  padding: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--type {
+  grid-column: span 7;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--role {
+  grid-column: span 5;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--profile {
+  grid-column: span 8;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--danger {
+  grid-column: span 4;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__status-row {
+  margin: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero h2 {
+  margin: 0;
+  font-size: clamp(42px, 5.8vw, 82px);
+  line-height: 0.86;
+  letter-spacing: -0.065em;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout span {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  min-height: 36px;
+  gap: 9px;
+  border-color: rgba(255, 238, 242, 0.075);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(238, 238, 238, 0.72);
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout svg {
+  width: 15px;
+  height: 15px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group__head {
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 238, 242, 0.07);
+  padding-bottom: 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group__head h3 {
+  color: #d0a2aa;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-grid {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-panel,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-panel,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip {
+  border-color: rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.032), transparent 68%),
+    rgba(5, 5, 6, 0.54);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-chip:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-chip.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip.active {
+  transform: none;
+  border-color: rgba(190, 64, 82, 0.58);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(190, 64, 82, 0.16), transparent 12rem),
+    rgba(95, 7, 22, 0.22);
+  color: #fff0f2;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-scale {
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  gap: 8px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__meter {
+  border: 1px solid rgba(255, 238, 242, 0.065);
+  background: rgba(0, 0, 0, 0.14);
+  padding: 10px;
+}
+
+@media (max-width: 1240px) {
+  .monster-shell.monster-frame-modal-portal .monster-frame-drawer.game-frame-drawer--fullscreen {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "body";
+    overflow: auto;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero {
+    overflow: visible;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__body {
+    height: auto;
+    overflow: visible;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--type,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--role,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--profile,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--danger {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .monster-shell.monster-frame-modal-portal .monster-frame-modal {
+    padding: 10px;
+  }
+
+  .monster-shell.monster-frame-modal-portal .monster-frame-drawer.game-frame-drawer--fullscreen {
+    width: 100%;
+    max-width: none;
+    height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    padding: 12px;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero h2 {
+    font-family: var(--font);
+    font-size: clamp(28px, 10vw, 44px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__body {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-grid,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-grid,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-scale {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Step 5.8 — Game Frame dashboard layout refinement.
+   Recasts the fullscreen Monster Frame as a compact HUD-driven configuration dashboard. */
+.monster-shell.monster-frame-modal-portal .monster-frame-drawer.game-frame-drawer--fullscreen {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    "hero"
+    "body";
+  gap: clamp(12px, 1.35vw, 18px);
+  width: min(1680px, calc(100vw - clamp(24px, 4vw, 56px)));
+  max-width: min(1680px, calc(100vw - clamp(24px, 4vw, 56px)));
+  height: min(940px, calc(100dvh - clamp(24px, 4vw, 56px)));
+  max-height: calc(100dvh - clamp(24px, 4vw, 56px));
+  border-color: rgba(255, 238, 242, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.035), transparent 18rem),
+    radial-gradient(circle at 12% 0%, rgba(190, 64, 82, 0.13), transparent 28rem),
+    radial-gradient(circle at 86% 92%, rgba(95, 7, 22, 0.22), transparent 34rem),
+    linear-gradient(135deg, rgba(13, 9, 11, 0.99), rgba(3, 3, 4, 0.985));
+  padding: clamp(14px, 1.45vw, 20px);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero {
+  grid-area: hero;
+  display: grid;
+  align-content: start;
+  gap: clamp(12px, 1vw, 16px);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 238, 242, 0.08);
+  background:
+    linear-gradient(90deg, rgba(190, 64, 82, 0.13), transparent 52%),
+    linear-gradient(180deg, rgba(255, 238, 242, 0.034), transparent 70%),
+    rgba(0, 0, 0, 0.18);
+  padding: clamp(13px, 1.2vw, 18px);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__topline,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(12px, 1.4vw, 20px);
+  min-width: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__topline {
+  min-height: 30px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__topline .eyebrow {
+  margin-right: auto;
+  color: rgba(208, 162, 170, 0.72);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__status {
+  min-height: 28px;
+  width: fit-content;
+  border-color: rgba(190, 64, 82, 0.42);
+  background: rgba(95, 7, 22, 0.16);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-modal__close {
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__title-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero h2 {
+  margin: 0;
+  color: #fff0f2;
+  font-size: clamp(36px, 4vw, 66px);
+  line-height: 0.88;
+  letter-spacing: -0.065em;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__title-copy p {
+  max-width: 560px;
+  margin: 0;
+  color: rgba(238, 238, 238, 0.54);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(94px, 1fr));
+  gap: 8px;
+  flex: 0 0 min(480px, 44%);
+  min-width: 300px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip {
+  display: grid;
+  grid-template-columns: 17px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  border: 1px solid rgba(255, 238, 242, 0.065);
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(238, 238, 238, 0.72);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat {
+  min-height: 50px;
+  gap: 9px;
+  padding: 9px 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat.is-stable svg {
+  color: #bec8c5;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat.is-danger {
+  border-color: rgba(240, 185, 194, 0.46);
+  background: rgba(122, 26, 40, 0.22);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat.is-danger svg,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat.is-danger strong {
+  color: #f0b9c2;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat svg,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip svg {
+  width: 16px;
+  height: 16px;
+  color: #b33b4e;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat span,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat small,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip small {
+  overflow: hidden;
+  color: #8f7278;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stat strong,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip strong {
+  overflow: hidden;
+  color: #fff0f2;
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout-chip {
+  min-height: 40px;
+  gap: 8px;
+  padding: 8px 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__body {
+  grid-area: body;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: min-content;
+  gap: clamp(10px, 1vw, 14px);
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 0;
+  background: transparent;
+  padding: 0 2px 0 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  border: 1px solid rgba(255, 238, 242, 0.075);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.028), transparent 14rem),
+    rgba(0, 0, 0, 0.15);
+  padding: clamp(11px, 1vw, 14px);
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, 0.035);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--type,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--profile {
+  grid-column: span 7;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--role,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--danger {
+  grid-column: span 5;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group__head {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  align-items: start;
+  gap: 10px;
+  min-height: 34px;
+  margin: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 238, 242, 0.055);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(190, 64, 82, 0.22);
+  background: rgba(51, 3, 12, 0.16);
+  color: #b33b4e;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section__copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group__head h3 {
+  margin: 0;
+  color: #f0d7dc;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.11em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .monster-panel-group__head p {
+  margin: 0;
+  color: rgba(238, 238, 238, 0.48);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section__body {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip {
+  min-width: 0;
+  border: 1px solid rgba(255, 238, 242, 0.06);
+  background: rgba(0, 0, 0, 0.16);
+  box-shadow: none;
+  transform: none;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card {
+  grid-template-columns: 30px minmax(0, 1fr);
+  grid-template-areas:
+    "icon text"
+    "icon mark";
+  min-height: 78px;
+  gap: 5px 9px;
+  padding: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card__icon {
+  grid-area: icon;
+  width: 30px;
+  height: 30px;
+  border-color: rgba(190, 64, 82, 0.2);
+  background: rgba(51, 3, 12, 0.16);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card__text {
+  grid-area: text;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card__text strong,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card__top strong {
+  font-size: 13px;
+  font-weight: 950;
+  line-height: 1.1;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card__mark {
+  grid-area: mark;
+  align-self: end;
+  color: rgba(208, 162, 170, 0.62);
+  font-size: 8px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card {
+  gap: 7px;
+  min-height: 0;
+  padding: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card__summary {
+  font-size: 11px;
+  line-height: 1.32;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card__stats span {
+  border: 0;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 3px 6px;
+  font-size: 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-control-block,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-panel {
+  display: grid;
+  gap: 9px;
+  border: 1px solid rgba(255, 238, 242, 0.055);
+  background: rgba(0, 0, 0, 0.12);
+  padding: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__minihead {
+  margin: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-chip {
+  min-height: 28px;
+  border-color: rgba(255, 238, 242, 0.06);
+  background: rgba(255, 255, 255, 0.025);
+  color: rgba(238, 238, 238, 0.62);
+  padding: 0 9px;
+  font-size: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-tuning-grid {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.6fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
+  gap: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-cr-block {
+  align-content: space-between;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-number-field input {
+  min-height: 52px;
+  padding: 0 10px;
+  color: #fff0f2;
+  font-size: 24px;
+  font-weight: 950;
+  text-align: center;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-scale {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip {
+  min-height: 58px;
+  padding: 9px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__meter {
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 238, 242, 0.06);
+  background: rgba(0, 0, 0, 0.14);
+  padding: 10px;
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__meter.is-over {
+  border-color: rgba(240, 185, 194, 0.42);
+  background: rgba(122, 26, 40, 0.18);
+}
+
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-card.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-role-card.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-chip:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-category-chip.active,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip:hover,
+.monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-chip.active {
+  transform: none;
+  border-color: rgba(190, 64, 82, 0.58);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(190, 64, 82, 0.15), transparent 10rem),
+    rgba(95, 7, 22, 0.2);
+  color: #fff0f2;
+}
+
+@media (max-width: 1180px) {
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__title-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stats {
+    flex: none;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--type,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--role,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--profile,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-section--danger {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 760px) {
+  .monster-shell.monster-frame-modal-portal .monster-frame-drawer.game-frame-drawer--fullscreen {
+    height: calc(100dvh - 20px);
+    max-height: calc(100dvh - 20px);
+    padding: 10px;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__topline {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__topline .eyebrow {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hero h2 {
+    font-family: var(--font);
+    font-size: clamp(28px, 10vw, 42px);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__hud-stats,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__loadout,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-type-grid,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame-tuning-grid,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-threat-scale,
+  .monster-shell.monster-frame-modal-portal .game-frame-drawer--fullscreen .game-frame__meters {
     grid-template-columns: 1fr;
   }
 }

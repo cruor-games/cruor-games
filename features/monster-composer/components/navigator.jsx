@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, SlidersHorizontal, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Gauge, Plus, ShieldAlert, ShieldCheck, SlidersHorizontal, X } from "lucide-react";
 
 import { ALL_MONSTER_SOURCES as SOURCES } from "../data/monster-content-pack-feed.js";
 import { SLOTS } from "../monster-composer.workflow.js";
 import { getSelectedIdsForSlot } from "../model/selection.js";
 import {
-  formatFeatureImpactPreview,
   formatToken,
   getCompatibilityStatus,
   getFeatureCompatibility,
@@ -42,6 +43,101 @@ function EmptyState({ text }) {
   return <div className="empty">{text}</div>;
 }
 
+function signedDelta(value) {
+  const number = Number(value || 0);
+  return number > 0 ? `+${number}` : String(number);
+}
+
+function hasDelta(value) {
+  return Number(value || 0) !== 0;
+}
+
+function getCounterplayTone(counterplay) {
+  if (counterplay === "Improves") return "positive";
+  if (counterplay === "Worsens" || counterplay === "Needs Tell") return "negative";
+  return "";
+}
+
+function ImpactMetricDock({ impact, compact = false }) {
+  const counterplayTone = getCounterplayTone(impact?.counterplay);
+  const CounterplayIcon = counterplayTone === "positive" ? ShieldCheck : ShieldAlert;
+
+  return (
+    <div className={`component-impact-dock ${compact ? "is-compact" : ""}`} aria-label="Component impact">
+      <span
+        className="component-impact-metric component-impact-metric--pressure"
+        aria-label={`Pressure ${signedDelta(impact?.pressureDelta)}`}
+      >
+        <Gauge aria-hidden="true" />
+        <strong>{signedDelta(impact?.pressureDelta)}</strong>
+      </span>
+      <span
+        className="component-impact-metric component-impact-metric--complexity"
+        aria-label={`Complexity ${signedDelta(impact?.complexityDelta)}`}
+      >
+        <SlidersHorizontal aria-hidden="true" />
+        <strong>{signedDelta(impact?.complexityDelta)}</strong>
+      </span>
+      {counterplayTone && (
+        <span
+          className={`component-impact-metric component-impact-metric--counterplay is-${counterplayTone}`}
+          aria-label={`Counterplay ${impact.counterplay}`}
+        >
+          <CounterplayIcon aria-hidden="true" />
+        </span>
+      )}
+    </div>
+  );
+}
+
+
+function ImpactMetaRows({ impact }) {
+  return (
+    <>
+      {hasDelta(impact?.dprDelta) && (
+        <div className="meta-row">
+          <span className="meta-label">DPR</span>
+          <span className="meta-values">
+            <span className="meta-value strong-chip">{signedDelta(impact.dprDelta)}</span>
+          </span>
+        </div>
+      )}
+      {hasDelta(impact?.hpDelta) && (
+        <div className="meta-row">
+          <span className="meta-label">HP</span>
+          <span className="meta-values">
+            <span className="meta-value strong-chip">{signedDelta(impact.hpDelta)}</span>
+          </span>
+        </div>
+      )}
+      {hasDelta(impact?.acDelta) && (
+        <div className="meta-row">
+          <span className="meta-label">AC</span>
+          <span className="meta-values">
+            <span className="meta-value strong-chip">{signedDelta(impact.acDelta)}</span>
+          </span>
+        </div>
+      )}
+      {(impact?.warningsCleared > 0 || impact?.warningsAdded > 0) && (
+        <div className="meta-row">
+          <span className="meta-label">Warnings</span>
+          <span className="meta-values">
+            {impact.warningsCleared > 0 && (
+              <span className="meta-value strong-chip">Clears {impact.warningsCleared}</span>
+            )}
+            {impact.warningsAdded > 0 && (
+              <span className="meta-value danger-chip">
+                Adds {impact.warningsAdded} warning{impact.warningsAdded === 1 ? "" : "s"}
+              </span>
+            )}
+          </span>
+        </div>
+      )}
+    </>
+  );
+}
+
+
 export function ComponentNavigatorModal({
   open,
   mode,
@@ -50,6 +146,8 @@ export function ComponentNavigatorModal({
   setNavigatorSlotFilter,
   navigatorPackFilter = "all",
   setNavigatorPackFilter,
+  navigatorSourceFilters,
+  setNavigatorSourceFilters,
   contentPackOptions = [],
   setActiveSlot,
   onClose,
@@ -76,6 +174,8 @@ export function ComponentNavigatorModal({
   buildFeatureDecisionProfile,
   buildFeatureImpactPreview,
 }) {
+  const [navigatorBestPickFilter, setNavigatorBestPickFilter] = useState("all");
+
   if (!open) return null;
 
   const slotData = SLOTS.find((slot) => slot.id === activeSlot) || SLOTS[0];
@@ -98,28 +198,73 @@ export function ComponentNavigatorModal({
     tacticalRoleId: computed.tacticalRole.id,
     monsterTierId: computed.monsterTier.id,
   });
+  const activeBestPickIds = new Set(
+    navigatorBestPickFilter === "best"
+      ? smartPicks.map((pick) => pick.feature.id)
+      : smartPicks
+          .filter((pick) => pick.id === navigatorBestPickFilter)
+          .map((pick) => pick.feature.id)
+  );
+  const bestPickFilterActive = navigatorBestPickFilter !== "all" && activeBestPickIds.size > 0;
+  const displayedFeatures = bestPickFilterActive
+    ? visibleFeatures.filter((feature) => activeBestPickIds.has(feature.id))
+    : visibleFeatures;
   const packOptions = [
     { id: "all", title: "All Content Packs" },
     ...contentPackOptions.filter((pack) => pack.id !== "all"),
   ];
-  const currentSource = SOURCES.find((source) => source.id === sourceId) || null;
   const sourceFilterOptions =
     navigatorPackFilter === "all"
       ? SOURCES
       : SOURCES.filter((source) => getContentPackId(source) === navigatorPackFilter);
+  const activeSourceFilters =
+    Array.isArray(navigatorSourceFilters) && navigatorSourceFilters.length > 0
+      ? navigatorSourceFilters
+      : [sourceId].filter(Boolean);
+  const sourceFilterActive =
+    activeSourceFilters.length !== 1 || activeSourceFilters[0] !== sourceId;
+  const hasActiveNavigatorFilters = Boolean(
+    navigatorSearch.trim() ||
+      sourceFilterActive ||
+      navigatorPackFilter !== "all" ||
+      bestPickFilterActive ||
+      (mode === "global" && navigatorSlotFilter !== "all")
+  );
 
   function selectContentPackFilter(packId) {
     setNavigatorPackFilter?.(packId);
     if (packId === "all") return;
-    if (getContentPackId(currentSource) === packId) return;
 
-    const nextSource = SOURCES.find((source) => getContentPackId(source) === packId);
-    if (!nextSource) return;
+    const sourcesInPack = SOURCES.filter((source) => getContentPackId(source) === packId);
+    if (!sourcesInPack.length) return;
+
+    const currentSourcesInPack = activeSourceFilters.filter((id) =>
+      sourcesInPack.some((source) => source.id === id)
+    );
+    if (currentSourcesInPack.length) return;
+
+    const nextSource = sourcesInPack[0];
+    setNavigatorSourceFilters?.([nextSource.id]);
     setSourceId(nextSource.id);
     setActivePresetId("");
   }
 
-  return (
+  function toggleSourceFilter(nextSourceId) {
+    if (!nextSourceId) return;
+
+    setNavigatorSourceFilters?.((current) => {
+      const currentIds =
+        Array.isArray(current) && current.length > 0 ? current : [sourceId].filter(Boolean);
+      const nextIds = currentIds.includes(nextSourceId)
+        ? currentIds.filter((id) => id !== nextSourceId)
+        : [...currentIds, nextSourceId];
+      return nextIds.length ? nextIds : [nextSourceId];
+    });
+    setSourceId(nextSourceId);
+    setActivePresetId("");
+  }
+
+  const modal = (
     <div
       className="component-navigator-modal"
       data-navigator-mode={mode}
@@ -142,56 +287,43 @@ export function ComponentNavigatorModal({
         <div className="component-navigator-modal__head">
           <div className="component-navigator-modal__head-copy">
             <h2>{modalTitle}</h2>
-            <p className="component-navigator-modal__subtitle">
-              {mode === "global"
-                ? "Browse every available graft and filter by slot, pack, or source."
-                : `Pick a graft for ${slotData.label}.`}
-            </p>
           </div>
-          <button
-            className="icon-btn"
-            type="button"
-            aria-label="Close Component Navigator"
-            onClick={onClose}
-          >
-            <X aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="navigator-tools monster-navigator-tools component-navigator-modal__rail">
-          <div className="navigator-search-row">
-            <div className="search-wrap monster-search-wrap">
-              <input
-                type="search"
-                value={navigatorSearch}
-                placeholder="Search components…"
-                aria-label="Search components"
-                onChange={(event) => setNavigatorSearch(event.target.value)}
-              />
-            </div>
+          <div className="component-navigator-modal__head-actions">
             <button
               className={`icon-btn navigator-filter-btn ${navigatorFiltersOpen ? "active" : ""}`}
               type="button"
               aria-label="Filter components"
               aria-expanded={navigatorFiltersOpen}
-              data-active-count={
-                navigatorSearch.trim() ||
-                sourceId !== "decomposition" ||
-                navigatorPackFilter !== "all" ||
-                (mode === "global" && navigatorSlotFilter !== "all")
-                  ? 1
-                  : 0
-              }
+              data-active-count={hasActiveNavigatorFilters ? 1 : 0}
               onClick={() => setNavigatorFiltersOpen((current) => !current)}
             >
               <SlidersHorizontal aria-hidden="true" />
             </button>
-            <div className="navigator-count" aria-label="Visible component count">
-              {visibleFeatures.length}
-            </div>
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label="Close Component Navigator"
+              onClick={onClose}
+            >
+              <X aria-hidden="true" />
+            </button>
           </div>
+        </div>
 
-          {navigatorFiltersOpen && (
+        {navigatorFiltersOpen && (
+          <div className="navigator-tools monster-navigator-tools component-navigator-modal__rail">
+            <div className="navigator-search-row">
+              <div className="search-wrap monster-search-wrap">
+                <input
+                  type="search"
+                  value={navigatorSearch}
+                  placeholder="Search components…"
+                  aria-label="Search components"
+                  onChange={(event) => setNavigatorSearch(event.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="tag-filter-row monster-source-grid-open" aria-label="Filter components">
               <div className="tag-filter-row__head">
                 <span>Component Filters</span>
@@ -202,6 +334,8 @@ export function ComponentNavigatorModal({
                     setNavigatorSearch("");
                     setNavigatorSlotFilter(mode === "global" ? "all" : activeSlot);
                     setNavigatorPackFilter?.("all");
+                    setNavigatorSourceFilters?.([sourceId]);
+                    setNavigatorBestPickFilter("all");
                   }}
                 >
                   Clear
@@ -209,23 +343,23 @@ export function ComponentNavigatorModal({
               </div>
               <div className="navigator-filter-panel">
                 <section className="navigator-filter-section">
-                  <strong>Source Anchor</strong>
+                  <strong>Inspiration</strong>
                   <div className="filter-chip-grid source-filter">
-                    {sourceFilterOptions.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`navigator-filter-chip navigator-filter-chip--stacked ${item.id === sourceId ? "active" : ""}`}
-                        aria-pressed={item.id === sourceId}
-                        onClick={() => {
-                          setSourceId(item.id);
-                          setActivePresetId("");
-                        }}
-                      >
-                        <span className="navigator-filter-chip__main">{item.label}</span>
-                        <span className="navigator-filter-chip__meta">{getSourcePackTitle(item)}</span>
-                      </button>
-                    ))}
+                    {sourceFilterOptions.map((item) => {
+                      const isActive = activeSourceFilters.includes(item.id);
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          className={`navigator-filter-chip navigator-filter-chip--stacked ${isActive ? "active" : ""}`}
+                          aria-pressed={isActive}
+                          onClick={() => toggleSourceFilter(item.id)}
+                        >
+                          <span className="navigator-filter-chip__main">{item.label}</span>
+                          <span className="navigator-filter-chip__meta">{getSourcePackTitle(item)}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </section>
                 <section className="navigator-filter-section">
@@ -244,10 +378,44 @@ export function ComponentNavigatorModal({
                     ))}
                   </div>
                 </section>
+                {smartPicks.length > 0 && (
+                  <section className="navigator-filter-section">
+                    <strong>Best Picks</strong>
+                    <div className="filter-chip-grid source-filter">
+                      <button
+                        type="button"
+                        className={`navigator-filter-chip ${navigatorBestPickFilter === "all" ? "active" : ""}`}
+                        aria-pressed={navigatorBestPickFilter === "all"}
+                        onClick={() => setNavigatorBestPickFilter("all")}
+                      >
+                        All Components
+                      </button>
+                      <button
+                        type="button"
+                        className={`navigator-filter-chip ${navigatorBestPickFilter === "best" ? "active" : ""}`}
+                        aria-pressed={navigatorBestPickFilter === "best"}
+                        onClick={() => setNavigatorBestPickFilter("best")}
+                      >
+                        Best Picks
+                      </button>
+                      {smartPicks.map((pick) => (
+                        <button
+                          key={pick.id}
+                          type="button"
+                          className={`navigator-filter-chip ${navigatorBestPickFilter === pick.id ? "active" : ""}`}
+                          aria-pressed={navigatorBestPickFilter === pick.id}
+                          onClick={() => setNavigatorBestPickFilter(pick.id)}
+                        >
+                          {pick.label}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {mode === "global" && (
           <div className="source-modal__tools monster-slot-tabs component-navigator-modal__slot-tabs">
@@ -274,28 +442,11 @@ export function ComponentNavigatorModal({
           </div>
         )}
 
-        {smartPickSlotId !== "all" && smartPicks.length > 0 && (
-          <SmartSlotPicks
-            slotId={smartPickSlotId}
-            picks={smartPicks}
-            selected={selected}
-            selectedFeatures={selectedFeatures}
-            typeId={typeId}
-            category={category}
-            advancedMode={advancedMode}
-            slotCaps={slotCaps}
-            computed={computed}
-            onAdd={addFeature}
-            getSlotCap={getSlotCap}
-            buildFeatureImpactPreview={buildFeatureImpactPreview}
-          />
-        )}
-
         <div className="component-list monster-component-list component-navigator-modal__list cruor-scroll-surface">
-          {visibleFeatures.length === 0 ? (
+          {displayedFeatures.length === 0 ? (
             <EmptyState text="No compatible components for this source/type/role/filter combination in the MVP dataset." />
           ) : (
-            visibleFeatures.map((feature) => {
+            displayedFeatures.map((feature) => {
               const featureSlotIds = getSelectedIdsForSlot(selected, feature.slot);
               const featureSlotCap = advancedMode ? getSlotCap(slotCaps, feature.slot) : 1;
               const selectedInSlot = featureSlotIds.includes(feature.id);
@@ -344,70 +495,22 @@ export function ComponentNavigatorModal({
       </aside>
     </div>
   );
-}
 
-function SmartSlotPicks({
-  slotId,
-  picks,
-  selected,
-  selectedFeatures,
-  typeId,
-  category,
-  advancedMode,
-  slotCaps,
-  computed,
-  onAdd,
-  getSlotCap,
-  buildFeatureImpactPreview,
-}) {
-  const slot = SLOTS.find((item) => item.id === slotId) || SLOTS[0];
-  if (!picks.length) return null;
+  if (typeof document === "undefined" || !document.body) {
+    return modal;
+  }
 
-  return (
-    <section className="smart-slot-picks" aria-label={`Best picks for ${slot.label}`}>
-      <div className="smart-slot-picks__head">
-        <strong>Best Picks</strong>
-        <span>{slot.label}</span>
-      </div>
-      <div className="smart-slot-picks__grid">
-        {picks.map((pick) => {
-          const feature = pick.feature;
-          const featureSlotIds = getSelectedIdsForSlot(selected, feature.slot);
-          const featureSlotCap = advancedMode ? getSlotCap(slotCaps, feature.slot) : 1;
-          const selectedInSlot = featureSlotIds.includes(feature.id);
-          const slotFull =
-            featureSlotCap > 1 && featureSlotIds.length >= featureSlotCap && !selectedInSlot;
-          const compatibility = getCompatibilityStatus(feature, selectedFeatures, typeId, category);
-          const impact = buildFeatureImpactPreview({
-            feature,
-            selected,
-            selectedFeatures,
-            typeId,
-            category,
-            computed,
-          });
-          const disabled =
-            selectedInSlot || slotFull || ["missing", "incompatible"].includes(compatibility.kind);
-          return (
-            <article key={`${pick.id}-${feature.id}`} className={`smart-pick-card is-${pick.id}`}>
-              <div className="smart-pick-card__top">
-                <span>{pick.label}</span>
-                <button type="button" disabled={disabled} onClick={() => onAdd?.(feature)}>
-                  {selectedInSlot ? "Added" : slotFull ? "Full" : "Add"}
-                </button>
-              </div>
-              <h3>{feature.title}</h3>
-              <span className="component-pack-badge">{getContentPackTitle(feature)}</span>
-              <p>{normalizeMonsterReferences(feature.summary, computed)}</p>
-              <em>{formatFeatureImpactPreview(impact)}</em>
-              {compatibility.kind !== "compatible" && <small>{compatibility.message}</small>}
-            </article>
-          );
-        })}
-      </div>
-    </section>
+  return createPortal(
+    <div
+      className="monster-shell component-navigator-modal-portal"
+      data-component-navigator-portal=""
+    >
+      {modal}
+    </div>,
+    document.body
   );
 }
+
 
 function FeatureCard({
   feature,
@@ -441,6 +544,7 @@ function FeatureCard({
     category,
     computed,
   });
+  const [detailsOpen, setDetailsOpen] = useState(false);
   return (
     <motion.article
       layout
@@ -453,7 +557,7 @@ function FeatureCard({
         onDragStart?.();
       }}
       onDragEnd={onDragEnd}
-      className={`component-card ${selected ? "in-build" : ""} ${slotFull ? "slot-full" : ""} ${hasCompatibilityBadge ? `compatibility-${compatibility.kind}` : ""}`}
+      className={`component-card ${selected ? "in-build" : ""} ${slotFull ? "slot-full" : ""} ${detailsOpen ? "details-open" : ""} ${hasCompatibilityBadge ? `compatibility-${compatibility.kind}` : ""}`}
       data-decision-tier={profile.tier}
     >
       <button
@@ -476,7 +580,6 @@ function FeatureCard({
       <div className="card-top">
         <div className="component-title-stack">
           <h3>{feature.title}</h3>
-          <span className="component-pack-badge">{packTitle}</span>
         </div>
         {hasCompatibilityBadge && (
           <span className={`compatibility-badge ${compatibility.kind}`}>{compatibility.label}</span>
@@ -484,7 +587,7 @@ function FeatureCard({
       </div>
 
       <p className="summary">{normalizeMonsterReferences(feature.summary, computed)}</p>
-      <p className="component-impact-line">{formatFeatureImpactPreview(impact)}</p>
+      <ImpactMetricDock impact={impact} />
 
       {hasCompatibilityBadge && <p className="compatibility-note">{compatibility.message}</p>}
       {slotFull && (
@@ -492,11 +595,28 @@ function FeatureCard({
           This slot is full. Raise its cap or remove a graft first.
         </p>
       )}
-      <details className="component-details">
-        <summary>Details</summary>
-        <div className="meta-list" aria-label="Component metadata">
+      <div
+        className="component-details"
+        onPointerEnter={() => setDetailsOpen(true)}
+        onPointerLeave={() => setDetailsOpen(false)}
+        onFocus={() => setDetailsOpen(true)}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setDetailsOpen(false);
+          }
+        }}
+      >
+        <button
+          className="component-details__trigger"
+          type="button"
+          aria-expanded={detailsOpen}
+          aria-haspopup="dialog"
+        >
+          Details
+        </button>
+        <div className="meta-list component-details__panel" aria-label="Component metadata">
           <div className="meta-row">
-            <span className="meta-label">Source</span>
+            <span className="meta-label">Inspiration</span>
             <span className="meta-values">
               <span className="meta-value source-chip">{source?.label}</span>
             </span>
@@ -510,6 +630,7 @@ function FeatureCard({
               )}
             </span>
           </div>
+          <ImpactMetaRows impact={impact} />
           <div className="meta-row">
             <span className="meta-label">Slot</span>
             <span className="meta-values">
@@ -566,7 +687,7 @@ function FeatureCard({
             </div>
           )}
         </div>
-      </details>
+      </div>
     </motion.article>
   );
 }

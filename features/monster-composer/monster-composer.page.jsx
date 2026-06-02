@@ -1,17 +1,11 @@
 import { useMemo, useState } from "react";
 import "./monster-composer.styles.css";
 import {
-  Skull,
   Shield,
-  Sword,
-  Gauge,
-  AlertTriangle,
   RotateCcw,
   X,
   Flame,
   BookOpen,
-  Activity,
-  Sparkles,
   SlidersHorizontal,
 } from "lucide-react";
 
@@ -23,7 +17,6 @@ import {
   MONSTER_TIERS,
   TEMPO_PROFILES,
   getDefaultCreatureCategory,
-  isCreatureCategoryUnavailable,
   isCreatureTypeUnavailable,
 } from "./monster-composer.taxonomies.js";
 
@@ -90,6 +83,7 @@ import { MonsterComposerTopbar } from "./components/shell.jsx";
 import { GuidedFlowPanel, TemplatePickerModal } from "./components/start-flow.jsx";
 import { MonsterSilhouetteMap } from "./components/anatomy.jsx";
 import { ComponentNavigatorModal } from "./components/navigator.jsx";
+import { MonsterFrameModal } from "./components/frame.jsx";
 import { BalanceWorkbench, ExportWorkbench, RunModePanel } from "./components/panels.jsx";
 
 
@@ -315,8 +309,13 @@ function buildName(type, category, selectedFeatures) {
   return `${source} ${titleCase(type)}`;
 }
 
+function featureMatchesSource(feature, sourceIdOrIds) {
+  const sourceIds = Array.isArray(sourceIdOrIds) ? sourceIdOrIds : [sourceIdOrIds];
+  return sourceIds.filter(Boolean).includes(feature.source);
+}
+
 function featureMatchesFrame(feature, sourceId, typeId, roleId, slotId = null) {
-  const sourceMatch = feature.source === sourceId;
+  const sourceMatch = featureMatchesSource(feature, sourceId);
   const typeMatch = !feature.typeBias?.length || feature.typeBias.includes(typeId);
   const roleMatch = !feature.roleBias?.length || feature.roleBias.includes(roleId);
   const slotMatch = !slotId || feature.slot === slotId;
@@ -324,7 +323,7 @@ function featureMatchesFrame(feature, sourceId, typeId, roleId, slotId = null) {
 }
 
 function featureMatchesSourceAndSlot(feature, sourceId, slotId = null) {
-  const sourceMatch = feature.source === sourceId;
+  const sourceMatch = featureMatchesSource(feature, sourceId);
   const slotMatch = !slotId || feature.slot === slotId;
   return sourceMatch && slotMatch;
 }
@@ -1077,6 +1076,7 @@ export default function CruorMonsterComposerMvp() {
   const [category, setCategory] = useState("Zombie");
   const [roleId, setRoleId] = useState("standard");
   const [sourceId, setSourceId] = useState("decomposition");
+  const [navigatorSourceFilters, setNavigatorSourceFilters] = useState(["decomposition"]);
   const [partyLevel, setPartyLevel] = useState(5);
   const [partySize, setPartySize] = useState(4);
   const [dangerId, setDangerId] = useState("hard");
@@ -1148,6 +1148,10 @@ export default function CruorMonsterComposerMvp() {
 
   const availableFeatures = useMemo(() => {
     const slotFilter = currentNavigatorSlot === "all" ? null : currentNavigatorSlot;
+    const activeNavigatorSourceFilters =
+      Array.isArray(navigatorSourceFilters) && navigatorSourceFilters.length > 0
+        ? navigatorSourceFilters
+        : [sourceId].filter(Boolean);
     return FEATURES.map((feature) => ({
       feature,
       status: getCompatibilityStatus(feature, selectedFeatures, typeId, category),
@@ -1156,8 +1160,8 @@ export default function CruorMonsterComposerMvp() {
         const packMatch =
           navigatorPackFilter === "all" || getContentPackId(feature) === navigatorPackFilter;
         const frameMatch = customMode
-          ? featureMatchesSourceAndSlot(feature, sourceId, slotFilter)
-          : featureMatchesFrame(feature, sourceId, typeId, roleId, slotFilter);
+          ? featureMatchesSourceAndSlot(feature, activeNavigatorSourceFilters, slotFilter)
+          : featureMatchesFrame(feature, activeNavigatorSourceFilters, typeId, roleId, slotFilter);
         return packMatch && frameMatch && canShowFeatureForMode(status, composerMode);
       })
       .sort((a, b) => {
@@ -1196,6 +1200,7 @@ export default function CruorMonsterComposerMvp() {
       .map(({ feature }) => feature);
   }, [
     sourceId,
+    navigatorSourceFilters,
     typeId,
     roleId,
     navigatorPackFilter,
@@ -1784,6 +1789,7 @@ export default function CruorMonsterComposerMvp() {
     setActiveSlot(slotId);
     setNavigatorSlotFilter(slotId);
     setNavigatorSearch("");
+    setNavigatorSourceFilters([sourceId]);
     setNavigatorFiltersOpen(false);
     setComponentNavigatorMode("slot");
     setComponentNavigatorOpen(true);
@@ -1794,6 +1800,7 @@ export default function CruorMonsterComposerMvp() {
     setComponentNavigatorMode("global");
     setNavigatorSlotFilter("all");
     setNavigatorSearch("");
+    setNavigatorSourceFilters([sourceId]);
     setNavigatorFiltersOpen(false);
     setComponentNavigatorOpen(true);
   }
@@ -1917,301 +1924,35 @@ export default function CruorMonsterComposerMvp() {
           onSetViewMode={setViewMode}
         />
 
-        {frameOpen ? (
-          <>
-            <button
-              className="monster-frame-scrim is-open"
-          type="button"
-          aria-label="Close Monster Frame"
-          onClick={() => setFrameOpen(false)}
-            />
-
-            <aside
-              className="panel navigator monster-frame-drawer game-frame-drawer is-open"
-              aria-label="Monster Frame"
-              aria-hidden="false"
-            >
-          <div className="game-frame__hero">
-            <div className="game-frame__status-row">
-              <span className="game-frame__status">
-                <span /> Live Frame
-              </span>
-              <button
-                className="icon-btn"
-                type="button"
-                aria-label="Close Monster Frame"
-                onClick={() => setFrameOpen(false)}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-            <p className="eyebrow">Monster Frame</p>
-            <h2>{computed.name}</h2>
-            <div className="game-frame__loadout" aria-label="Current frame summary">
-              <span>
-                <Skull aria-hidden="true" /> {creatureType.label}
-              </span>
-              <span>
-                <Activity aria-hidden="true" /> {category}
-              </span>
-              <span>
-                <Sword aria-hidden="true" /> {role.label}
-              </span>
-              <span>
-                <Gauge aria-hidden="true" /> CR {targetCr}
-              </span>
-              <span>
-                <Activity aria-hidden="true" /> {tacticalRole.label}
-              </span>
-              <span>
-                <Sparkles aria-hidden="true" /> {monsterTier.label}
-              </span>
-              <span>
-                <AlertTriangle aria-hidden="true" /> {tempoProfile.label}
-              </span>
-            </div>
-          </div>
-
-          <div className="game-frame__body">
-            <PanelGroup title="Creature Type" icon={Skull}>
-              <div className="game-type-grid">
-                {CREATURE_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const active = type.id === typeId;
-                  const unavailable = isCreatureTypeUnavailable(type.id);
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      disabled={unavailable}
-                      aria-disabled={unavailable}
-                      className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                      onClick={() => selectType(type.id)}
-                    >
-                      <span className="game-type-card__icon">
-                        <Icon aria-hidden="true" />
-                      </span>
-                      <span className="game-type-card__text">
-                        <strong>{type.label}</strong>
-                        <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
-                      </span>
-                      <span className="game-type-card__mark">
-                        {active ? "Active" : unavailable ? "Later" : "Select"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="game-category-panel">
-                <div className="game-frame__minihead">
-                  <span>Variant</span>
-                  <strong>{category}</strong>
-                </div>
-                <div
-                  className="game-category-grid"
-                  role="radiogroup"
-                  aria-label="Creature category"
-                >
-                  {creatureType.categories.map((item) => {
-                    const unavailable = isCreatureCategoryUnavailable(typeId, item);
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        role="radio"
-                        disabled={unavailable}
-                        aria-disabled={unavailable}
-                        aria-checked={item === category}
-                        className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                        onClick={() => {
-                          if (unavailable) return;
-                          setCategory(item);
-                          setActivePresetId("");
-                        }}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Encounter Role" icon={Sword}>
-              <div className="game-role-grid">
-                {ROLES.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`game-role-card ${item.id === roleId ? "active" : ""}`}
-                    onClick={() => {
-                      setRoleId(item.id);
-                      setActivePresetId("");
-                    }}
-                  >
-                    <span className="game-role-card__top">
-                      <strong>{item.label}</strong>
-                      <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
-                    </span>
-                    <span className="game-role-card__summary">{item.summary}</span>
-                    <span className="game-role-card__stats">
-                      <span>HP {Math.round(item.hpMult * 100)}%</span>
-                      <span>DPR {Math.round(item.dprMult * 100)}%</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Design Profile" icon={Gauge}>
-              <div className="game-category-panel">
-                <div className="game-frame__minihead">
-                  <span>Target CR</span>
-                  <strong>{targetCr}</strong>
-                </div>
-                <NumberField
-                  label="Target CR"
-                  value={targetCr}
-                  min={0}
-                  max={30}
-                  onChange={(value) => {
-                    setTargetCr(value);
-                    setActivePresetId("");
-                  }}
-                />
-              </div>
-
-              <div className="game-category-panel">
-                <div className="game-frame__minihead">
-                  <span>Tactical Role</span>
-                  <strong>{tacticalRole.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Tactical role">
-                  {TACTICAL_ROLES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === tacticalRoleId}
-                      className={`game-category-chip ${item.id === tacticalRoleId ? "active" : ""}`}
-                      onClick={() => {
-                        setTacticalRoleId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="game-category-panel">
-                <div className="game-frame__minihead">
-                  <span>Tier</span>
-                  <strong>{monsterTier.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
-                  {MONSTER_TIERS.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === monsterTierId}
-                      className={`game-category-chip ${item.id === monsterTierId ? "active" : ""}`}
-                      onClick={() => {
-                        setMonsterTierId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="game-category-panel">
-                <div className="game-frame__minihead">
-                  <span>Tempo</span>
-                  <strong>{tempoProfile.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Tempo profile">
-                  {TEMPO_PROFILES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === tempoProfileId}
-                      className={`game-category-chip ${item.id === tempoProfileId ? "active" : ""}`}
-                      onClick={() => {
-                        setTempoProfileId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </PanelGroup>
-
-            <PanelGroup title="Danger" icon={AlertTriangle}>
-              <div className="game-threat-panel">
-                <div className="game-threat-scale" role="radiogroup" aria-label="Monster danger">
-                  {DANGERS.map((item, index) => (
-                    <button
-                      key={item.id}
-                      className={`game-threat-chip ${item.id === dangerId ? "active" : ""}`}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === dangerId}
-                      onClick={() => {
-                        setDangerId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      <span>0{index + 1}</span>
-                      <strong>{item.label}</strong>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="game-frame__meters" aria-label="Current pressure readout">
-                  <div className="game-frame__meter">
-                    <span>
-                      <small>Pressure</small>
-                      <strong>
-                        {computed.pressure} / {computed.budget}
-                      </strong>
-                    </span>
-                    <i>
-                      <b
-                        className={computed.pressure > computed.budget ? "is-over" : ""}
-                        style={{ width: `${Math.min(pressurePercent, 100)}%` }}
-                      />
-                    </i>
-                  </div>
-                  <div className="game-frame__meter">
-                    <span>
-                      <small>Complexity</small>
-                      <strong>
-                        {computed.complexity} / {computed.complexityCap}
-                      </strong>
-                    </span>
-                    <i>
-                      <b
-                        className={computed.complexity > computed.complexityCap ? "is-over" : ""}
-                        style={{ width: `${Math.min(complexityPercent, 100)}%` }}
-                      />
-                    </i>
-                  </div>
-                </div>
-              </div>
-            </PanelGroup>
-          </div>
-            </aside>
-          </>
-        ) : null}
+        <MonsterFrameModal
+          open={frameOpen}
+          onClose={() => setFrameOpen(false)}
+          computed={computed}
+          creatureType={creatureType}
+          category={category}
+          role={role}
+          targetCr={targetCr}
+          tacticalRole={tacticalRole}
+          monsterTier={monsterTier}
+          tempoProfile={tempoProfile}
+          typeId={typeId}
+          roleId={roleId}
+          tacticalRoleId={tacticalRoleId}
+          monsterTierId={monsterTierId}
+          tempoProfileId={tempoProfileId}
+          dangerId={dangerId}
+          pressurePercent={pressurePercent}
+          complexityPercent={complexityPercent}
+          selectType={selectType}
+          setCategory={setCategory}
+          setActivePresetId={setActivePresetId}
+          setRoleId={setRoleId}
+          setTargetCr={setTargetCr}
+          setTacticalRoleId={setTacticalRoleId}
+          setMonsterTierId={setMonsterTierId}
+          setTempoProfileId={setTempoProfileId}
+          setDangerId={setDangerId}
+        />
 
         {viewMode === "composer" && (
           <section className="monster-layout">
@@ -2465,6 +2206,8 @@ export default function CruorMonsterComposerMvp() {
           setNavigatorSlotFilter={setNavigatorSlotFilter}
           navigatorPackFilter={navigatorPackFilter}
           setNavigatorPackFilter={setNavigatorPackFilter}
+          navigatorSourceFilters={navigatorSourceFilters}
+          setNavigatorSourceFilters={setNavigatorSourceFilters}
           contentPackOptions={contentPackOptions}
           setActiveSlot={setActiveSlot}
           onClose={() => setComponentNavigatorOpen(false)}
@@ -2601,29 +2344,3 @@ function GraftInspector({
   );
 }
 
-function PanelGroup({ title, icon: Icon, children }) {
-  return (
-    <section className="monster-panel-group">
-      <div className="monster-panel-group__head">
-        <Icon aria-hidden="true" />
-        <h3>{title}</h3>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function NumberField({ label, value, min, max, onChange }) {
-  return (
-    <label className="monster-field">
-      <span>{label}</span>
-      <input
-        type="number"
-        min={min}
-        max={max}
-        value={value}
-        onChange={(event) => onChange(clamp(Number(event.target.value || min), min, max))}
-      />
-    </label>
-  );
-}

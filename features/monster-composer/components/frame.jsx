@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   Activity,
@@ -21,25 +21,32 @@ import {
   isCreatureTypeUnavailable,
 } from "../monster-composer.taxonomies.js";
 
+const FRAME_STEPS = [
+  {
+    id: "chassis",
+    number: "01",
+    title: "Chassis",
+    kicker: "Creature Body",
+    summary: "Choose the monster family and variant.",
+  },
+  {
+    id: "role",
+    number: "02",
+    title: "Combat Role",
+    kicker: "Encounter Job",
+    summary: "Set footprint and battlefield behavior.",
+  },
+  {
+    id: "challenge",
+    number: "03",
+    title: "Challenge",
+    kicker: "Difficulty Profile",
+    summary: "Tune CR, tier, tempo, danger, and budget.",
+  },
+];
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function PanelGroup({ title, description, icon: Icon, className = "", children }) {
-  return (
-    <section className={`monster-panel-group game-frame-section ${className}`.trim()}>
-      <div className="monster-panel-group__head">
-        <span className="game-frame-section__icon">
-          <Icon aria-hidden="true" />
-        </span>
-        <span className="game-frame-section__copy">
-          <h3>{title}</h3>
-          {description ? <p>{description}</p> : null}
-        </span>
-      </div>
-      <div className="game-frame-section__body">{children}</div>
-    </section>
-  );
 }
 
 function NumberField({ label, value, min, max, onChange }) {
@@ -57,9 +64,9 @@ function NumberField({ label, value, min, max, onChange }) {
   );
 }
 
-function HudStat({ icon: Icon, label, value, tone = "" }) {
+function FrameKpi({ icon: Icon, label, value, tone = "" }) {
   return (
-    <span className={`game-frame__hud-stat ${tone ? `is-${tone}` : ""}`.trim()}>
+    <span className={`game-frame-kpi ${tone ? `is-${tone}` : ""}`.trim()}>
       <Icon aria-hidden="true" />
       <span>
         <small>{label}</small>
@@ -69,21 +76,387 @@ function HudStat({ icon: Icon, label, value, tone = "" }) {
   );
 }
 
-function LoadoutChip({ icon: Icon, label, value }) {
+function FrameStepNav({ activeStep, setActiveStep }) {
   return (
-    <span className="game-frame__loadout-chip">
-      <Icon aria-hidden="true" />
-      <span>
-        <small>{label}</small>
-        <strong>{value}</strong>
-      </span>
+    <nav className="game-frame-stepper" aria-label="Monster Frame steps">
+      {FRAME_STEPS.map((step) => (
+        <button
+          key={step.id}
+          type="button"
+          className={`game-frame-step ${step.id === activeStep ? "is-active" : ""}`}
+          aria-current={step.id === activeStep ? "step" : undefined}
+          onClick={() => setActiveStep(step.id)}
+        >
+          <span>{step.number}</span>
+          <strong>{step.title}</strong>
+          <small>{step.summary}</small>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+function FrameSummaryRow({ label, value }) {
+  return (
+    <span className="game-frame-summary-row">
+      <small>{label}</small>
+      <strong>{value}</strong>
     </span>
   );
 }
 
-function MeterTile({ label, value, max, percent, over }) {
+function FrameSummary({
+  creatureType,
+  category,
+  role,
+  targetCr,
+  tacticalRole,
+  monsterTier,
+  tempoProfile,
+  danger,
+  computed,
+  pressureOverBudget,
+  complexityOverBudget,
+}) {
   return (
-    <div className={`game-frame__meter ${over ? "is-over" : ""}`}>
+    <aside className="game-frame-summary" aria-label="Current Monster Frame summary">
+      <div className="game-frame-summary__head">
+        <span>Current Frame</span>
+        <strong>{computed.name}</strong>
+      </div>
+      <div className="game-frame-summary__grid">
+        <FrameSummaryRow label="Type" value={creatureType.label} />
+        <FrameSummaryRow label="Variant" value={category} />
+        <FrameSummaryRow label="Role" value={role.label} />
+        <FrameSummaryRow label="Tactic" value={tacticalRole.label} />
+        <FrameSummaryRow label="Tier" value={monsterTier.label} />
+        <FrameSummaryRow label="Tempo" value={tempoProfile.label} />
+        <FrameSummaryRow label="Danger" value={danger?.label || "Standard"} />
+        <FrameSummaryRow label="CR" value={targetCr} />
+      </div>
+      <div className="game-frame-summary__meters">
+        <CompactMeter
+          label="Pressure"
+          value={computed.pressure}
+          max={computed.budget}
+          over={pressureOverBudget}
+        />
+        <CompactMeter
+          label="Complexity"
+          value={computed.complexity}
+          max={computed.complexityCap}
+          over={complexityOverBudget}
+        />
+      </div>
+    </aside>
+  );
+}
+
+function CompactMeter({ label, value, max, over }) {
+  const percent = max > 0 ? Math.min((value / max) * 100, 100) : 0;
+  return (
+    <div className={`game-frame-compact-meter ${over ? "is-over" : ""}`}>
+      <span>
+        <small>{label}</small>
+        <strong>
+          {value} / {max}
+        </strong>
+      </span>
+      <i>
+        <b style={{ width: `${percent}%` }} />
+      </i>
+    </div>
+  );
+}
+
+function StepHeader({ step }) {
+  return (
+    <div className="game-frame-stage__head">
+      <span>{step.kicker}</span>
+      <h3>{step.title}</h3>
+      <p>{step.summary}</p>
+    </div>
+  );
+}
+
+function ChassisStep({
+  typeId,
+  creatureType,
+  category,
+  selectType,
+  setCategory,
+  setActivePresetId,
+}) {
+  return (
+    <div className="game-frame-stage__content game-frame-stage__content--chassis">
+      <section className="game-frame-control-zone">
+        <div className="game-frame-control-zone__head">
+          <span>Family</span>
+          <strong>{creatureType.label}</strong>
+        </div>
+        <div className="game-frame-choice-grid game-frame-choice-grid--types">
+          {CREATURE_TYPES.map((type) => {
+            const Icon = type.icon;
+            const active = type.id === typeId;
+            const unavailable = isCreatureTypeUnavailable(type.id);
+            return (
+              <button
+                key={type.id}
+                type="button"
+                disabled={unavailable}
+                aria-disabled={unavailable}
+                className={`game-frame-choice game-frame-choice--type ${active ? "is-active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                onClick={() => selectType(type.id)}
+              >
+                <Icon aria-hidden="true" />
+                <span>
+                  <strong>{type.label}</strong>
+                  <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="game-frame-control-zone is-compact">
+        <div className="game-frame-control-zone__head">
+          <span>Variant</span>
+          <strong>{category}</strong>
+        </div>
+        <div className="game-frame-pill-row" role="radiogroup" aria-label="Creature category">
+          {creatureType.categories.map((item) => {
+            const unavailable = isCreatureCategoryUnavailable(typeId, item);
+            return (
+              <button
+                key={item}
+                type="button"
+                role="radio"
+                disabled={unavailable}
+                aria-disabled={unavailable}
+                aria-checked={item === category}
+                className={`game-frame-pill ${item === category ? "is-active" : ""} ${unavailable ? "is-disabled" : ""}`}
+                onClick={() => {
+                  if (unavailable) return;
+                  setCategory(item);
+                  setActivePresetId("");
+                }}
+              >
+                {item}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function RoleStep({
+  roleId,
+  tacticalRoleId,
+  tacticalRole,
+  setRoleId,
+  setTacticalRoleId,
+  setActivePresetId,
+}) {
+  return (
+    <div className="game-frame-stage__content game-frame-stage__content--role">
+      <section className="game-frame-control-zone">
+        <div className="game-frame-control-zone__head">
+          <span>Encounter Footprint</span>
+          <strong>{ROLES.find((item) => item.id === roleId)?.label || "Standard"}</strong>
+        </div>
+        <div className="game-frame-choice-grid game-frame-choice-grid--roles">
+          {ROLES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`game-frame-choice game-frame-choice--role ${item.id === roleId ? "is-active" : ""}`}
+              onClick={() => {
+                setRoleId(item.id);
+                setActivePresetId("");
+              }}
+            >
+              <span>
+                <strong>{item.label}</strong>
+                <small>{item.summary}</small>
+              </span>
+              <em>
+                HP {Math.round(item.hpMult * 100)}% · DPR {Math.round(item.dprMult * 100)}%
+              </em>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="game-frame-control-zone is-compact">
+        <div className="game-frame-control-zone__head">
+          <span>Battlefield Job</span>
+          <strong>{tacticalRole.label}</strong>
+        </div>
+        <div className="game-frame-pill-row" role="radiogroup" aria-label="Tactical role">
+          {TACTICAL_ROLES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={item.id === tacticalRoleId}
+              className={`game-frame-pill ${item.id === tacticalRoleId ? "is-active" : ""}`}
+              onClick={() => {
+                setTacticalRoleId(item.id);
+                setActivePresetId("");
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ChallengeStep({
+  targetCr,
+  monsterTier,
+  monsterTierId,
+  tempoProfile,
+  tempoProfileId,
+  dangerId,
+  danger,
+  computed,
+  pressurePercent,
+  complexityPercent,
+  pressureOverBudget,
+  complexityOverBudget,
+  setTargetCr,
+  setMonsterTierId,
+  setTempoProfileId,
+  setDangerId,
+  setActivePresetId,
+}) {
+  return (
+    <div className="game-frame-stage__content game-frame-stage__content--challenge">
+      <section className="game-frame-control-zone game-frame-control-zone--challenge-main">
+        <div className="game-frame-control-zone__head">
+          <span>Challenge Rating</span>
+          <strong>CR {targetCr}</strong>
+        </div>
+        <NumberField
+          label="Target CR"
+          value={targetCr}
+          min={0}
+          max={30}
+          onChange={(value) => {
+            setTargetCr(value);
+            setActivePresetId("");
+          }}
+        />
+      </section>
+
+      <section className="game-frame-control-zone">
+        <div className="game-frame-control-zone__head">
+          <span>Monster Tier</span>
+          <strong>{monsterTier.label}</strong>
+        </div>
+        <div className="game-frame-pill-row" role="radiogroup" aria-label="Monster tier">
+          {MONSTER_TIERS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={item.id === monsterTierId}
+              className={`game-frame-pill ${item.id === monsterTierId ? "is-active" : ""}`}
+              onClick={() => {
+                setMonsterTierId(item.id);
+                setActivePresetId("");
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="game-frame-control-zone">
+        <div className="game-frame-control-zone__head">
+          <span>Tempo</span>
+          <strong>{tempoProfile.label}</strong>
+        </div>
+        <div className="game-frame-pill-row" role="radiogroup" aria-label="Tempo profile">
+          {TEMPO_PROFILES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="radio"
+              aria-checked={item.id === tempoProfileId}
+              className={`game-frame-pill ${item.id === tempoProfileId ? "is-active" : ""}`}
+              onClick={() => {
+                setTempoProfileId(item.id);
+                setActivePresetId("");
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="game-frame-control-zone game-frame-control-zone--danger">
+        <div className="game-frame-control-zone__head">
+          <span>Danger</span>
+          <strong>{danger?.label || "Standard"}</strong>
+        </div>
+        <div className="game-frame-danger-row" role="radiogroup" aria-label="Monster danger">
+          {DANGERS.map((item, index) => (
+            <button
+              key={item.id}
+              className={`game-frame-danger ${item.id === dangerId ? "is-active" : ""}`}
+              type="button"
+              role="radio"
+              aria-checked={item.id === dangerId}
+              onClick={() => {
+                setDangerId(item.id);
+                setActivePresetId("");
+              }}
+            >
+              <span>0{index + 1}</span>
+              <strong>{item.label}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="game-frame-control-zone game-frame-control-zone--budget">
+        <div className="game-frame-control-zone__head">
+          <span>Budget</span>
+          <strong>{pressureOverBudget || complexityOverBudget ? "Over Limit" : "Stable"}</strong>
+        </div>
+        <div className="game-frame-budget-grid">
+          <BudgetMeter
+            label="Pressure"
+            value={computed.pressure}
+            max={computed.budget}
+            percent={pressurePercent}
+            over={pressureOverBudget}
+          />
+          <BudgetMeter
+            label="Complexity"
+            value={computed.complexity}
+            max={computed.complexityCap}
+            percent={complexityPercent}
+            over={complexityOverBudget}
+          />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function BudgetMeter({ label, value, max, percent, over }) {
+  return (
+    <div className={`game-frame-budget-meter ${over ? "is-over" : ""}`}>
       <span>
         <small>{label}</small>
         <strong>
@@ -126,6 +499,8 @@ export function MonsterFrameModal({
   setTempoProfileId,
   setDangerId,
 }) {
+  const [activeStep, setActiveStep] = useState("chassis");
+
   useEffect(() => {
     if (!open || typeof document === "undefined") return undefined;
 
@@ -144,10 +519,24 @@ export function MonsterFrameModal({
     };
   }, [open, onClose]);
 
-  if (!open) return null;
-
+  const activeIndex = FRAME_STEPS.findIndex((step) => step.id === activeStep);
+  const activeStepData = FRAME_STEPS[activeIndex] || FRAME_STEPS[0];
   const pressureOverBudget = computed.pressure > computed.budget;
   const complexityOverBudget = computed.complexity > computed.complexityCap;
+  const danger = useMemo(
+    () => DANGERS.find((item) => item.id === dangerId) || DANGERS[0],
+    [dangerId]
+  );
+
+  if (!open) return null;
+
+  function goPrevious() {
+    setActiveStep(FRAME_STEPS[Math.max(activeIndex - 1, 0)].id);
+  }
+
+  function goNext() {
+    setActiveStep(FRAME_STEPS[Math.min(activeIndex + 1, FRAME_STEPS.length - 1)].id);
+  }
 
   const modal = (
     <div
@@ -168,303 +557,131 @@ export function MonsterFrameModal({
         />
 
         <aside
-          className="panel navigator monster-frame-drawer game-frame-drawer game-frame-drawer--fullscreen is-open"
+          className="panel navigator monster-frame-drawer game-frame-drawer game-frame-drawer--fullscreen game-frame-drawer--guided is-open"
           aria-label="Monster Frame"
           aria-hidden="false"
         >
           <header className="game-frame__hero">
-            <div className="game-frame__topline">
-              <span className="game-frame__status">
-                <span /> Live Frame
-              </span>
+            <div className="game-frame__title-copy">
               <p className="eyebrow">Monster Frame</p>
-              <button
-                className="icon-btn game-frame-modal__close"
-                type="button"
-                aria-label="Close Monster Frame"
-                onClick={onClose}
-              >
-                <X aria-hidden="true" />
-              </button>
+              <h2>{computed.name}</h2>
+              <p>Build the baseline before choosing grafts.</p>
             </div>
 
-            <div className="game-frame__title-row">
-              <div className="game-frame__title-copy">
-                <h2>{computed.name}</h2>
-                <p>Define the creature chassis before choosing grafts.</p>
-              </div>
-              <div className="game-frame__hud-stats" aria-label="Current frame budget">
-                <HudStat icon={Gauge} label="CR" value={targetCr} />
-                <HudStat
-                  icon={AlertTriangle}
-                  label="Pressure"
-                  value={`${computed.pressure}/${computed.budget}`}
-                  tone={pressureOverBudget ? "danger" : "stable"}
-                />
-                <HudStat
-                  icon={Activity}
-                  label="Complexity"
-                  value={`${computed.complexity}/${computed.complexityCap}`}
-                  tone={complexityOverBudget ? "danger" : "stable"}
-                />
-              </div>
+            <div className="game-frame__hud-stats" aria-label="Current frame budget">
+              <FrameKpi icon={Gauge} label="CR" value={targetCr} />
+              <FrameKpi
+                icon={AlertTriangle}
+                label="Pressure"
+                value={`${computed.pressure}/${computed.budget}`}
+                tone={pressureOverBudget ? "danger" : "stable"}
+              />
+              <FrameKpi
+                icon={Activity}
+                label="Complexity"
+                value={`${computed.complexity}/${computed.complexityCap}`}
+                tone={complexityOverBudget ? "danger" : "stable"}
+              />
             </div>
 
-            <div className="game-frame__loadout" aria-label="Current frame summary">
-              <LoadoutChip icon={Skull} label="Type" value={creatureType.label} />
-              <LoadoutChip icon={Activity} label="Variant" value={category} />
-              <LoadoutChip icon={Sword} label="Role" value={role.label} />
-              <LoadoutChip icon={Activity} label="Tactic" value={tacticalRole.label} />
-              <LoadoutChip icon={Sparkles} label="Tier" value={monsterTier.label} />
-              <LoadoutChip icon={AlertTriangle} label="Tempo" value={tempoProfile.label} />
-            </div>
+            <button
+              className="icon-btn game-frame-modal__close"
+              type="button"
+              aria-label="Close Monster Frame"
+              onClick={onClose}
+            >
+              <X aria-hidden="true" />
+            </button>
           </header>
 
-          <div className="game-frame__body">
-            <PanelGroup
-              title="Creature Foundation"
-              description="Choose the monster family and its base body language."
-              icon={Skull}
-              className="game-frame-section--type"
-            >
-              <div className="game-type-grid">
-                {CREATURE_TYPES.map((type) => {
-                  const Icon = type.icon;
-                  const active = type.id === typeId;
-                  const unavailable = isCreatureTypeUnavailable(type.id);
-                  return (
-                    <button
-                      key={type.id}
-                      type="button"
-                      disabled={unavailable}
-                      aria-disabled={unavailable}
-                      className={`game-type-card ${active ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                      onClick={() => selectType(type.id)}
-                    >
-                      <span className="game-type-card__icon">
-                        <Icon aria-hidden="true" />
-                      </span>
-                      <span className="game-type-card__text">
-                        <strong>{type.label}</strong>
-                        <small>{unavailable ? "Unavailable" : `${type.categories.length} variants`}</small>
-                      </span>
-                      <span className="game-type-card__mark">
-                        {active ? "Active" : unavailable ? "Later" : "Select"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+          <div className="game-frame-guided-layout">
+            <FrameStepNav activeStep={activeStep} setActiveStep={setActiveStep} />
 
-              <div className="game-category-panel game-frame-control-block">
-                <div className="game-frame__minihead">
-                  <span>Variant</span>
-                  <strong>{category}</strong>
-                </div>
-                <div
-                  className="game-category-grid"
-                  role="radiogroup"
-                  aria-label="Creature category"
-                >
-                  {creatureType.categories.map((item) => {
-                    const unavailable = isCreatureCategoryUnavailable(typeId, item);
-                    return (
-                      <button
-                        key={item}
-                        type="button"
-                        role="radio"
-                        disabled={unavailable}
-                        aria-disabled={unavailable}
-                        aria-checked={item === category}
-                        className={`game-category-chip ${item === category ? "active" : ""} ${unavailable ? "is-disabled" : ""}`}
-                        onClick={() => {
-                          if (unavailable) return;
-                          setCategory(item);
-                          setActivePresetId("");
-                        }}
-                      >
-                        {item}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </PanelGroup>
+            <main className="game-frame-stage" aria-live="polite">
+              <StepHeader step={activeStepData} />
 
-            <PanelGroup
-              title="Combat Identity"
-              description="Set the encounter footprint and battlefield job."
-              icon={Sword}
-              className="game-frame-section--role"
-            >
-              <div className="game-role-grid">
-                {ROLES.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`game-role-card ${item.id === roleId ? "active" : ""}`}
-                    onClick={() => {
-                      setRoleId(item.id);
-                      setActivePresetId("");
-                    }}
-                  >
-                    <span className="game-role-card__top">
-                      <strong>{item.label}</strong>
-                      <small>{item.id === roleId ? "Equipped" : "Loadout"}</small>
-                    </span>
-                    <span className="game-role-card__summary">{item.summary}</span>
-                    <span className="game-role-card__stats">
-                      <span>HP {Math.round(item.hpMult * 100)}%</span>
-                      <span>DPR {Math.round(item.dprMult * 100)}%</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+              {activeStep === "chassis" && (
+                <ChassisStep
+                  typeId={typeId}
+                  creatureType={creatureType}
+                  category={category}
+                  selectType={selectType}
+                  setCategory={setCategory}
+                  setActivePresetId={setActivePresetId}
+                />
+              )}
 
-              <div className="game-category-panel game-frame-control-block">
-                <div className="game-frame__minihead">
-                  <span>Tactical Role</span>
-                  <strong>{tacticalRole.label}</strong>
-                </div>
-                <div className="game-category-grid" role="radiogroup" aria-label="Tactical role">
-                  {TACTICAL_ROLES.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === tacticalRoleId}
-                      className={`game-category-chip ${item.id === tacticalRoleId ? "active" : ""}`}
-                      onClick={() => {
-                        setTacticalRoleId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </PanelGroup>
+              {activeStep === "role" && (
+                <RoleStep
+                  roleId={roleId}
+                  tacticalRoleId={tacticalRoleId}
+                  tacticalRole={tacticalRole}
+                  setRoleId={setRoleId}
+                  setTacticalRoleId={setTacticalRoleId}
+                  setActivePresetId={setActivePresetId}
+                />
+              )}
 
-            <PanelGroup
-              title="Design Profile"
-              description="Tune challenge rating, monster tier, and tempo."
-              icon={Gauge}
-              className="game-frame-section--profile"
-            >
-              <div className="game-frame-tuning-grid">
-                <div className="game-category-panel game-frame-control-block game-frame-cr-block">
-                  <div className="game-frame__minihead">
-                    <span>Target CR</span>
-                    <strong>{targetCr}</strong>
-                  </div>
-                  <NumberField
-                    label="Target CR"
-                    value={targetCr}
-                    min={0}
-                    max={30}
-                    onChange={(value) => {
-                      setTargetCr(value);
-                      setActivePresetId("");
-                    }}
-                  />
-                </div>
+              {activeStep === "challenge" && (
+                <ChallengeStep
+                  targetCr={targetCr}
+                  monsterTier={monsterTier}
+                  monsterTierId={monsterTierId}
+                  tempoProfile={tempoProfile}
+                  tempoProfileId={tempoProfileId}
+                  dangerId={dangerId}
+                  danger={danger}
+                  computed={computed}
+                  pressurePercent={pressurePercent}
+                  complexityPercent={complexityPercent}
+                  pressureOverBudget={pressureOverBudget}
+                  complexityOverBudget={complexityOverBudget}
+                  setTargetCr={setTargetCr}
+                  setMonsterTierId={setMonsterTierId}
+                  setTempoProfileId={setTempoProfileId}
+                  setDangerId={setDangerId}
+                  setActivePresetId={setActivePresetId}
+                />
+              )}
+            </main>
 
-                <div className="game-category-panel game-frame-control-block">
-                  <div className="game-frame__minihead">
-                    <span>Tier</span>
-                    <strong>{monsterTier.label}</strong>
-                  </div>
-                  <div className="game-category-grid" role="radiogroup" aria-label="Monster tier">
-                    {MONSTER_TIERS.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="radio"
-                        aria-checked={item.id === monsterTierId}
-                        className={`game-category-chip ${item.id === monsterTierId ? "active" : ""}`}
-                        onClick={() => {
-                          setMonsterTierId(item.id);
-                          setActivePresetId("");
-                        }}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="game-category-panel game-frame-control-block">
-                  <div className="game-frame__minihead">
-                    <span>Tempo</span>
-                    <strong>{tempoProfile.label}</strong>
-                  </div>
-                  <div className="game-category-grid" role="radiogroup" aria-label="Tempo profile">
-                    {TEMPO_PROFILES.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="radio"
-                        aria-checked={item.id === tempoProfileId}
-                        className={`game-category-chip ${item.id === tempoProfileId ? "active" : ""}`}
-                        onClick={() => {
-                          setTempoProfileId(item.id);
-                          setActivePresetId("");
-                        }}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </PanelGroup>
-
-            <PanelGroup
-              title="Danger & Budget"
-              description="Set encounter danger and watch current pressure limits."
-              icon={AlertTriangle}
-              className="game-frame-section--danger"
-            >
-              <div className="game-threat-panel">
-                <div className="game-threat-scale" role="radiogroup" aria-label="Monster danger">
-                  {DANGERS.map((item, index) => (
-                    <button
-                      key={item.id}
-                      className={`game-threat-chip ${item.id === dangerId ? "active" : ""}`}
-                      type="button"
-                      role="radio"
-                      aria-checked={item.id === dangerId}
-                      onClick={() => {
-                        setDangerId(item.id);
-                        setActivePresetId("");
-                      }}
-                    >
-                      <span>0{index + 1}</span>
-                      <strong>{item.label}</strong>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="game-frame__meters" aria-label="Current pressure readout">
-                  <MeterTile
-                    label="Pressure"
-                    value={computed.pressure}
-                    max={computed.budget}
-                    percent={pressurePercent}
-                    over={pressureOverBudget}
-                  />
-                  <MeterTile
-                    label="Complexity"
-                    value={computed.complexity}
-                    max={computed.complexityCap}
-                    percent={complexityPercent}
-                    over={complexityOverBudget}
-                  />
-                </div>
-              </div>
-            </PanelGroup>
+            <FrameSummary
+              creatureType={creatureType}
+              category={category}
+              role={role}
+              targetCr={targetCr}
+              tacticalRole={tacticalRole}
+              monsterTier={monsterTier}
+              tempoProfile={tempoProfile}
+              danger={danger}
+              computed={computed}
+              pressureOverBudget={pressureOverBudget}
+              complexityOverBudget={complexityOverBudget}
+            />
           </div>
+
+          <footer className="game-frame-footer">
+            <button
+              type="button"
+              className="game-frame-footer__btn"
+              disabled={activeIndex === 0}
+              onClick={goPrevious}
+            >
+              Previous
+            </button>
+            <span>
+              Step {activeIndex + 1} / {FRAME_STEPS.length}
+            </span>
+            {activeIndex < FRAME_STEPS.length - 1 ? (
+              <button type="button" className="game-frame-footer__btn is-primary" onClick={goNext}>
+                Next
+              </button>
+            ) : (
+              <button type="button" className="game-frame-footer__btn is-primary" onClick={onClose}>
+                Done
+              </button>
+            )}
+          </footer>
         </aside>
       </div>
     </div>

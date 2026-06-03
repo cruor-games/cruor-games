@@ -1989,18 +1989,18 @@ export default function CruorMonsterComposerMvp() {
                 setMonsterTierId={setMonsterTierId}
                 setTempoProfileId={setTempoProfileId}
                 setDangerId={setDangerId}
-              />
-
-              <GuidedFlowPanel
-                guidedFlow={guidedFlow}
-                onOpenStart={openTemplatePicker}
-                onOpenFrame={() => setComposerStageMode("frame")}
-                onFocusSlot={(slotId) => {
-                  setComposerStageMode("grafts");
-                  openSlotNavigator(slotId);
-                }}
-                onOpenBalance={() => setViewMode("balance")}
-                onOpenExport={() => setViewMode("export")}
+                guidedFlowPanel={(
+                  <GuidedFlowPanel
+                    guidedFlow={guidedFlow}
+                    onOpenStart={openTemplatePicker}
+                    onFocusSlot={(slotId) => {
+                      setComposerStageMode("grafts");
+                      openSlotNavigator(slotId);
+                    }}
+                    onOpenBalance={() => setViewMode("balance")}
+                    onOpenExport={() => setViewMode("export")}
+                  />
+                )}
               />
 
               {composerStarted && composerStageMode === "grafts" && (

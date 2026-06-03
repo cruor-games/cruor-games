@@ -1,4 +1,4 @@
-import { BookOpen, Plus, X } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, Plus, X } from "lucide-react";
 
 export function GuidedFlowPanel({
   guidedFlow,
@@ -36,6 +36,17 @@ export function GuidedFlowPanel({
     if (action.kind === "export") onOpenExport?.();
   }
 
+  const steps = guidedFlow.steps || [];
+  const activeStepIndex = Math.max(
+    0,
+    steps.findIndex((step) => step.active)
+  );
+  const previousStep = [...steps]
+    .slice(0, activeStepIndex)
+    .reverse()
+    .find((step) => !step.disabled);
+  const nextStep = steps.slice(activeStepIndex + 1).find((step) => !step.disabled);
+
   return (
     <section className="guided-flow-panel is-wizard" aria-label="Build flow">
       <div className="guided-flow-next" data-next-kind={guidedFlow.nextAction?.kind || "start"}>
@@ -48,27 +59,49 @@ export function GuidedFlowPanel({
         </button>
       </div>
 
-      <nav
-        className="brief-wizard__progress monster-flow-progress"
-        aria-label="Monster build progress"
-        style={{ "--brief-progress": String(guidedFlow.progress) }}
-      >
-        {guidedFlow.steps.map((step) => (
-          <button
-            key={step.id}
-            className={`brief-step-btn ${step.reached ? "reached" : ""} ${step.active ? "active" : ""}`}
-            type="button"
-            data-brief-step={step.number - 1}
-            disabled={step.disabled}
-            aria-current={step.active ? "step" : "false"}
-            title={step.detail}
-            onClick={() => handleStepClick(step)}
-          >
-            <span className="brief-step-number">{step.number}</span>
-            <span className="brief-step-label">{step.label}</span>
-          </button>
-        ))}
-      </nav>
+      <div className="monster-flow-progress-shell" aria-label="Monster build progress controls">
+        <button
+          className="monster-flow-nav-btn monster-flow-nav-btn--previous"
+          type="button"
+          aria-label="Previous build step"
+          disabled={!previousStep}
+          onClick={() => previousStep && handleStepClick(previousStep)}
+        >
+          <ChevronLeft aria-hidden="true" />
+        </button>
+
+        <nav
+          className="brief-wizard__progress monster-flow-progress"
+          aria-label="Monster build progress"
+          style={{ "--brief-progress": String(guidedFlow.progress) }}
+        >
+          {steps.map((step) => (
+            <button
+              key={step.id}
+              className={`brief-step-btn ${step.reached ? "reached" : ""} ${step.active ? "active" : ""}`}
+              type="button"
+              data-brief-step={step.number - 1}
+              disabled={step.disabled}
+              aria-current={step.active ? "step" : "false"}
+              title={step.detail}
+              onClick={() => handleStepClick(step)}
+            >
+              <span className="brief-step-number">{step.number}</span>
+              <span className="brief-step-label">{step.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <button
+          className="monster-flow-nav-btn monster-flow-nav-btn--next"
+          type="button"
+          aria-label="Next build step"
+          disabled={!nextStep}
+          onClick={() => nextStep && handleStepClick(nextStep)}
+        >
+          <ChevronRight aria-hidden="true" />
+        </button>
+      </div>
     </section>
   );
 }

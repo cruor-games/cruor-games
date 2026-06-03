@@ -9237,3 +9237,722 @@
 .monster-shell .monster-frame-icon-toggle-row {
   justify-content: flex-start !important;
 }
+
+/* Step 7.0 — Fullscreen anatomy stage and compact flow rail.
+   The silhouette stays centered; side/control surfaces adapt around it. */
+.monster-shell .monster-workspace {
+  min-height: calc(100dvh - var(--monster-shell-bar-height, var(--app-shell-bar-height, 62px)));
+  padding: 0 !important;
+}
+
+.monster-shell .monster-layout {
+  display: block !important;
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100dvh - var(--monster-shell-bar-height, var(--app-shell-bar-height, 62px)) - clamp(12px, 1.35vw, 20px));
+  margin: 0 !important;
+}
+
+.monster-shell .build-canvas.monster-canvas {
+  width: 100% !important;
+  min-height: calc(100dvh - var(--monster-shell-bar-height, var(--app-shell-bar-height, 62px)) - clamp(12px, 1.35vw, 20px));
+  border: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.monster-shell .monster-silhouette-stage.anatomy-stage {
+  --stage-viewport-height: calc(100dvh - var(--monster-shell-bar-height, var(--app-shell-bar-height, 62px)) - clamp(12px, 1.35vw, 20px));
+  width: 100% !important;
+  min-height: var(--stage-viewport-height) !important;
+  height: var(--stage-viewport-height) !important;
+  padding: clamp(12px, 1.4vw, 20px) !important;
+}
+
+.monster-shell .monster-silhouette-stage.is-frame-mode,
+.monster-shell .monster-silhouette-stage[data-stage-mode="frame"] {
+  display: grid;
+  align-items: stretch;
+}
+
+.monster-shell .anatomy-stage__grid--frame,
+.monster-shell .anatomy-stage__grid--grafts {
+  min-height: 0 !important;
+  height: 100% !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame {
+  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr) minmax(260px, 340px) !important;
+  grid-template-areas: "left center right" !important;
+  align-items: stretch !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__center {
+  min-height: 0 !important;
+  height: 100% !important;
+  align-self: stretch !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__silhouette-layer {
+  width: min(52vw, 680px) !important;
+  height: min(78vh, 820px) !important;
+  min-height: 560px !important;
+  margin: auto !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame .monster-silhouette-svg,
+.monster-shell .anatomy-stage__grid--frame .monster-silhouette-asset {
+  inset: 18px 50% !important;
+  width: min(430px, 76%) !important;
+  height: calc(100% - 36px) !important;
+  transform: translateX(-50%) !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__column,
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__column {
+  max-height: 100% !important;
+}
+
+.monster-shell .monster-frame-controls {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+  overflow: auto !important;
+}
+
+.monster-shell .monster-frame-control-footer {
+  margin-top: auto !important;
+  padding-top: 10px !important;
+}
+
+.monster-shell .guided-flow-panel.is-wizard {
+  margin: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.monster-shell .guided-flow-panel.is-wizard .guided-flow-next {
+  display: none !important;
+}
+
+.monster-shell .monster-frame-control-footer .brief-wizard__progress,
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress {
+  grid-template-columns: repeat(7, minmax(20px, 1fr)) !important;
+  gap: 5px !important;
+  justify-content: stretch !important;
+  width: 100% !important;
+  min-height: 30px !important;
+  margin: 0 !important;
+}
+
+.monster-shell .monster-frame-control-footer .brief-wizard__progress::before,
+.monster-shell .monster-frame-control-footer .brief-wizard__progress::after,
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress::before,
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress::after {
+  top: 13px !important;
+  left: 14px !important;
+  right: 14px !important;
+}
+
+.monster-shell .monster-frame-control-footer .brief-step-btn,
+.monster-shell .monster-stage-progress-dock .brief-step-btn {
+  min-width: 0 !important;
+  min-height: 28px !important;
+  padding: 0 !important;
+}
+
+.monster-shell .monster-frame-control-footer .brief-step-label,
+.monster-shell .monster-stage-progress-dock .brief-step-label {
+  display: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock--grafts {
+  position: absolute;
+  left: clamp(12px, 1.4vw, 20px);
+  bottom: clamp(12px, 1.4vw, 20px);
+  z-index: 8;
+  width: min(360px, calc(100% - 24px));
+  pointer-events: auto;
+}
+
+/* Step 7.0 — Graft mode metric regression guard. */
+.monster-shell .anatomy-stage__grid--grafts .silhouette-metric-card.is-pressure,
+.monster-shell .anatomy-stage__grid--grafts .silhouette-metric-card.is-complexity {
+  display: none !important;
+}
+
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__column--left {
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+
+/* Step 7.0 — Restore card impact dock positioning and dynamic tone. */
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-card,
+.monster-shell .component-navigator-modal__list .component-card {
+  position: relative !important;
+  padding-bottom: 48px !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-dock,
+.monster-shell .component-navigator-modal__list .component-impact-dock {
+  position: absolute !important;
+  right: 10px !important;
+  bottom: 10px !important;
+  z-index: 9 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 5px !important;
+  width: auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric,
+.monster-shell .component-navigator-modal__list .component-impact-metric {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  min-width: 28px !important;
+  min-height: 24px !important;
+  border: 1px solid rgba(255, 238, 242, .09) !important;
+  background: rgba(0, 0, 0, .34) !important;
+  color: rgba(240, 215, 220, .66) !important;
+  padding: 0 6px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035) !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric svg,
+.monster-shell .component-navigator-modal__list .component-impact-metric svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric strong,
+.monster-shell .component-navigator-modal__list .component-impact-metric strong {
+  font-size: 10px !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric.is-good,
+.monster-shell .component-navigator-modal__list .component-impact-metric.is-good,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric--counterplay.is-positive,
+.monster-shell .component-navigator-modal__list .component-impact-metric--counterplay.is-positive {
+  border-color: rgba(143, 150, 148, .42) !important;
+  background: rgba(143, 150, 148, .1) !important;
+  color: #bec8c5 !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric.is-low,
+.monster-shell .component-navigator-modal__list .component-impact-metric.is-low {
+  border-color: rgba(208, 162, 170, .38) !important;
+  background: rgba(208, 162, 170, .08) !important;
+  color: #d0a2aa !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric.is-medium,
+.monster-shell .component-navigator-modal__list .component-impact-metric.is-medium {
+  border-color: rgba(190, 64, 82, .48) !important;
+  background: rgba(95, 7, 22, .22) !important;
+  color: #f0d7dc !important;
+}
+
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric.is-high,
+.monster-shell .component-navigator-modal__list .component-impact-metric.is-high,
+.monster-shell.component-navigator-modal-portal .component-navigator-modal__list .component-impact-metric--counterplay.is-negative,
+.monster-shell .component-navigator-modal__list .component-impact-metric--counterplay.is-negative {
+  border-color: rgba(240, 185, 194, .62) !important;
+  background: rgba(122, 26, 40, .32) !important;
+  color: #f0b9c2 !important;
+  box-shadow: 0 0 18px rgba(122, 26, 40, .22), inset 0 1px 0 rgba(255, 238, 242, .04) !important;
+}
+
+/* Step 7.0 — Re-align graft action buttons with Cruor icon buttons. */
+.monster-shell .monster-graft-action-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+}
+
+.monster-shell .monster-graft-action-btn {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  border: 1px solid var(--cruor-button-border, rgba(95, 7, 22, .58)) !important;
+  background: linear-gradient(180deg, rgba(255, 238, 242, .025), transparent), rgba(0, 0, 0, .22) !important;
+  color: rgba(240, 215, 220, .72) !important;
+  padding: 0 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035) !important;
+  transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease !important;
+}
+
+.monster-shell .monster-graft-action-btn svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: currentColor !important;
+}
+
+.monster-shell .monster-graft-action-btn span {
+  display: none !important;
+}
+
+.monster-shell .monster-graft-action-btn:hover,
+.monster-shell .monster-graft-action-btn:focus-visible,
+.monster-shell .monster-graft-action-btn.is-primary {
+  border-color: var(--cruor-button-border-hover, rgba(190, 64, 82, .78)) !important;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(190, 64, 82, .18), transparent 68%),
+    linear-gradient(180deg, rgba(30, 7, 11, .94), rgba(10, 5, 7, .88)),
+    rgba(8, 5, 6, .86) !important;
+  color: #fff0f2 !important;
+  box-shadow: 0 0 0 1px rgba(190, 64, 82, .12), 0 0 20px rgba(122, 26, 40, .22), inset 0 1px 0 rgba(255, 238, 242, .06) !important;
+  outline: none !important;
+}
+
+.monster-shell .monster-graft-action-btn[aria-disabled="true"],
+.monster-shell .monster-graft-action-btn.is-disabled {
+  cursor: not-allowed !important;
+  opacity: .54 !important;
+  filter: saturate(.72) !important;
+}
+
+.monster-shell .monster-graft-action-btn[aria-disabled="true"]:hover,
+.monster-shell .monster-graft-action-btn.is-disabled:hover {
+  border-color: rgba(255, 238, 242, .09) !important;
+  background: rgba(255, 255, 255, .022) !important;
+  color: rgba(238, 238, 238, .58) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035) !important;
+}
+
+@media (max-width: 1180px) {
+  .monster-shell .monster-silhouette-stage.anatomy-stage {
+    height: auto !important;
+    min-height: var(--stage-viewport-height) !important;
+    overflow: auto !important;
+  }
+
+  .monster-shell .anatomy-stage__grid--frame,
+  .monster-shell .anatomy-stage__grid--grafts {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: auto minmax(520px, 64vh) auto !important;
+    grid-template-areas:
+      "left"
+      "center"
+      "right" !important;
+    height: auto !important;
+  }
+
+  .monster-shell .anatomy-stage__grid--frame .anatomy-stage__silhouette-layer {
+    width: min(720px, 100%) !important;
+    height: min(66vh, 720px) !important;
+  }
+}
+
+
+/* Step 7.1 — Locked viewport anatomy stage.
+   The page no longer scrolls; only side panels scroll. The silhouette scales from a
+   shared stage box so Frame and Grafts modes keep the same central size. */
+.monster-shell:has(.monster-silhouette-stage.anatomy-stage),
+.monster-shell:has(.monster-silhouette-stage.anatomy-stage) .monster-workspace,
+.monster-shell:has(.monster-silhouette-stage.anatomy-stage) .monster-layout,
+.monster-shell:has(.monster-silhouette-stage.anatomy-stage) .build-canvas.monster-canvas,
+.monster-shell:has(.monster-silhouette-stage.anatomy-stage) .monster-anatomy-composer {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.monster-shell .monster-silhouette-stage.anatomy-stage {
+  --stage-pad: clamp(10px, 1.15vw, 18px);
+  --stage-gap: clamp(14px, 1.8vw, 22px);
+  --stage-left-width: clamp(286px, 22vw, 364px);
+  --stage-right-width: clamp(270px, 20vw, 342px);
+  --stage-center-width: calc(100vw - var(--stage-left-width) - var(--stage-right-width) - var(--stage-pad) - var(--stage-pad) - var(--stage-gap) - var(--stage-gap));
+  --stage-center-height: 100%;
+  --stage-silhouette-width: min(var(--stage-center-width), 720px);
+  --stage-silhouette-height: min(var(--stage-center-height), 860px);
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding: var(--stage-pad) !important;
+}
+
+.monster-shell .anatomy-stage__grid--frame,
+.monster-shell .anatomy-stage__grid--grafts {
+  display: grid !important;
+  grid-template-columns: var(--stage-left-width) minmax(0, 1fr) var(--stage-right-width) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+  grid-template-areas: "left center right" !important;
+  gap: var(--stage-gap) !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  align-items: stretch !important;
+}
+
+.monster-shell .anatomy-stage__column,
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__column,
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__column {
+  height: 100% !important;
+  max-height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  padding-right: 0 !important;
+}
+
+.monster-shell .anatomy-stage__column--left.monster-frame-controls,
+.monster-shell .anatomy-stage__column--right.monster-frame-info {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+  scrollbar-width: thin;
+}
+
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__column--left {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+.monster-shell .anatomy-stage__center,
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__center,
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__center {
+  position: relative !important;
+  display: grid !important;
+  place-items: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.monster-shell .anatomy-stage__silhouette-layer,
+.monster-shell .anatomy-stage__grid--frame .anatomy-stage__silhouette-layer,
+.monster-shell .anatomy-stage__grid--grafts .anatomy-stage__silhouette-layer {
+  width: min(100%, var(--stage-silhouette-width)) !important;
+  height: min(100%, var(--stage-silhouette-height)) !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: auto !important;
+  overflow: visible !important;
+}
+
+.monster-shell .monster-silhouette-stage .monster-silhouette-svg,
+.monster-shell .monster-silhouette-stage .monster-silhouette-asset,
+.monster-shell .anatomy-stage__grid--frame .monster-silhouette-svg,
+.monster-shell .anatomy-stage__grid--frame .monster-silhouette-asset,
+.monster-shell .anatomy-stage__grid--grafts .monster-silhouette-svg,
+.monster-shell .anatomy-stage__grid--grafts .monster-silhouette-asset {
+  inset: 2% 50% !important;
+  width: min(82%, 620px) !important;
+  height: 96% !important;
+  transform: translateX(-50%) !important;
+}
+
+.monster-shell .monster-silhouette-stage .monster-silhouette-svg--skeleton {
+  width: min(78%, 580px) !important;
+}
+
+.monster-shell .monster-silhouette-stage .monster-silhouette-svg--spider {
+  inset: 18% 50% !important;
+  width: min(98%, 760px) !important;
+  height: 64% !important;
+}
+
+.monster-shell .monster-frame-control-footer {
+  display: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock {
+  position: absolute !important;
+  z-index: 12 !important;
+  right: var(--stage-pad) !important;
+  bottom: var(--stage-pad) !important;
+  width: min(320px, calc(var(--stage-right-width) - 8px)) !important;
+  pointer-events: auto !important;
+}
+
+.monster-shell .monster-stage-progress-dock--frame {
+  left: 50% !important;
+  right: auto !important;
+  bottom: var(--stage-pad) !important;
+  width: min(360px, var(--stage-center-width)) !important;
+  transform: translateX(-50%) !important;
+}
+
+.monster-shell .monster-stage-progress-dock--grafts {
+  left: 50% !important;
+  right: auto !important;
+  bottom: var(--stage-pad) !important;
+  width: min(360px, var(--stage-center-width)) !important;
+  transform: translateX(-50%) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-panel.is-wizard {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress {
+  opacity: .72;
+  transition: opacity .12s ease;
+}
+
+.monster-shell .monster-stage-progress-dock:hover .brief-wizard__progress,
+.monster-shell .monster-stage-progress-dock:focus-within .brief-wizard__progress {
+  opacity: 1;
+}
+
+@media (max-width: 1180px) {
+  .monster-shell .monster-silhouette-stage.anatomy-stage {
+    --stage-left-width: 0px;
+    --stage-right-width: 0px;
+    --stage-center-width: calc(100vw - var(--stage-pad) - var(--stage-pad));
+    overflow: hidden !important;
+  }
+
+  .monster-shell .anatomy-stage__grid--frame,
+  .monster-shell .anatomy-stage__grid--grafts {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(150px, .34fr) minmax(300px, .42fr) minmax(150px, .24fr) !important;
+    grid-template-areas:
+      "left"
+      "center"
+      "right" !important;
+    overflow: hidden !important;
+  }
+
+  .monster-shell .monster-stage-progress-dock,
+  .monster-shell .monster-stage-progress-dock--frame,
+  .monster-shell .monster-stage-progress-dock--grafts {
+    left: 50% !important;
+    right: auto !important;
+    width: min(320px, calc(100% - 24px)) !important;
+    transform: translateX(-50%) !important;
+  }
+}
+
+/* Step 7.2 — Interactive wizard dock.
+   Keeps the page locked while making the current/hovered step readable. */
+.monster-shell .monster-stage-progress-dock {
+  width: min(520px, calc(var(--stage-center-width, 520px) - 16px)) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-panel.is-wizard {
+  display: block !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.monster-shell .monster-flow-progress-shell {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 58px;
+  overflow: visible;
+}
+
+.monster-shell .monster-flow-nav-btn {
+  position: relative;
+  z-index: 4;
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  min-width: 30px;
+  height: 30px;
+  min-height: 30px;
+  border: 1px solid rgba(95, 7, 22, .68);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, .035), transparent),
+    rgba(5, 5, 6, .94);
+  color: rgba(240, 215, 220, .72);
+  padding: 0;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, .34),
+    inset 0 1px 0 rgba(255, 238, 242, .045);
+  transition: border-color .12s ease, background .12s ease, color .12s ease, box-shadow .12s ease;
+}
+
+.monster-shell .monster-flow-nav-btn svg {
+  width: 15px;
+  height: 15px;
+}
+
+.monster-shell .monster-flow-nav-btn:hover:not(:disabled),
+.monster-shell .monster-flow-nav-btn:focus-visible:not(:disabled) {
+  border-color: rgba(190, 64, 82, .78);
+  background:
+    radial-gradient(circle at 50% 24%, rgba(190, 64, 82, .18), transparent 68%),
+    linear-gradient(180deg, rgba(30, 7, 11, .94), rgba(10, 5, 7, .88));
+  color: #fff0f2;
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, .12),
+    0 0 20px rgba(122, 26, 40, .22),
+    inset 0 1px 0 rgba(255, 238, 242, .06);
+  outline: none;
+}
+
+.monster-shell .monster-flow-nav-btn:disabled {
+  cursor: default;
+  opacity: .34;
+  filter: saturate(.62);
+}
+
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress,
+.monster-shell .monster-frame-control-footer .brief-wizard__progress {
+  position: relative !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  width: 100% !important;
+  min-height: 52px !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress::before,
+.monster-shell .monster-stage-progress-dock .brief-wizard__progress::after,
+.monster-shell .monster-frame-control-footer .brief-wizard__progress::before,
+.monster-shell .monster-frame-control-footer .brief-wizard__progress::after {
+  top: 14px !important;
+  left: 15px !important;
+  right: 15px !important;
+  z-index: 0 !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn,
+.monster-shell .monster-frame-control-footer .brief-step-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  display: grid !important;
+  justify-items: center !important;
+  align-content: start !important;
+  flex: 1 1 30px !important;
+  min-width: 0 !important;
+  max-width: 78px !important;
+  min-height: 52px !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  opacity: 1 !important;
+  overflow: visible !important;
+  transition: flex-basis .16s ease, max-width .16s ease, opacity .12s ease;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn:hover:not(:disabled),
+.monster-shell .monster-stage-progress-dock .brief-step-btn:focus-visible:not(:disabled),
+.monster-shell .monster-stage-progress-dock .brief-step-btn.active,
+.monster-shell .monster-frame-control-footer .brief-step-btn:hover:not(:disabled),
+.monster-shell .monster-frame-control-footer .brief-step-btn:focus-visible:not(:disabled),
+.monster-shell .monster-frame-control-footer .brief-step-btn.active {
+  flex-basis: 78px !important;
+  max-width: 86px !important;
+  z-index: 5 !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-number {
+  position: relative !important;
+  z-index: 2 !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-color: rgba(255, 238, 242, .12) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, .035), transparent),
+    #070506 !important;
+  color: #8f7278 !important;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, .46),
+    0 0 0 1px rgba(0, 0, 0, .72),
+    inset 0 1px 0 rgba(255, 238, 242, .04) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn.reached .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-btn.reached .brief-step-number {
+  border-color: rgba(143, 150, 148, .36) !important;
+  background:
+    linear-gradient(180deg, rgba(143, 150, 148, .08), transparent),
+    #070506 !important;
+  color: #bec8c5 !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn.active .brief-step-number,
+.monster-shell .monster-stage-progress-dock .brief-step-btn:hover:not(:disabled) .brief-step-number,
+.monster-shell .monster-stage-progress-dock .brief-step-btn:focus-visible:not(:disabled) .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-btn.active .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-btn:hover:not(:disabled) .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-btn:focus-visible:not(:disabled) .brief-step-number {
+  transform: translateY(-2px) !important;
+  border-color: rgba(190, 64, 82, .78) !important;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(190, 64, 82, .24), transparent 62%),
+    linear-gradient(180deg, rgba(122, 26, 40, .54), rgba(28, 5, 9, .96)),
+    #070506 !important;
+  color: #fff0f2 !important;
+  box-shadow:
+    0 0 0 1px rgba(190, 64, 82, .18),
+    0 0 24px rgba(122, 26, 40, .34),
+    0 14px 26px rgba(0, 0, 0, .42),
+    inset 0 1px 0 rgba(255, 238, 242, .08) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-label,
+.monster-shell .monster-frame-control-footer .brief-step-label {
+  position: absolute !important;
+  top: 35px !important;
+  left: 50% !important;
+  display: block !important;
+  width: max-content !important;
+  max-width: 108px !important;
+  color: rgba(240, 215, 220, .48) !important;
+  font-size: 8px !important;
+  font-weight: 950 !important;
+  letter-spacing: .1em !important;
+  line-height: 1 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateX(-50%) translateY(-3px) !important;
+  transition: opacity .12s ease, transform .12s ease, color .12s ease !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn.active .brief-step-label,
+.monster-shell .monster-stage-progress-dock .brief-step-btn:hover:not(:disabled) .brief-step-label,
+.monster-shell .monster-stage-progress-dock .brief-step-btn:focus-visible:not(:disabled) .brief-step-label,
+.monster-shell .monster-frame-control-footer .brief-step-btn.active .brief-step-label,
+.monster-shell .monster-frame-control-footer .brief-step-btn:hover:not(:disabled) .brief-step-label,
+.monster-shell .monster-frame-control-footer .brief-step-btn:focus-visible:not(:disabled) .brief-step-label {
+  color: #fff0f2 !important;
+  opacity: 1 !important;
+  transform: translateX(-50%) translateY(0) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .brief-step-btn:disabled .brief-step-number,
+.monster-shell .monster-frame-control-footer .brief-step-btn:disabled .brief-step-number {
+  background: #070506 !important;
+  opacity: .58 !important;
+}

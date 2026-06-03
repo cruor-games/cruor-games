@@ -858,6 +858,7 @@ export function MonsterSilhouetteMap({
   setMonsterTierId,
   setTempoProfileId,
   setDangerId,
+  guidedFlowPanel,
 }) {
   const silhouetteId = getSilhouetteId(typeId, category, activePreset);
   const profile = getSilhouetteProfile(typeId, category, activePreset);
@@ -1011,22 +1012,6 @@ export function MonsterSilhouetteMap({
                   className="anatomy-stage__column anatomy-stage__column--left"
                   aria-label="Anatomy graft slots"
                 >
-                  <article className="silhouette-metric-card is-pressure">
-                    <AnatomyMeter
-                      label="Pressure"
-                      value={computed.pressure}
-                      max={computed.budget}
-                      percent={clamp((computed.pressure / computed.budget) * 100, 0, 160)}
-                    />
-                  </article>
-                  <article className="silhouette-metric-card is-complexity">
-                    <AnatomyMeter
-                      label="Complexity"
-                      value={computed.complexity}
-                      max={computed.complexityCap}
-                      percent={clamp((computed.complexity / computed.complexityCap) * 100, 0, 160)}
-                    />
-                  </article>
                   <div className="anatomy-stage__slot-stack">
                     {[...ANATOMY_RIGHT_SLOT_IDS, ...ANATOMY_LEFT_SLOT_IDS, ...ANATOMY_BOTTOM_SLOT_IDS].map(renderSlotCard)}
                   </div>
@@ -1055,6 +1040,13 @@ export function MonsterSilhouetteMap({
                 />
               </div>
             )}
+            {guidedFlowPanel ? (
+              <div
+                className={`monster-stage-progress-dock ${isFrameMode ? "monster-stage-progress-dock--frame" : "monster-stage-progress-dock--grafts"}`}
+              >
+                {guidedFlowPanel}
+              </div>
+            ) : null}
           </div>
         </>
       )}

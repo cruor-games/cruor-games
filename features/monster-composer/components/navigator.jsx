@@ -58,21 +58,31 @@ function getCounterplayTone(counterplay) {
   return "";
 }
 
+function getDeltaTone(value) {
+  const number = Number(value || 0);
+  if (number <= 0) return "good";
+  if (number <= 1) return "low";
+  if (number <= 2) return "medium";
+  return "high";
+}
+
 function ImpactMetricDock({ impact, compact = false }) {
+  const pressureTone = getDeltaTone(impact?.pressureDelta);
+  const complexityTone = getDeltaTone(impact?.complexityDelta);
   const counterplayTone = getCounterplayTone(impact?.counterplay);
   const CounterplayIcon = counterplayTone === "positive" ? ShieldCheck : ShieldAlert;
 
   return (
     <div className={`component-impact-dock ${compact ? "is-compact" : ""}`} aria-label="Component impact">
       <span
-        className="component-impact-metric component-impact-metric--pressure"
+        className={`component-impact-metric component-impact-metric--pressure is-${pressureTone}`}
         aria-label={`Pressure ${signedDelta(impact?.pressureDelta)}`}
       >
         <Gauge aria-hidden="true" />
         <strong>{signedDelta(impact?.pressureDelta)}</strong>
       </span>
       <span
-        className="component-impact-metric component-impact-metric--complexity"
+        className={`component-impact-metric component-impact-metric--complexity is-${complexityTone}`}
         aria-label={`Complexity ${signedDelta(impact?.complexityDelta)}`}
       >
         <SlidersHorizontal aria-hidden="true" />

@@ -1,12 +1,9 @@
 import { useMemo, useState } from "react";
 import "./monster-composer.styles.css";
 import {
-  Shield,
-  RotateCcw,
   X,
-  Flame,
   BookOpen,
-  SlidersHorizontal,
+  Shield,
 } from "lucide-react";
 
 import {
@@ -83,7 +80,6 @@ import { MonsterComposerTopbar } from "./components/shell.jsx";
 import { GuidedFlowPanel, TemplatePickerModal } from "./components/start-flow.jsx";
 import { MonsterSilhouetteMap } from "./components/anatomy.jsx";
 import { ComponentNavigatorModal } from "./components/navigator.jsx";
-import { MonsterFrameModal } from "./components/frame.jsx";
 import { BalanceWorkbench, ExportWorkbench, RunModePanel } from "./components/panels.jsx";
 
 
@@ -1090,7 +1086,8 @@ export default function CruorMonsterComposerMvp() {
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [, setDraggedFeatureId] = useState(null);
   const [activeSlot, setActiveSlot] = useState("body");
-  const [frameOpen, setFrameOpen] = useState(false);
+  const [composerStageMode, setComposerStageMode] = useState("frame");
+  const [customMonsterName, setCustomMonsterName] = useState("");
   const [viewMode, setViewMode] = useState("composer");
   const [advancedMode, setAdvancedMode] = useState(false);
   const [customMode, setCustomMode] = useState(false);
@@ -1340,7 +1337,8 @@ export default function CruorMonsterComposerMvp() {
       0,
       30
     );
-    const name = buildName(typeId, category, selectedFeatures);
+    const generatedName = buildName(typeId, category, selectedFeatures);
+    const name = customMonsterName.trim() || generatedName;
     const rulesContext = {
       typeId,
       creatureType: creatureType.label,
@@ -1498,6 +1496,7 @@ export default function CruorMonsterComposerMvp() {
     danger,
     creatureType,
     selectedFeatures,
+    customMonsterName,
     selected,
     typeId,
     category,
@@ -1549,6 +1548,7 @@ export default function CruorMonsterComposerMvp() {
     setStartMode("template");
     setComposerStarted(true);
     setTemplatePickerOpen(false);
+    setCustomMonsterName("");
   }
 
   function openTemplatePicker() {
@@ -1558,6 +1558,7 @@ export default function CruorMonsterComposerMvp() {
   function startFromScratch() {
     setSelected({});
     setActivePresetId("");
+    setCustomMonsterName("");
     setStartMode("scratch");
     setComposerStarted(true);
     setTemplatePickerOpen(false);
@@ -1565,6 +1566,7 @@ export default function CruorMonsterComposerMvp() {
     setComponentNavigatorMode("slot");
     setNavigatorSlotFilter("body");
     setNavigatorSearch("");
+    setNavigatorSourceFilters(["decomposition"]);
     setNavigatorFiltersOpen(false);
     setNavigatorPackFilter("all");
     setActiveSlot("body");
@@ -1574,6 +1576,7 @@ export default function CruorMonsterComposerMvp() {
   function startOver() {
     setSelected({});
     setActivePresetId("");
+    setCustomMonsterName("");
     setStartMode("");
     setComposerStarted(false);
     setTemplatePickerOpen(false);
@@ -1581,6 +1584,7 @@ export default function CruorMonsterComposerMvp() {
     setComponentNavigatorMode("slot");
     setNavigatorSlotFilter("body");
     setNavigatorSearch("");
+    setNavigatorSourceFilters(["decomposition"]);
     setNavigatorFiltersOpen(false);
     setNavigatorPackFilter("all");
     setActiveSlot("body");
@@ -1786,6 +1790,7 @@ export default function CruorMonsterComposerMvp() {
 
   function openSlotNavigator(slotId) {
     if (!composerStarted) return;
+    setComposerStageMode("grafts");
     setActiveSlot(slotId);
     setNavigatorSlotFilter(slotId);
     setNavigatorSearch("");
@@ -1797,6 +1802,7 @@ export default function CruorMonsterComposerMvp() {
 
   function openGlobalNavigator() {
     if (!composerStarted) return;
+    setComposerStageMode("grafts");
     setComponentNavigatorMode("global");
     setNavigatorSlotFilter("all");
     setNavigatorSearch("");
@@ -1864,7 +1870,8 @@ export default function CruorMonsterComposerMvp() {
     }
 
     if (action.kind === "frame") {
-      setFrameOpen(true);
+      setComposerStageMode("frame");
+      setViewMode("composer");
       return;
     }
 
@@ -1922,36 +1929,8 @@ export default function CruorMonsterComposerMvp() {
           tempoProfile={tempoProfile}
           viewMode={viewMode}
           onSetViewMode={setViewMode}
-        />
-
-        <MonsterFrameModal
-          open={frameOpen}
-          onClose={() => setFrameOpen(false)}
-          computed={computed}
-          creatureType={creatureType}
-          category={category}
-          role={role}
-          targetCr={targetCr}
-          tacticalRole={tacticalRole}
-          monsterTier={monsterTier}
-          tempoProfile={tempoProfile}
-          typeId={typeId}
-          roleId={roleId}
-          tacticalRoleId={tacticalRoleId}
-          monsterTierId={monsterTierId}
-          tempoProfileId={tempoProfileId}
-          dangerId={dangerId}
-          pressurePercent={pressurePercent}
-          complexityPercent={complexityPercent}
-          selectType={selectType}
-          setCategory={setCategory}
-          setActivePresetId={setActivePresetId}
-          setRoleId={setRoleId}
-          setTargetCr={setTargetCr}
-          setTacticalRoleId={setTacticalRoleId}
-          setMonsterTierId={setMonsterTierId}
-          setTempoProfileId={setTempoProfileId}
-          setDangerId={setDangerId}
+          composerStageMode={composerStageMode}
+          onSetComposerStageMode={setComposerStageMode}
         />
 
         {viewMode === "composer" && (
@@ -1960,72 +1939,6 @@ export default function CruorMonsterComposerMvp() {
               className="panel build-canvas monster-canvas"
               aria-label="The Crucible build canvas"
             >
-              <div className="build-head monster-build-head">
-                <div>
-                  <h2 className="monster-canvas-title">{computed.name}</h2>
-                  <div
-                    className="monster-canvas-meta-row"
-                    aria-label="Current anatomy composer state"
-                  >
-                    <button
-                      className="anatomy-frame-btn"
-                      type="button"
-                      aria-label="Open Monster Frame"
-                      title="Open Monster Frame"
-                      onClick={() => setFrameOpen(true)}
-                    >
-                      <SlidersHorizontal aria-hidden="true" />
-                    </button>
-                    <strong>
-                      {composerStarted
-                        ? `${selectedSlotCount}/${SLOTS.length} Filled`
-                        : "Choose Start"}
-                    </strong>
-                  </div>
-                </div>
-                <div className="crucible-head-controls">
-                  <div className="brief-actions" aria-label="Build actions">
-                    <button
-                      className="icon-btn primary empty-cta tooltip-btn"
-                      type="button"
-                      aria-label="Forge Monster"
-                      data-tooltip="Auto-build a playable first draft from the current Monster Frame. You can customize every anatomy slot afterward."
-                      onClick={forgeMonster}
-                    >
-                      <Flame aria-hidden="true" />
-                    </button>
-                    <button
-                      className="crucible-action-btn tooltip-btn"
-                      type="button"
-                      aria-label="Open Component Navigator"
-                      aria-disabled={!composerStarted}
-                      data-tooltip={
-                        composerStarted
-                          ? "Browse compatible components independently from a specific anatomy slot."
-                          : "Choose Pick a Template or Build from Scratch before browsing components."
-                      }
-                      onClick={openGlobalNavigator}
-                    >
-                      <SlidersHorizontal aria-hidden="true" /> Components
-                    </button>
-                    <button
-                      className={`icon-btn tooltip-btn ${composerStarted ? "" : "is-disabled"}`}
-                      type="button"
-                      aria-label="Start Over"
-                      aria-disabled={!composerStarted}
-                      data-tooltip={
-                        composerStarted
-                          ? "Return to the initial Template / Scratch choice and clear the current build."
-                          : "Start a build before using Start Over."
-                      }
-                      onClick={composerStarted ? startOver : undefined}
-                    >
-                      <RotateCcw aria-hidden="true" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               <MonsterSilhouetteMap
                 typeId={typeId}
                 category={category}
@@ -2037,22 +1950,60 @@ export default function CruorMonsterComposerMvp() {
                 started={composerStarted}
                 startMode={startMode}
                 presetsCount={MONSTER_FAMILY_PRESETS.length}
+                stageMode={composerStageMode}
+                onSetStageMode={setComposerStageMode}
+                creatureType={creatureType}
+                role={role}
+                roleId={roleId}
+                targetCr={targetCr}
+                tacticalRole={tacticalRole}
+                tacticalRoleId={tacticalRoleId}
+                monsterTier={monsterTier}
+                monsterTierId={monsterTierId}
+                tempoProfile={tempoProfile}
+                tempoProfileId={tempoProfileId}
+                danger={danger}
+                dangerId={dangerId}
+                monsterName={computed.name}
+                onMonsterNameChange={setCustomMonsterName}
+                onForgeMonster={forgeMonster}
+                onOpenComponents={() => {
+                  setComposerStageMode("grafts");
+                  openGlobalNavigator();
+                }}
+                onStartOver={composerStarted ? startOver : undefined}
+                composerStarted={composerStarted}
                 onPickTemplate={openTemplatePicker}
                 onBuildFromScratch={startFromScratch}
-                onOpenFrame={() => setFrameOpen(true)}
-                onFocusSlot={openSlotNavigator}
+                onOpenFrame={() => setComposerStageMode("frame")}
+                onFocusSlot={(slotId) => {
+                  setComposerStageMode("grafts");
+                  openSlotNavigator(slotId);
+                }}
+                selectType={selectType}
+                setCategory={setCategory}
+                setActivePresetId={setActivePresetId}
+                setRoleId={setRoleId}
+                setTargetCr={setTargetCr}
+                setTacticalRoleId={setTacticalRoleId}
+                setMonsterTierId={setMonsterTierId}
+                setTempoProfileId={setTempoProfileId}
+                setDangerId={setDangerId}
               />
 
               <GuidedFlowPanel
                 guidedFlow={guidedFlow}
                 onOpenStart={openTemplatePicker}
-                onOpenFrame={() => setFrameOpen(true)}
-                onFocusSlot={openSlotNavigator}
+                onOpenFrame={() => setComposerStageMode("frame")}
+                onFocusSlot={(slotId) => {
+                  setComposerStageMode("grafts");
+                  openSlotNavigator(slotId);
+                }}
                 onOpenBalance={() => setViewMode("balance")}
                 onOpenExport={() => setViewMode("export")}
               />
 
-              {composerStarted && (
+              {composerStarted && composerStageMode === "grafts" && (
                 <GraftInspector
                   slot={activeSlotData}
                   features={activeSlotFeatures}
@@ -2343,4 +2294,3 @@ function GraftInspector({
     </details>
   );
 }
-

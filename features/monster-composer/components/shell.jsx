@@ -1,4 +1,4 @@
-import { BookOpen, Skull, Sparkles } from "lucide-react";
+import { BookOpen, Flame, Skull, SlidersHorizontal, Sparkles } from "lucide-react";
 
 export function MonsterComposerTopbar({
   activePreset,
@@ -8,6 +8,8 @@ export function MonsterComposerTopbar({
   tempoProfile,
   viewMode,
   onSetViewMode,
+  composerStageMode = "frame",
+  onSetComposerStageMode,
 }) {
   return (
     <div className="darken-workspace__topbar monster-topbar-wrap">
@@ -48,6 +50,31 @@ export function MonsterComposerTopbar({
               >
                 <Sparkles aria-hidden="true" />
                 <span className="sr-only">Inspirations</span>
+              </button>
+            </div>
+
+            <div className="monster-canvas-meta-row monster-canvas-mode-row" aria-label="Monster Builder mode">
+              <button
+                className={`monster-canvas-mode-btn ${composerStageMode === "frame" ? "is-active" : ""}`}
+                type="button"
+                aria-label="Frame mode"
+                aria-pressed={composerStageMode === "frame"}
+                title="Frame"
+                onClick={() => onSetComposerStageMode?.("frame")}
+              >
+                <SlidersHorizontal aria-hidden="true" />
+                <span className="sr-only">Frame</span>
+              </button>
+              <button
+                className={`monster-canvas-mode-btn ${composerStageMode === "grafts" ? "is-active" : ""}`}
+                type="button"
+                aria-label="Grafts mode"
+                aria-pressed={composerStageMode === "grafts"}
+                title="Grafts"
+                onClick={() => onSetComposerStageMode?.("grafts")}
+              >
+                <Flame aria-hidden="true" />
+                <span className="sr-only">Grafts</span>
               </button>
             </div>
             <div className="monster-topbar__right">

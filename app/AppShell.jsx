@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import SiteTopbar from "./navigation/SiteTopbar.jsx";
+import { startTooltipRuntime } from "../shared/tooltips/tooltip.runtime.js";
+import "../shared/styles/tooltips.css";
 
 export default function AppShell({
   activeSection = "home",
@@ -11,6 +14,10 @@ export default function AppShell({
   crucibleContent,
   inspirationsContent,
 }) {
+  useEffect(() => {
+    return startTooltipRuntime();
+  }, []);
+
   return (
     <div className="app-shell" data-ui-mode={activeUiMode}>
       <SiteTopbar

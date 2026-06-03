@@ -7,6 +7,66 @@ function appendText(parent, tagName, className, text) {
   return element;
 }
 
+function appendRichInlineText(parent, text) {
+  const source = String(text || "");
+  if (!source) return;
+
+  const tokenPattern = /(\*\*([^*]+)\*\*|\*([^*]+)\*)/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = tokenPattern.exec(source))) {
+    if (match.index > cursor) {
+      parent.appendChild(document.createTextNode(source.slice(cursor, match.index)));
+    }
+
+    const element = document.createElement(match[2] ? "strong" : "em");
+    element.textContent = match[2] || match[3] || "";
+    parent.appendChild(element);
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor < source.length) {
+    parent.appendChild(document.createTextNode(source.slice(cursor)));
+  }
+}
+
+function appendRichParagraph(parent, text) {
+  const value = String(text || "").trim();
+  if (!value) return null;
+  const paragraph = document.createElement("p");
+  paragraph.className = "cruor-tooltip__paragraph";
+  appendRichInlineText(paragraph, value);
+  parent.appendChild(paragraph);
+  return paragraph;
+}
+
+function renderGenericTooltipBody(body) {
+  if (!body) return null;
+
+  const container = document.createElement("div");
+  container.className = "cruor-tooltip__body";
+
+  const blocks = String(body)
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  for (const block of blocks) {
+    const lines = block
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    for (const line of lines) {
+      appendRichParagraph(container, line);
+    }
+  }
+
+  return container.children.length ? container : null;
+}
+
+
 function appendFact(parent, label, value) {
   if (!value) return;
   const item = document.createElement("div");
@@ -37,6 +97,33 @@ function normalizeTooltipText(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+function normalizeTooltipBodyText(value) {
+  return String(value || "")
+    .split(/\n+/)
+    .map((line) => normalizeTooltipText(line))
+    .filter(Boolean)
+    .join("\n");
+}
+
+function trimMultilineTooltipText(value, maxLength) {
+  const text = normalizeTooltipBodyText(value);
+  if (text.length <= maxLength) return text;
+
+  const lines = text.split("\n");
+  const kept = [];
+  let length = 0;
+
+  for (const line of lines) {
+    const nextLength = length + line.length + (kept.length ? 1 : 0);
+    if (nextLength > maxLength) break;
+    kept.push(line);
+    length = nextLength;
+  }
+
+  if (!kept.length) return `${text.slice(0, maxLength).trim()}…`;
+  return `${kept.join("\n").trim()}…`;
+}
+
 function trimTooltipText(value, maxLength) {
   const text = normalizeTooltipText(value);
   if (text.length <= maxLength) return text;
@@ -61,8 +148,8 @@ function trimTooltipText(value, maxLength) {
 
 function resolveGenericTooltipCopy(payload) {
   const rawTitle = normalizeTooltipText(payload.title);
-  const rawBody = normalizeTooltipText(payload.text);
-  const sourceTitle = rawTitle || rawBody;
+  const rawBody = normalizeTooltipBodyText(payload.text);
+  const sourceTitle = rawTitle || normalizeTooltipText(rawBody);
 
   if (!sourceTitle) {
     return { title: "", body: "" };
@@ -75,7 +162,7 @@ function resolveGenericTooltipCopy(payload) {
     body = sourceTitle.slice(title.replace(/…$/, "").length).trim();
   }
 
-  body = trimTooltipText(body, 180);
+  body = body.includes("\n") ? trimMultilineTooltipText(body, 640) : trimTooltipText(body, 180);
 
   if (body === title || body === `${title}…`) {
     body = "";
@@ -87,7 +174,7 @@ function resolveGenericTooltipCopy(payload) {
 function renderGenericTooltip(payload) {
   const { title, body } = resolveGenericTooltipCopy(payload);
   const tooltip = document.createElement("article");
-  tooltip.className = "cruor-tooltip cruor-tooltip--generic";
+  tooltip.className = `cruor-tooltip cruor-tooltip--generic${body.includes("\n") ? " cruor-tooltip--has-lines" : ""}`;
   tooltip.setAttribute("role", "tooltip");
 
   const head = document.createElement("div");
@@ -96,7 +183,8 @@ function renderGenericTooltip(payload) {
   appendText(head, "kbd", "cruor-tooltip__kbd", payload.kbd || "");
   tooltip.appendChild(head);
 
-  appendText(tooltip, "p", "cruor-tooltip__body", body);
+  const bodyElement = renderGenericTooltipBody(body);
+  if (bodyElement) tooltip.appendChild(bodyElement);
   return tooltip;
 }
 

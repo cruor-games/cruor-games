@@ -23,7 +23,9 @@
     "git:main": "node .vscode/dev/git-auto-update.mjs main",
     "git:feature": "node .vscode/dev/git-auto-update.mjs feature",
     "git:fix": "node .vscode/dev/git-auto-update.mjs fix",
-    "git:experiment": "node .vscode/dev/git-auto-update.mjs experiment"
+    "git:experiment": "node .vscode/dev/git-auto-update.mjs experiment",
+    "git:restore-main": "node .vscode/dev/git-restore-from-github.mjs main",
+    "git:restore-current": "node .vscode/dev/git-restore-from-github.mjs current"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

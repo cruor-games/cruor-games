@@ -11,6 +11,15 @@ const MONSTER_COMPONENT_DISPLAY_LIMIT = 18;
 const INSPIRATION_WORKFLOW_ID = "inspiration-archive";
 const MONSTER_WORKFLOW_ID = "monster-composer";
 
+const SORT_OPTIONS = [
+  { value: "az", label: "A-Z" },
+  { value: "za", label: "Z-A" },
+  { value: "chronology-asc", label: "Chronology ↑" },
+  { value: "chronology-desc", label: "Chronology ↓" },
+  { value: "components-desc", label: "Most Components" },
+  { value: "components-asc", label: "Fewest Components" },
+];
+
 const SLOT_LABELS = {
   body: "Body",
   mind: "Mind",
@@ -69,6 +78,104 @@ function getInspirationLogic(inspiration, sourceAnchor = null) {
     sourceAnchor?.summary ||
     "This inspiration provides concrete images and pressures that can become playable horror components."
   );
+}
+
+function coerceChronologyValue(value) {
+  if (value == null || value === "") return null;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const directNumber = Number(trimmed);
+    if (Number.isFinite(directNumber)) return directNumber;
+
+    const yearMatch = trimmed.match(/-?\d{1,4}/);
+    if (yearMatch) return Number(yearMatch[0]);
+
+    const timestamp = Date.parse(trimmed);
+    return Number.isNaN(timestamp) ? null : timestamp;
+  }
+
+  if (typeof value === "object") {
+    return coerceChronologyValue(
+      value.sort ??
+        value.order ??
+        value.year ??
+        value.startYear ??
+        value.date ??
+        value.label ??
+        value.value,
+    );
+  }
+
+  return null;
+}
+
+function getChronologyValue(inspiration, sourceAnchor = null) {
+  return coerceChronologyValue(
+    inspiration?.chronology ??
+      inspiration?.timeline ??
+      inspiration?.year ??
+      inspiration?.date ??
+      inspiration?.metadata?.chronology ??
+      inspiration?.metadata?.year ??
+      inspiration?.metadata?.date ??
+      inspiration?.inspiration?.chronology ??
+      inspiration?.inspiration?.year ??
+      inspiration?.inspiration?.date ??
+      sourceAnchor?.chronology ??
+      sourceAnchor?.timeline ??
+      sourceAnchor?.year ??
+      sourceAnchor?.date ??
+      sourceAnchor?.metadata?.chronology ??
+      sourceAnchor?.metadata?.year ??
+      sourceAnchor?.metadata?.date,
+  );
+}
+
+function compareByTitle(left, right, direction = 1) {
+  return direction * getInspirationTitle(left).localeCompare(getInspirationTitle(right));
+}
+
+function compareByChronology(left, right, direction, sourceOrderById) {
+  const leftChronology = getChronologyValue(left, getSourceAnchorMeta(left));
+  const rightChronology = getChronologyValue(right, getSourceAnchorMeta(right));
+  const leftFallback = sourceOrderById.get(left.id) ?? 0;
+  const rightFallback = sourceOrderById.get(right.id) ?? 0;
+  const leftValue = leftChronology ?? leftFallback;
+  const rightValue = rightChronology ?? rightFallback;
+
+  return direction * (leftValue - rightValue) || compareByTitle(left, right);
+}
+
+function compareByLinkedComponents(left, right, direction) {
+  const leftCount = getLinkedRegistryComponents(left).length;
+  const rightCount = getLinkedRegistryComponents(right).length;
+
+  return direction * (leftCount - rightCount) || compareByTitle(left, right);
+}
+
+function compareInspirationCards(left, right, sortMode, sourceOrderById) {
+  switch (sortMode) {
+    case "za":
+      return compareByTitle(left, right, -1);
+    case "chronology-asc":
+      return compareByChronology(left, right, 1, sourceOrderById);
+    case "chronology-desc":
+      return compareByChronology(left, right, -1, sourceOrderById);
+    case "components-desc":
+      return compareByLinkedComponents(left, right, -1);
+    case "components-asc":
+      return compareByLinkedComponents(left, right, 1);
+    case "az":
+    default:
+      return compareByTitle(left, right);
+  }
 }
 
 function getLinkedRegistryComponents(inspiration) {
@@ -173,18 +280,40 @@ function InspirationImage({ inspiration }) {
   );
 }
 
-export default function InspirationsPage() {
+function ComponentGroup({ slotId, components }) {
+  return (
+    <article className="inspirations-page__component-group">
+      <h4>
+        <span>{SLOT_LABELS[slotId] || titleCase(slotId)}</span>
+        <em>{components.length}</em>
+      </h4>
+      <div className="inspirations-page__linked">
+        {components.slice(0, 6).map((component) => (
+          <span key={component.id} title={component.summary}>
+            <strong>{component.title}</strong>
+            <small>{formatComponentMeta(component)}</small>
+          </span>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+export default function InspirationsPage({ onOpenMonsterComposer }) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("Any Type");
   const [themeFilter, setThemeFilter] = useState("Any Theme");
   const [packFilter, setPackFilter] = useState(ANY_PACK);
+  const [sortMode, setSortMode] = useState("az");
   const [activeInspirationId, setActiveInspirationId] = useState("");
 
   const allInspirations = useMemo(() => {
-    return STATIC_CONTENT_REGISTRY.getInspirations({ workflow: INSPIRATION_WORKFLOW_ID }).sort((a, b) =>
-      getInspirationTitle(a).localeCompare(getInspirationTitle(b)),
-    );
+    return STATIC_CONTENT_REGISTRY.getInspirations({ workflow: INSPIRATION_WORKFLOW_ID });
   }, []);
+
+  const sourceOrderById = useMemo(() => {
+    return new Map(allInspirations.map((inspiration, index) => [inspiration.id, index]));
+  }, [allInspirations]);
 
   const packOptions = useMemo(() => {
     const inspirationPackIds = new Set(
@@ -226,7 +355,8 @@ export default function InspirationsPage() {
   const cards = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return allInspirations.filter((inspiration) => {
+    return allInspirations
+      .filter((inspiration) => {
       const sourceAnchor = getSourceAnchorMeta(inspiration);
       const linkedComponents = getLinkedRegistryComponents(inspiration);
       const sourceType = getSourceType(inspiration, sourceAnchor);
@@ -248,155 +378,207 @@ export default function InspirationsPage() {
       if (!query) return true;
 
       return buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents).includes(query);
-    });
-  }, [allInspirations, search, typeFilter, themeFilter, packFilter]);
+    })
+      .sort((left, right) => compareInspirationCards(left, right, sortMode, sourceOrderById));
+  }, [allInspirations, search, typeFilter, themeFilter, packFilter, sortMode, sourceOrderById]);
 
-  const activeInspiration = allInspirations.find((item) => item.id === activeInspirationId) || null;
+  const activeInspiration =
+    cards.find((item) => item.id === activeInspirationId) ||
+    allInspirations.find((item) => item.id === activeInspirationId) ||
+    cards[0] ||
+    null;
   const activeSourceAnchor = activeInspiration ? getSourceAnchorMeta(activeInspiration) : null;
+  const activeSourceAnchorId = activeInspiration ? getPrimarySourceAnchorId(activeInspiration) : "";
   const linkedComponents = activeInspiration ? getLinkedRegistryComponents(activeInspiration) : [];
   const groupedComponents = groupComponentsBySlot(linkedComponents);
-  const displayedComponentCount = Math.min(
-    linkedComponents.length,
-    MONSTER_COMPONENT_DISPLAY_LIMIT,
-  );
+  const displayedComponentCount = Math.min(linkedComponents.length, MONSTER_COMPONENT_DISPLAY_LIMIT);
   const activeThemes = activeInspiration
     ? uniqueArray([...(activeInspiration.themes || []), ...(activeSourceAnchor?.themes || [])])
     : [];
   const activeMotifs = activeInspiration
     ? uniqueArray([...(activeInspiration.motifs || []), ...(activeSourceAnchor?.motifs || [])])
     : [];
+  const activeHorror = activeInspiration
+    ? uniqueArray([...(activeInspiration.horror || []), ...(activeSourceAnchor?.horror || [])])
+    : [];
   const activeContentPack = activeInspiration ? getContentPack("inspirations", activeInspiration) : null;
+  const totalLinkedComponents = useMemo(() => {
+    return allInspirations.reduce((total, inspiration) => total + getLinkedRegistryComponents(inspiration).length, 0);
+  }, [allInspirations]);
+  const activeFilterCount = [
+    search.trim(),
+    packFilter !== ANY_PACK,
+    typeFilter !== "Any Type",
+    themeFilter !== "Any Theme",
+  ].filter(Boolean).length;
+
+  function clearFilters() {
+    setSearch("");
+    setPackFilter(ANY_PACK);
+    setTypeFilter("Any Type");
+    setThemeFilter("Any Theme");
+  }
+
+  function openMonsterComposerFrom(inspiration) {
+    if (!inspiration || !onOpenMonsterComposer) return;
+    const sourceAnchorId = getPrimarySourceAnchorId(inspiration);
+    onOpenMonsterComposer({
+      sourceAnchorId,
+      inspirationId: inspiration.id,
+      title: getInspirationTitle(inspiration),
+    });
+  }
 
   return (
     <section className="inspirations-page" aria-label="Inspirations archive">
-      <header className="inspirations-page__head">
-        <div>
-          <p className="eyebrow">Public Archive</p>
-          <h1>Inspirations</h1>
+      <header className="inspirations-page__hero inspirations-panel">
+        <div className="inspirations-page__hero-copy">
+          <p className="eyebrow">Source Atlas</p>
+          <h1>Choose the Horror Source</h1>
           <p>
-            Real-world processes, rituals, images, and horror premises that feed Cruor
-            components.
+            Browse real images, rituals, places, and cultural fears as playable seeds for Cruor tools.
+            Each source card works like a visual prompt, a lore dossier, and a bridge toward Monster Components.
           </p>
         </div>
-        <p className="inspirations-page__note">
-          This archive now uses the shared Cruor registry as its content source.
-          Existing Composer, Crucible, and Monster data remain unchanged.
-        </p>
+        <div className="inspirations-page__stats" aria-label="Inspiration archive summary">
+          <span>
+            <strong>{allInspirations.length}</strong>
+            <small>Sources</small>
+          </span>
+          <span>
+            <strong>{cards.length}</strong>
+            <small>Visible</small>
+          </span>
+          <span>
+            <strong>{totalLinkedComponents}</strong>
+            <small>Linked Components</small>
+          </span>
+        </div>
       </header>
 
-      <div className="inspirations-page__tools" aria-label="Inspiration filters">
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          type="search"
-          placeholder="Search inspirations, themes, motifs, components..."
-          aria-label="Search inspirations"
-        />
-        <select
-          value={packFilter}
-          onChange={(event) => setPackFilter(event.target.value)}
-          aria-label="Filter by content pack"
-        >
-          {packOptions.map((pack) => (
-            <option key={pack.id} value={pack.id}>
-              {pack.title}
-            </option>
-          ))}
-        </select>
-        <select
-          value={typeFilter}
-          onChange={(event) => setTypeFilter(event.target.value)}
-          aria-label="Filter by source type"
-        >
-          {sourceTypes.map((type) => (
-            <option key={type}>{type}</option>
-          ))}
-        </select>
-        <select
-          value={themeFilter}
-          onChange={(event) => setThemeFilter(event.target.value)}
-          aria-label="Filter by theme"
-        >
-          {themes.map((theme) => (
-            <option key={theme}>{theme}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="inspirations-page__grid">
-        {cards.map((inspiration) => {
-          const sourceAnchor = getSourceAnchorMeta(inspiration);
-          const linkedCount = getLinkedRegistryComponents(inspiration).length;
-          const motifs = uniqueArray([...(inspiration.motifs || []), ...(sourceAnchor?.motifs || [])]);
-          const packLabel = getContentPackLabel("inspirations", inspiration);
-
-          return (
+      <div className="inspirations-page__workspace">
+        <section className="inspirations-page__library" aria-label="Inspiration cards">
+          <div className="inspirations-page__tools inspirations-panel" aria-label="Inspiration filters">
+            <label className="inspirations-page__search">
+              <span>Search the archive</span>
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                type="search"
+                placeholder="Search inspirations, themes, components..."
+                aria-label="Search inspirations"
+              />
+            </label>
+            <label>
+              <span>Content Pack</span>
+              <select
+                value={packFilter}
+                onChange={(event) => setPackFilter(event.target.value)}
+                aria-label="Filter by content pack"
+              >
+                {packOptions.map((pack) => (
+                  <option key={pack.id} value={pack.id}>
+                    {pack.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Source Type</span>
+              <select
+                value={typeFilter}
+                onChange={(event) => setTypeFilter(event.target.value)}
+                aria-label="Filter by source type"
+              >
+                {sourceTypes.map((type) => (
+                  <option key={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Theme</span>
+              <select
+                value={themeFilter}
+                onChange={(event) => setThemeFilter(event.target.value)}
+                aria-label="Filter by theme"
+              >
+                {themes.map((theme) => (
+                  <option key={theme}>{theme}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>Sort</span>
+              <select
+                value={sortMode}
+                onChange={(event) => setSortMode(event.target.value)}
+                aria-label="Sort inspirations"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button
-              key={inspiration.id}
-              className="inspirations-page__card"
+              className="inspirations-page__clear-btn"
               type="button"
-              onClick={() => setActiveInspirationId(inspiration.id)}
+              onClick={clearFilters}
+              disabled={!activeFilterCount}
             >
-              <span
-                className="inspirations-page__visual"
-                role="img"
-                aria-label={inspiration.media?.imageNote || getInspirationTitle(inspiration)}
-              >
-                <InspirationImage inspiration={inspiration} />
-              </span>
-              <span className="inspirations-page__body">
-                <strong>{getInspirationTitle(inspiration)}</strong>
-                <span>{getInspirationCaption(inspiration)}</span>
-                <em>{motifs.slice(0, 3).join(" / ") || "source anchor"}</em>
-                <small>
-                  {packLabel} · {linkedCount
-                    ? `${linkedCount} registry component${linkedCount === 1 ? "" : "s"}`
-                    : "No registry components yet"}
-                </small>
-              </span>
+              Clear {activeFilterCount ? `(${activeFilterCount})` : ""}
             </button>
-          );
-        })}
-      </div>
+          </div>
+          <div className="inspirations-page__library-head">
+            <div>
+              <p className="eyebrow">Visual Source Cards</p>
+              <h2>{cards.length ? `${cards.length} usable source${cards.length === 1 ? "" : "s"}` : "No matching sources"}</h2>
+            </div>
+            <span>{activeFilterCount ? `${activeFilterCount} active filter${activeFilterCount === 1 ? "" : "s"}` : "All sources"}</span>
+          </div>
 
-      {!cards.length && <div className="empty">No inspirations match these filters.</div>}
+          <div className="inspirations-page__grid">
+            {cards.map((inspiration) => {
+              const packLabel = getContentPackLabel("inspirations", inspiration);
+              const isActive = activeInspiration?.id === inspiration.id;
 
-      {activeInspiration && (
-        <div
-          className="inspirations-page__backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setActiveInspirationId("");
-          }}
-        >
-          <section
-            className="inspirations-page__modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="inspirationPageDetailTitle"
-          >
-            <header className="inspirations-page__modal-head">
-              <div>
-                <p className="eyebrow">Inspiration Archive</p>
-                <h2 id="inspirationPageDetailTitle">{getInspirationTitle(activeInspiration)}</h2>
-                <p>{getSourceType(activeInspiration, activeSourceAnchor)}</p>
-                {activeContentPack && (
-                  <span className="inspirations-page__pack-badge">
-                    Content Pack · {activeContentPack.title}
-                  </span>
-                )}
-              </div>
-              <button
-                className="icon-btn"
-                type="button"
-                title="Close"
-                aria-label="Close inspiration detail"
-                onClick={() => setActiveInspirationId("")}
-              >
-                <i className="fa-solid fa-xmark" aria-hidden="true"></i>
-              </button>
-            </header>
-            <div className="inspirations-page__modal-body">
+              return (
+                <article
+                  key={inspiration.id}
+                  className={`inspirations-page__card ${isActive ? "is-active" : ""}`}
+                >
+                  <button
+                    className="inspirations-page__card-image"
+                    type="button"
+                    onClick={() => setActiveInspirationId(inspiration.id)}
+                    aria-label={`Open ${getInspirationTitle(inspiration)} dossier`}
+                  >
+                    <span
+                      className="inspirations-page__visual"
+                      role="img"
+                      aria-label={inspiration.media?.imageNote || getInspirationTitle(inspiration)}
+                    >
+                      <InspirationImage inspiration={inspiration} />
+                    </span>
+                    <span className="inspirations-page__card-type">{packLabel}</span>
+                  </button>
+
+                  <div className="inspirations-page__body">
+                    <strong>{getInspirationTitle(inspiration)}</strong>
+                    <span>{getInspirationCaption(inspiration)}</span>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          {!cards.length && <div className="empty">No inspirations match these filters.</div>}
+        </section>
+
+        <aside className="inspirations-page__dossier inspirations-panel" aria-label="Selected inspiration dossier">
+          {activeInspiration ? (
+            <div key={activeInspiration.id} className="inspirations-page__dossier-content">
               <div
                 className="inspirations-page__detail-visual"
                 role="img"
@@ -404,6 +586,34 @@ export default function InspirationsPage() {
               >
                 <InspirationImage inspiration={activeInspiration} />
               </div>
+
+              <div className="inspirations-page__dossier-head">
+                <p className="eyebrow">Selected Source</p>
+                <h2>{getInspirationTitle(activeInspiration)}</h2>
+                <p>{getSourceType(activeInspiration, activeSourceAnchor)}</p>
+                {activeContentPack && (
+                  <span className="inspirations-page__pack-badge">
+                    Content Pack · {activeContentPack.title}
+                  </span>
+                )}
+              </div>
+
+              <div className="inspirations-page__use-actions" aria-label="Use this inspiration">
+                <button
+                  className="inspirations-page__primary-action"
+                  type="button"
+                  onClick={() => openMonsterComposerFrom(activeInspiration)}
+                  disabled={!onOpenMonsterComposer || !activeSourceAnchorId}
+                >
+                  Use as Monster Seed
+                </button>
+                <span>
+                  {linkedComponents.length
+                    ? `${linkedComponents.length} linked graft${linkedComponents.length === 1 ? "" : "s"}`
+                    : "Awaiting linked grafts"}
+                </span>
+              </div>
+
               <div className="inspirations-page__detail-main">
                 <section>
                   <h3>What It Is</h3>
@@ -416,7 +626,7 @@ export default function InspirationsPage() {
                 <section>
                   <h3>Cruor Themes</h3>
                   <div className="inspirations-page__chips">
-                    {activeThemes.map((theme) => (
+                    {(activeThemes.length ? activeThemes : ["Unsorted"]).map((theme) => (
                       <span key={theme}>{theme}</span>
                     ))}
                   </div>
@@ -424,11 +634,21 @@ export default function InspirationsPage() {
                 <section>
                   <h3>Cruor Motifs</h3>
                   <div className="inspirations-page__chips">
-                    {activeMotifs.map((motif) => (
+                    {(activeMotifs.length ? activeMotifs : ["Unsorted"]).map((motif) => (
                       <span key={motif}>{motif}</span>
                     ))}
                   </div>
                 </section>
+                {activeHorror.length ? (
+                  <section>
+                    <h3>Horror Texture</h3>
+                    <div className="inspirations-page__chips">
+                      {activeHorror.map((texture) => (
+                        <span key={texture}>{texture}</span>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
                 <section>
                   <div className="inspirations-page__section-head">
                     <h3>Linked Monster Components</h3>
@@ -441,20 +661,7 @@ export default function InspirationsPage() {
                   {linkedComponents.length ? (
                     <div className="inspirations-page__component-groups">
                       {Object.entries(groupedComponents).map(([slotId, components]) => (
-                        <article key={slotId} className="inspirations-page__component-group">
-                          <h4>
-                            <span>{SLOT_LABELS[slotId] || titleCase(slotId)}</span>
-                            <em>{components.length}</em>
-                          </h4>
-                          <div className="inspirations-page__linked">
-                            {components.slice(0, 6).map((component) => (
-                              <span key={component.id} title={component.summary}>
-                                <strong>{component.title}</strong>
-                                <small>{formatComponentMeta(component)}</small>
-                              </span>
-                            ))}
-                          </div>
-                        </article>
+                        <ComponentGroup key={slotId} slotId={slotId} components={components} />
                       ))}
                     </div>
                   ) : (
@@ -463,9 +670,15 @@ export default function InspirationsPage() {
                 </section>
               </div>
             </div>
-          </section>
-        </div>
-      )}
+          ) : (
+            <div className="inspirations-page__empty-dossier">
+              <p className="eyebrow">No Source Selected</p>
+              <h2>Choose a card to open its dossier.</h2>
+              <p>Each source can become a monster seed, scene pressure, motif cluster, or reusable horror reference.</p>
+            </div>
+          )}
+        </aside>
+      </div>
     </section>
   );
 }

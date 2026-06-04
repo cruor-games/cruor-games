@@ -10826,3 +10826,130 @@
   visibility: visible !important;
   pointer-events: auto !important;
 }
+
+/* Flow dock timeline hard repair — scoped override against global brief-wizard rules. */
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline {
+  --flow-step-size: 32px;
+  --flow-step-gap: 5px;
+  --flow-line-y: calc(var(--flow-step-size) / 2);
+  align-items: center !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .monster-flow-nav-btn,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-number {
+  box-sizing: border-box !important;
+  width: var(--flow-step-size) !important;
+  min-width: var(--flow-step-size) !important;
+  max-width: var(--flow-step-size) !important;
+  height: var(--flow-step-size) !important;
+  min-height: var(--flow-step-size) !important;
+  max-height: var(--flow-step-size) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .monster-flow-nav-btn {
+  align-self: center !important;
+  justify-self: center !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .monster-flow-progress,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-wizard__progress {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: repeat(var(--flow-step-count, 7), var(--flow-step-size)) !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: var(--flow-step-gap) !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: var(--flow-step-size) !important;
+  min-height: var(--flow-step-size) !important;
+  max-height: var(--flow-step-size) !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-wizard__progress::after {
+  content: "" !important;
+  position: absolute !important;
+  top: var(--flow-line-y) !important;
+  left: calc(var(--flow-step-size) / 2) !important;
+  right: calc(var(--flow-step-size) / 2) !important;
+  z-index: 0 !important;
+  display: block !important;
+  height: 2px !important;
+  background: rgba(255, 238, 242, .085) !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-wizard__progress::before {
+  content: "" !important;
+  position: absolute !important;
+  top: var(--flow-line-y) !important;
+  left: calc(var(--flow-step-size) / 2) !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: calc((100% - var(--flow-step-size)) * var(--flow-active-progress, var(--brief-progress, 0))) !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, rgba(143, 150, 148, .72), rgba(190, 64, 82, .82)) !important;
+  box-shadow: 0 0 14px rgba(122, 26, 40, .28) !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled),
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled),
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active:hover:not(:disabled),
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active:focus-visible:not(:disabled) {
+  position: relative !important;
+  z-index: 2 !important;
+  display: grid !important;
+  place-items: center !important;
+  align-self: center !important;
+  justify-self: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-number,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled) .brief-step-number,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled) .brief-step-number,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active .brief-step-number,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active:hover:not(:disabled) .brief-step-number,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active:focus-visible:not(:disabled) .brief-step-number {
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.reached:not(.active) .brief-step-number {
+  border-color: rgba(143, 150, 148, .6) !important;
+  background:
+    linear-gradient(180deg, rgba(143, 150, 148, .16), rgba(10, 12, 12, .94)),
+    #070506 !important;
+  color: #bec8c5 !important;
+  box-shadow:
+    0 0 0 1px rgba(143, 150, 148, .16),
+    0 0 18px rgba(143, 150, 148, .18),
+    inset 0 1px 0 rgba(255, 238, 242, .06) !important;
+}
+
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-label,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn.active .brief-step-label,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled) .brief-step-label,
+.monster-shell .monster-stage-progress-dock .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled) .brief-step-label {
+  top: calc(100% + 5px) !important;
+  transform: translateX(-50%) !important;
+}
+

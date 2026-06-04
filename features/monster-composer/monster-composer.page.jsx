@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./monster-composer.styles.css";
 import {
   X,
@@ -1067,7 +1067,7 @@ function copyTextFallback(text) {
 
 
 
-export default function CruorMonsterComposerMvp() {
+export default function CruorMonsterComposerMvp({ inspirationSeed = null } = {}) {
   const [typeId, setTypeId] = useState("undead");
   const [category, setCategory] = useState("Zombie");
   const [roleId, setRoleId] = useState("standard");
@@ -1112,6 +1112,23 @@ export default function CruorMonsterComposerMvp() {
   const monsterTier = MONSTER_TIERS.find((item) => item.id === monsterTierId) || MONSTER_TIERS[0];
   const tempoProfile =
     TEMPO_PROFILES.find((item) => item.id === tempoProfileId) || TEMPO_PROFILES[1];
+
+  useEffect(() => {
+    if (!inspirationSeed?.sourceAnchorId) return;
+
+    const sourceExists = SOURCES.some((item) => item.id === inspirationSeed.sourceAnchorId);
+    if (!sourceExists) return;
+
+    setSourceId(inspirationSeed.sourceAnchorId);
+    setNavigatorSourceFilters([inspirationSeed.sourceAnchorId]);
+    setComposerStarted(true);
+    setStartMode("scratch");
+    setComposerStageMode("grafts");
+    setViewMode("composer");
+    setComponentNavigatorMode("global");
+    setComponentNavigatorOpen(true);
+  }, [inspirationSeed?.revision, inspirationSeed?.sourceAnchorId]);
+
   const defaultPressureBudget =
     role.budget +
     danger.budgetOffset +

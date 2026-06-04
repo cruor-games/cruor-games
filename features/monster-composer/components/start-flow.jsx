@@ -85,6 +85,9 @@ export function GuidedFlowPanel({
     0,
     steps.findIndex((step) => step.active)
   );
+  const flowStepCount = Math.max(steps.length, 1);
+  const flowActiveProgress =
+    flowStepCount > 1 ? Math.max(activeStepIndex, 0) / (flowStepCount - 1) : 0;
   const previousStep = useMemo(
     () =>
       [...steps]
@@ -176,8 +179,9 @@ export function GuidedFlowPanel({
             aria-label="Monster build progress"
             style={{
               "--brief-progress": String(guidedFlow.progress),
-              "--flow-step-count": String(Math.max(steps.length, 1)),
+              "--flow-step-count": String(flowStepCount),
               "--flow-active-step": String(Math.max(activeStepIndex, 0)),
+              "--flow-active-progress": String(flowActiveProgress),
             }}
           >
             {steps.map((step) => (

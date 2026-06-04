@@ -61,6 +61,7 @@ export default function AppRouter() {
   const [hasOpenedMapGenerator, setHasOpenedMapGenerator] = useState(false);
   const [mapRequest, setMapRequest] = useState(null);
   const [mapRequestRevision, setMapRequestRevision] = useState(0);
+  const [monsterInspirationSeed, setMonsterInspirationSeed] = useState(null);
   const darkenSnapshotProviderRef = useRef(null);
 
   const createMapRequestFromSnapshot = useCallback(
@@ -143,6 +144,15 @@ export default function AppRouter() {
     [activateCrucibleGenerator, activateDarkenTab]
   );
 
+  const openMonsterFromInspiration = useCallback((seed = {}) => {
+    setMonsterInspirationSeed({
+      ...seed,
+      revision: Date.now(),
+    });
+    setActiveSection("crucible");
+    setActiveCrucibleGenerator("monster");
+  }, []);
+
   const homeContent = (
     <HomePage
       onOpenCrucibleTool={openCrucibleTool}
@@ -208,7 +218,7 @@ export default function AppRouter() {
           role="tabpanel"
           aria-labelledby="crucibleViewTab-monster-composer"
         >
-          <MonsterComposerPage uiMode={activeUiMode} />
+          <MonsterComposerPage uiMode={activeUiMode} inspirationSeed={monsterInspirationSeed} />
         </section>
       )}
     </section>
@@ -224,7 +234,7 @@ export default function AppRouter() {
       onOpenCrucibleTool={openCrucibleTool}
       homeContent={homeContent}
       crucibleContent={crucibleContent}
-      inspirationsContent={<InspirationsPage />}
+      inspirationsContent={<InspirationsPage onOpenMonsterComposer={openMonsterFromInspiration} />}
     />
   );
 }

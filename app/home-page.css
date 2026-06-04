@@ -174,6 +174,89 @@
   min-height: 584px;
 }
 
+.cruor-home__image-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(208, 162, 170, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, 0.034), transparent 60%),
+    rgba(0, 0, 0, 0.28);
+  box-shadow:
+    0 20px 52px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 238, 242, 0.06);
+}
+
+.cruor-home__image-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, transparent 42%, rgba(0, 0, 0, 0.28)),
+    radial-gradient(circle at 50% 0%, rgba(122, 26, 40, 0.12), transparent 60%);
+  pointer-events: none;
+}
+
+.cruor-home__image-frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter:
+    saturate(0.88)
+    contrast(1.08)
+    brightness(0.82);
+}
+
+.cruor-home__image-frame--main {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: min(calc(100% - 28px), 820px);
+  aspect-ratio: 8 / 5;
+}
+
+.cruor-home__image-frame--map,
+.cruor-home__image-frame--inspiration {
+  position: absolute;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.cruor-home__image-frame--map {
+  top: 24px;
+  right: -8px;
+  width: min(300px, 54%);
+  aspect-ratio: 13 / 7;
+  transform: rotate(3deg);
+}
+
+.cruor-home__image-frame--inspiration {
+  bottom: 0;
+  left: 0;
+  width: min(320px, 58%);
+  aspect-ratio: 10 / 7;
+  transform: rotate(-4deg);
+}
+
+.cruor-home__hero-visual:hover .cruor-home__image-frame--map {
+  transform: rotate(5deg) translateY(-4px);
+  border-color: rgba(208, 162, 170, 0.5);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 238, 242, 0.08);
+}
+
+.cruor-home__hero-visual:hover .cruor-home__image-frame--inspiration {
+  transform: rotate(-6deg) translateY(-4px);
+  border-color: rgba(208, 162, 170, 0.5);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 238, 242, 0.08);
+}
+
 .cruor-home__placeholder {
   position: relative;
   overflow: hidden;
@@ -226,46 +309,11 @@
   font-size: 12px;
 }
 
-.cruor-home__placeholder--main {
-  position: absolute;
-  inset: 0 0 64px 28px;
-  min-height: 420px;
-}
 
-.cruor-home__placeholder--main > div {
-  align-content: end;
-  height: 100%;
-}
 
-.cruor-home__placeholder--map,
-.cruor-home__placeholder--monster {
-  position: absolute;
-  width: min(280px, 54%);
-  min-height: 170px;
-  transition: transform 0.22s ease, border-color 0.22s ease;
-}
 
-.cruor-home__placeholder--map {
-  top: 24px;
-  right: -8px;
-  transform: rotate(3deg);
-}
 
-.cruor-home__placeholder--monster {
-  bottom: 0;
-  left: 0;
-  transform: rotate(-4deg);
-}
 
-.cruor-home__hero-visual:hover .cruor-home__placeholder--map {
-  transform: rotate(5deg) translateY(-4px);
-  border-color: rgba(208, 162, 170, 0.5);
-}
-
-.cruor-home__hero-visual:hover .cruor-home__placeholder--monster {
-  transform: rotate(-6deg) translateY(-4px);
-  border-color: rgba(208, 162, 170, 0.5);
-}
 
 .cruor-home__statement {
   position: relative;
@@ -601,13 +649,21 @@
     min-height: 460px;
   }
 
-  .cruor-home__placeholder--main {
-    inset: 0 0 54px 0;
+  .cruor-home__image-frame--main {
+    right: auto;
+    left: 0;
+    width: min(100%, 640px);
+    aspect-ratio: 8 / 5;
   }
 
-  .cruor-home__placeholder--map,
-  .cruor-home__placeholder--monster {
-    width: min(240px, 72%);
+  .cruor-home__image-frame--map {
+    width: min(250px, 70%);
+    aspect-ratio: 13 / 7;
+  }
+
+  .cruor-home__image-frame--inspiration {
+    width: min(270px, 78%);
+    aspect-ratio: 10 / 7;
   }
 
   .cruor-home__statement {

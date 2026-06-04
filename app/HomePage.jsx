@@ -36,33 +36,33 @@ export default function HomePage({ onOpenCrucibleTool, onOpenInspirations }) {
           </div>
         </div>
 
-        <aside className="cruor-home__hero-visual" aria-label="Hero image placeholder">
+        <aside className="cruor-home__hero-visual" aria-label="Cruor workbench preview">
           <div className="cruor-home__visual-board">
-            <div className="cruor-home__placeholder cruor-home__placeholder--main">
-              <div>
-                <span>Hero Image Placeholder</span>
-                <strong>Workbench Composite</strong>
-                <p>
-                  Use one visual combining a dungeon map crop, a monster composer crop,
-                  and overlapping inspiration cards.
-                </p>
-              </div>
+            <div className="cruor-home__image-frame cruor-home__image-frame--main">
+              <img
+                src="/assets/landing-page/hero-workbench.webp"
+                alt="Cruor workbench interface preview with dark fantasy tools and source-inspired horror material."
+                decoding="async"
+                fetchPriority="high"
+              />
             </div>
 
-            <div className="cruor-home__placeholder cruor-home__placeholder--map">
-              <div>
-                <span>Image Detail</span>
-                <strong>Map Crop</strong>
-                <p>Readable dungeon region preview in dark cartographic style.</p>
-              </div>
+            <div className="cruor-home__image-frame cruor-home__image-frame--map">
+              <img
+                src="/assets/landing-page/hero-mapcrop.webp"
+                alt="Dark fantasy dungeon map crop from the Cruor location workbench."
+                loading="lazy"
+                decoding="async"
+              />
             </div>
 
-            <div className="cruor-home__placeholder cruor-home__placeholder--monster">
-              <div>
-                <span>Image Detail</span>
-                <strong>Monster UI</strong>
-                <p>Silhouette, anatomy, or Crucible slots. Tool-like, not illustrative.</p>
-              </div>
+            <div className="cruor-home__image-frame cruor-home__image-frame--inspiration">
+              <img
+                src="/assets/landing-page/hero-inspiration.webp"
+                alt="Cruor inspiration card crop showing real sources transformed into playable horror."
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           </div>
         </aside>

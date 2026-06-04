@@ -460,3 +460,118 @@
 .monster-shell .guided-flow-drawer__warning.is-critical .guided-flow-drawer__warning-text {
   max-width: 100%;
 }
+
+/* Flow dock timeline repair — fixed active step, aligned controls, exact active-line reach. */
+.monster-shell .guided-flow-drawer__timeline {
+  align-items: center !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .monster-flow-nav-btn,
+.monster-shell .guided-flow-drawer__timeline .brief-step-number {
+  box-sizing: border-box !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .monster-flow-nav-btn {
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .monster-flow-progress,
+.monster-shell .guided-flow-drawer__timeline .brief-wizard__progress {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(32px, 1fr)) !important;
+  align-items: center !important;
+  gap: 5px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  margin: 0 !important;
+  overflow: visible !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-wizard__progress::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 16px !important;
+  left: 16px !important;
+  right: 16px !important;
+  z-index: 0 !important;
+  display: block !important;
+  height: 2px !important;
+  background: rgba(255, 238, 242, .085) !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-wizard__progress::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 16px !important;
+  left: 16px !important;
+  z-index: 1 !important;
+  display: block !important;
+  width: calc((100% - 32px) * var(--brief-progress, 0)) !important;
+  height: 2px !important;
+  background: linear-gradient(90deg, rgba(143, 150, 148, .68), rgba(190, 64, 82, .78)) !important;
+  box-shadow: 0 0 14px rgba(122, 26, 40, .28) !important;
+  transform: translateY(-50%) !important;
+  pointer-events: none !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn {
+  position: relative !important;
+  z-index: 2 !important;
+  display: grid !important;
+  place-items: center !important;
+  align-self: center !important;
+  justify-self: center !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 !important;
+  transform: none !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled),
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled),
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active:hover:not(:disabled),
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active:focus-visible:not(:disabled),
+.monster-shell .guided-flow-drawer__timeline .brief-step-number,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled) .brief-step-number,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled) .brief-step-number,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active .brief-step-number,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active:hover:not(:disabled) .brief-step-number,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active:focus-visible:not(:disabled) .brief-step-number {
+  transform: none !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.reached:not(.active) .brief-step-number {
+  border-color: rgba(143, 150, 148, .56) !important;
+  background:
+    linear-gradient(180deg, rgba(143, 150, 148, .14), rgba(10, 12, 12, .94)),
+    #070506 !important;
+  color: #bec8c5 !important;
+  box-shadow:
+    0 0 0 1px rgba(143, 150, 148, .13),
+    0 0 18px rgba(143, 150, 148, .16),
+    inset 0 1px 0 rgba(255, 238, 242, .06) !important;
+}
+
+.monster-shell .guided-flow-drawer__timeline .brief-step-label,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn.active .brief-step-label,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:hover:not(:disabled) .brief-step-label,
+.monster-shell .guided-flow-drawer__timeline .brief-step-btn:focus-visible:not(:disabled) .brief-step-label {
+  top: calc(100% + 5px) !important;
+  transform: translateX(-50%) !important;
+}

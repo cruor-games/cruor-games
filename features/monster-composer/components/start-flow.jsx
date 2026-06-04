@@ -174,7 +174,11 @@ export function GuidedFlowPanel({
           <nav
             className="brief-wizard__progress monster-flow-progress"
             aria-label="Monster build progress"
-            style={{ "--brief-progress": String(guidedFlow.progress) }}
+            style={{
+              "--brief-progress": String(guidedFlow.progress),
+              "--flow-step-count": String(Math.max(steps.length, 1)),
+              "--flow-active-step": String(Math.max(activeStepIndex, 0)),
+            }}
           >
             {steps.map((step) => (
               <button

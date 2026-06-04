@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useRef, useState } from "react";
 import AppShell from "./AppShell.jsx";
+import HomePage from "./HomePage.jsx";
 import CrucibleTopbar from "../features/crucible/components/CrucibleTopbar.jsx";
 import DarkenLocationComposerPage from "../features/darken-location/composer/darken-location-composer.index.js";
 import InspirationsPage from "../features/inspirations/inspirations.index.js";
@@ -143,43 +144,10 @@ export default function AppRouter() {
   );
 
   const homeContent = (
-    <section className="app-shell__home" aria-labelledby="cruorHomeTitle">
-      <div className="app-shell__home-panel panel">
-        <h1 id="cruorHomeTitle">Build drop-in horror for the session you already prepared.</h1>
-
-        <div className="app-shell__home-actions" aria-label="Choose what you need">
-          <button
-            className="app-shell__home-action"
-            type="button"
-            onClick={() => openCrucibleTool("darken", "composer")}
-          >
-            <i className="fa-solid fa-book-open" aria-hidden="true" />
-            <strong>Darken a Location</strong>
-            <span>Haunted regions and map</span>
-          </button>
-
-          <button
-            className="app-shell__home-action"
-            type="button"
-            onClick={() => openCrucibleTool("monster")}
-          >
-            <i className="fa-solid fa-skull" aria-hidden="true" />
-            <strong>Build a Monster</strong>
-            <span>Body, pressure, weakness</span>
-          </button>
-
-          <button
-            className="app-shell__home-action"
-            type="button"
-            onClick={() => setActiveSection("inspirations")}
-          >
-            <i className="fa-solid fa-book-skull" aria-hidden="true" />
-            <strong>Browse Inspirations</strong>
-            <span>Sources and motifs</span>
-          </button>
-        </div>
-      </div>
-    </section>
+    <HomePage
+      onOpenCrucibleTool={openCrucibleTool}
+      onOpenInspirations={() => setActiveSection("inspirations")}
+    />
   );
 
   const crucibleContent = (

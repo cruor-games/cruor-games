@@ -154,8 +154,8 @@ function compareByChronology(left, right, direction, sourceOrderById) {
 }
 
 function compareByLinkedComponents(left, right, direction) {
-  const leftCount = getLinkedRegistryComponents(left).length;
-  const rightCount = getLinkedRegistryComponents(right).length;
+  const leftCount = getLinkedSystemComponents(left).length;
+  const rightCount = getLinkedSystemComponents(right).length;
 
   return direction * (leftCount - rightCount) || compareByTitle(left, right);
 }
@@ -176,6 +176,15 @@ function compareInspirationCards(left, right, sortMode, sourceOrderById) {
     default:
       return compareByTitle(left, right);
   }
+}
+
+function getLinkedSystemComponents(inspiration) {
+  const sourceAnchorId = getPrimarySourceAnchorId(inspiration);
+  if (!sourceAnchorId) return [];
+
+  return STATIC_CONTENT_REGISTRY.getLinkedComponents(sourceAnchorId).sort((a, b) =>
+    a.title.localeCompare(b.title),
+  );
 }
 
 function getLinkedRegistryComponents(inspiration) {
@@ -244,12 +253,8 @@ function buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents) {
     sourceAnchor?.type,
     ...getContentPacks("inspirations", inspiration).map((pack) => pack.title),
     ...(inspiration.sourceTypes || []),
-    ...(inspiration.themes || []),
-    ...(inspiration.motifs || []),
     ...(inspiration.horror || []),
     ...(sourceAnchor?.sourceTypes || []),
-    ...(sourceAnchor?.themes || []),
-    ...(sourceAnchor?.motifs || []),
     ...(sourceAnchor?.horror || []),
     ...linkedComponents.map((component) => component.title),
     ...linkedComponents.map((component) => component.summary),
@@ -299,12 +304,72 @@ function ComponentGroup({ slotId, components }) {
   );
 }
 
-export default function InspirationsPage({ onOpenMonsterComposer }) {
+function InspirationFilterSelect({ id, label, value, options, onChange, openSelectKey, setOpenSelectKey }) {
+  const normalizedOptions = options.map((option) =>
+    typeof option === "string" ? { value: option, label: option } : option,
+  );
+  const selectedOption = normalizedOptions.find((option) => option.value === value) || normalizedOptions[0];
+  const isOpen = openSelectKey === id;
+
+  return (
+    <label className="inspirations-page__filter-select">
+      <span>{label}</span>
+      <div
+        className="inspirations-page__select"
+        data-open={isOpen ? "true" : "false"}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            setOpenSelectKey((current) => (current === id ? "" : current));
+          }
+        }}
+      >
+        <button
+          className="inspirations-page__select-trigger"
+          type="button"
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+          onClick={() => setOpenSelectKey(isOpen ? "" : id)}
+        >
+          <strong>{selectedOption?.label || "Select"}</strong>
+          <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+        </button>
+        {isOpen && (
+          <div className="inspirations-page__select-menu" role="listbox" aria-label={label}>
+            {normalizedOptions.map((option) => {
+              const isActive = option.value === value;
+              return (
+                <button
+                  key={option.value}
+                  className={`inspirations-page__select-option ${isActive ? "is-active" : ""}`}
+                  type="button"
+                  role="option"
+                  aria-selected={isActive}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => {
+                    onChange(option.value);
+                    setOpenSelectKey("");
+                  }}
+                >
+                  <span>
+                    <strong>{option.label}</strong>
+                    {option.description ? <small>{option.description}</small> : null}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </label>
+  );
+}
+
+export default function InspirationsPage() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("Any Type");
-  const [themeFilter, setThemeFilter] = useState("Any Theme");
   const [packFilter, setPackFilter] = useState(ANY_PACK);
   const [sortMode, setSortMode] = useState("az");
+  const [openSelectKey, setOpenSelectKey] = useState("");
   const [activeInspirationId, setActiveInspirationId] = useState("");
 
   const allInspirations = useMemo(() => {
@@ -340,47 +405,30 @@ export default function InspirationsPage({ onOpenMonsterComposer }) {
     ];
   }, [allInspirations]);
 
-  const themes = useMemo(() => {
-    return [
-      "Any Theme",
-      ...uniqueArray(
-        allInspirations.flatMap((inspiration) => {
-          const sourceAnchor = getSourceAnchorMeta(inspiration);
-          return [...(inspiration.themes || []), ...(sourceAnchor?.themes || [])];
-        }),
-      ).sort((a, b) => a.localeCompare(b)),
-    ];
-  }, [allInspirations]);
-
   const cards = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return allInspirations
       .filter((inspiration) => {
-      const sourceAnchor = getSourceAnchorMeta(inspiration);
-      const linkedComponents = getLinkedRegistryComponents(inspiration);
-      const sourceType = getSourceType(inspiration, sourceAnchor);
-      const themeValues = uniqueArray([...(inspiration.themes || []), ...(sourceAnchor?.themes || [])]);
-      const packIds = getContentPackIds("inspirations", inspiration);
+        const sourceAnchor = getSourceAnchorMeta(inspiration);
+        const linkedComponents = getLinkedSystemComponents(inspiration);
+        const sourceType = getSourceType(inspiration, sourceAnchor);
+        const packIds = getContentPackIds("inspirations", inspiration);
 
-      if (packFilter !== ANY_PACK && !packIds.includes(packFilter)) {
-        return false;
-      }
+        if (packFilter !== ANY_PACK && !packIds.includes(packFilter)) {
+          return false;
+        }
 
-      if (typeFilter !== "Any Type" && sourceType !== typeFilter && !inspiration.sourceTypes?.includes(typeFilter)) {
-        return false;
-      }
+        if (typeFilter !== "Any Type" && sourceType !== typeFilter && !inspiration.sourceTypes?.includes(typeFilter)) {
+          return false;
+        }
 
-      if (themeFilter !== "Any Theme" && !themeValues.includes(themeFilter)) {
-        return false;
-      }
+        if (!query) return true;
 
-      if (!query) return true;
-
-      return buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents).includes(query);
-    })
+        return buildRegistryHaystack(inspiration, sourceAnchor, linkedComponents).includes(query);
+      })
       .sort((left, right) => compareInspirationCards(left, right, sortMode, sourceOrderById));
-  }, [allInspirations, search, typeFilter, themeFilter, packFilter, sortMode, sourceOrderById]);
+  }, [allInspirations, search, typeFilter, packFilter, sortMode, sourceOrderById]);
 
   const activeInspiration =
     cards.find((item) => item.id === activeInspirationId) ||
@@ -388,76 +436,39 @@ export default function InspirationsPage({ onOpenMonsterComposer }) {
     cards[0] ||
     null;
   const activeSourceAnchor = activeInspiration ? getSourceAnchorMeta(activeInspiration) : null;
-  const activeSourceAnchorId = activeInspiration ? getPrimarySourceAnchorId(activeInspiration) : "";
   const linkedComponents = activeInspiration ? getLinkedRegistryComponents(activeInspiration) : [];
   const groupedComponents = groupComponentsBySlot(linkedComponents);
   const displayedComponentCount = Math.min(linkedComponents.length, MONSTER_COMPONENT_DISPLAY_LIMIT);
-  const activeThemes = activeInspiration
-    ? uniqueArray([...(activeInspiration.themes || []), ...(activeSourceAnchor?.themes || [])])
-    : [];
-  const activeMotifs = activeInspiration
-    ? uniqueArray([...(activeInspiration.motifs || []), ...(activeSourceAnchor?.motifs || [])])
-    : [];
   const activeHorror = activeInspiration
     ? uniqueArray([...(activeInspiration.horror || []), ...(activeSourceAnchor?.horror || [])])
     : [];
   const activeContentPack = activeInspiration ? getContentPack("inspirations", activeInspiration) : null;
-  const totalLinkedComponents = useMemo(() => {
-    return allInspirations.reduce((total, inspiration) => total + getLinkedRegistryComponents(inspiration).length, 0);
-  }, [allInspirations]);
   const activeFilterCount = [
     search.trim(),
     packFilter !== ANY_PACK,
     typeFilter !== "Any Type",
-    themeFilter !== "Any Theme",
   ].filter(Boolean).length;
 
   function clearFilters() {
     setSearch("");
     setPackFilter(ANY_PACK);
     setTypeFilter("Any Type");
-    setThemeFilter("Any Theme");
-  }
-
-  function openMonsterComposerFrom(inspiration) {
-    if (!inspiration || !onOpenMonsterComposer) return;
-    const sourceAnchorId = getPrimarySourceAnchorId(inspiration);
-    onOpenMonsterComposer({
-      sourceAnchorId,
-      inspirationId: inspiration.id,
-      title: getInspirationTitle(inspiration),
-    });
   }
 
   return (
     <section className="inspirations-page" aria-label="Inspirations archive">
-      <header className="inspirations-page__hero inspirations-panel">
-        <div className="inspirations-page__hero-copy">
-          <p className="eyebrow">Source Atlas</p>
-          <h1>Choose the Horror Source</h1>
-          <p>
-            Browse real images, rituals, places, and cultural fears as playable seeds for Cruor tools.
-            Each source card works like a visual prompt, a lore dossier, and a bridge toward Monster Components.
-          </p>
-        </div>
-        <div className="inspirations-page__stats" aria-label="Inspiration archive summary">
-          <span>
-            <strong>{allInspirations.length}</strong>
-            <small>Sources</small>
-          </span>
-          <span>
-            <strong>{cards.length}</strong>
-            <small>Visible</small>
-          </span>
-          <span>
-            <strong>{totalLinkedComponents}</strong>
-            <small>Linked Components</small>
-          </span>
-        </div>
-      </header>
-
       <div className="inspirations-page__workspace">
         <section className="inspirations-page__library" aria-label="Inspiration cards">
+          <header className="inspirations-page__hero inspirations-panel">
+            <div className="inspirations-page__hero-copy">
+              <h1>Choose the Horror Source</h1>
+              <p>
+                Browse real images, rituals, places, and cultural fears as playable seeds for Cruor tools.
+                Each source card works like a visual prompt, a lore dossier, and a bridge toward the wider Cruor system.
+              </p>
+            </div>
+          </header>
+
           <div className="inspirations-page__tools inspirations-panel" aria-label="Inspiration filters">
             <label className="inspirations-page__search">
               <span>Search the archive</span>
@@ -465,62 +476,37 @@ export default function InspirationsPage({ onOpenMonsterComposer }) {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 type="search"
-                placeholder="Search inspirations, themes, components..."
+                placeholder="Search inspirations, source types, components..."
                 aria-label="Search inspirations"
               />
             </label>
-            <label>
-              <span>Content Pack</span>
-              <select
-                value={packFilter}
-                onChange={(event) => setPackFilter(event.target.value)}
-                aria-label="Filter by content pack"
-              >
-                {packOptions.map((pack) => (
-                  <option key={pack.id} value={pack.id}>
-                    {pack.title}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Source Type</span>
-              <select
-                value={typeFilter}
-                onChange={(event) => setTypeFilter(event.target.value)}
-                aria-label="Filter by source type"
-              >
-                {sourceTypes.map((type) => (
-                  <option key={type}>{type}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Theme</span>
-              <select
-                value={themeFilter}
-                onChange={(event) => setThemeFilter(event.target.value)}
-                aria-label="Filter by theme"
-              >
-                {themes.map((theme) => (
-                  <option key={theme}>{theme}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              <span>Sort</span>
-              <select
-                value={sortMode}
-                onChange={(event) => setSortMode(event.target.value)}
-                aria-label="Sort inspirations"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <InspirationFilterSelect
+              id="pack"
+              label="Content Pack"
+              value={packFilter}
+              options={packOptions.map((pack) => ({ value: pack.id, label: pack.title }))}
+              onChange={setPackFilter}
+              openSelectKey={openSelectKey}
+              setOpenSelectKey={setOpenSelectKey}
+            />
+            <InspirationFilterSelect
+              id="source-type"
+              label="Source Type"
+              value={typeFilter}
+              options={sourceTypes}
+              onChange={setTypeFilter}
+              openSelectKey={openSelectKey}
+              setOpenSelectKey={setOpenSelectKey}
+            />
+            <InspirationFilterSelect
+              id="sort"
+              label="Sort"
+              value={sortMode}
+              options={SORT_OPTIONS}
+              onChange={setSortMode}
+              openSelectKey={openSelectKey}
+              setOpenSelectKey={setOpenSelectKey}
+            />
             <button
               className="inspirations-page__clear-btn"
               type="button"
@@ -588,30 +574,12 @@ export default function InspirationsPage({ onOpenMonsterComposer }) {
               </div>
 
               <div className="inspirations-page__dossier-head">
-                <p className="eyebrow">Selected Source</p>
                 <h2>{getInspirationTitle(activeInspiration)}</h2>
-                <p>{getSourceType(activeInspiration, activeSourceAnchor)}</p>
                 {activeContentPack && (
                   <span className="inspirations-page__pack-badge">
                     Content Pack · {activeContentPack.title}
                   </span>
                 )}
-              </div>
-
-              <div className="inspirations-page__use-actions" aria-label="Use this inspiration">
-                <button
-                  className="inspirations-page__primary-action"
-                  type="button"
-                  onClick={() => openMonsterComposerFrom(activeInspiration)}
-                  disabled={!onOpenMonsterComposer || !activeSourceAnchorId}
-                >
-                  Use as Monster Seed
-                </button>
-                <span>
-                  {linkedComponents.length
-                    ? `${linkedComponents.length} linked graft${linkedComponents.length === 1 ? "" : "s"}`
-                    : "Awaiting linked grafts"}
-                </span>
               </div>
 
               <div className="inspirations-page__detail-main">
@@ -622,22 +590,6 @@ export default function InspirationsPage({ onOpenMonsterComposer }) {
                 <section>
                   <h3>Why It Disturbs</h3>
                   <p>{getInspirationLogic(activeInspiration, activeSourceAnchor)}</p>
-                </section>
-                <section>
-                  <h3>Cruor Themes</h3>
-                  <div className="inspirations-page__chips">
-                    {(activeThemes.length ? activeThemes : ["Unsorted"]).map((theme) => (
-                      <span key={theme}>{theme}</span>
-                    ))}
-                  </div>
-                </section>
-                <section>
-                  <h3>Cruor Motifs</h3>
-                  <div className="inspirations-page__chips">
-                    {(activeMotifs.length ? activeMotifs : ["Unsorted"]).map((motif) => (
-                      <span key={motif}>{motif}</span>
-                    ))}
-                  </div>
                 </section>
                 {activeHorror.length ? (
                   <section>

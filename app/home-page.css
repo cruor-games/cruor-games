@@ -149,23 +149,6 @@
   min-height: 620px;
   padding: 18px;
   overflow: hidden;
-  border: 1px solid var(--home-line);
-  background:
-    linear-gradient(180deg, rgba(255, 238, 242, 0.034), transparent 60%),
-    linear-gradient(135deg, rgba(122, 26, 40, 0.1), rgba(0, 0, 0, 0.08) 48%, rgba(0, 0, 0, 0.2)),
-    var(--home-panel);
-  box-shadow:
-    0 28px 90px rgba(0, 0, 0, 0.56),
-    inset 0 1px 0 rgba(255, 238, 242, 0.06);
-}
-
-.cruor-home__hero-visual::before {
-  content: "";
-  position: absolute;
-  inset: -20% -10% auto;
-  height: 65%;
-  background: radial-gradient(circle at 50% 0%, rgba(122, 26, 40, 0.26), transparent 62%);
-  pointer-events: none;
 }
 
 .cruor-home__visual-board {

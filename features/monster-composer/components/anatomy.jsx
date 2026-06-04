@@ -858,6 +858,7 @@ export function MonsterSilhouetteMap({
   setMonsterTierId,
   setTempoProfileId,
   setDangerId,
+  componentNavigatorPanel,
   guidedFlowPanel,
 }) {
   const silhouetteId = getSilhouetteId(typeId, category, activePreset);
@@ -1016,6 +1017,15 @@ export function MonsterSilhouetteMap({
                     {[...ANATOMY_RIGHT_SLOT_IDS, ...ANATOMY_LEFT_SLOT_IDS, ...ANATOMY_BOTTOM_SLOT_IDS].map(renderSlotCard)}
                   </div>
                 </aside>
+
+                {componentNavigatorPanel ? (
+                  <div
+                    className="anatomy-stage__navigator-overlay"
+                    aria-label="Graft navigator drawer"
+                  >
+                    {componentNavigatorPanel}
+                  </div>
+                ) : null}
 
                 {renderStageCenter()}
 

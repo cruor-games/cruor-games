@@ -79,7 +79,7 @@ import { buildGuidedFlow } from "./model/start-flow.js";
 import { MonsterComposerTopbar } from "./components/shell.jsx";
 import { GuidedFlowPanel, TemplatePickerModal } from "./components/start-flow.jsx";
 import { MonsterSilhouetteMap } from "./components/anatomy.jsx";
-import { ComponentNavigatorModal } from "./components/navigator.jsx";
+import { ComponentNavigatorDrawer } from "./components/navigator.jsx";
 import { BalanceWorkbench, ExportWorkbench, RunModePanel } from "./components/panels.jsx";
 
 
@@ -1913,6 +1913,48 @@ export default function CruorMonsterComposerMvp() {
     }
   }
 
+  const componentNavigatorDrawer = (
+    <ComponentNavigatorDrawer
+      open={componentNavigatorOpen && viewMode === "composer" && composerStarted && composerStageMode === "grafts"}
+      mode={componentNavigatorMode}
+      activeSlot={activeSlot}
+      navigatorSlotFilter={navigatorSlotFilter}
+      setNavigatorSlotFilter={setNavigatorSlotFilter}
+      navigatorPackFilter={navigatorPackFilter}
+      setNavigatorPackFilter={setNavigatorPackFilter}
+      navigatorSourceFilters={navigatorSourceFilters}
+      setNavigatorSourceFilters={setNavigatorSourceFilters}
+      contentPackOptions={contentPackOptions}
+      setActiveSlot={setActiveSlot}
+      onClose={() => setComponentNavigatorOpen(false)}
+      visibleFeatures={visibleFeatures}
+      selected={selected}
+      selectedFeatures={selectedFeatures}
+      typeId={typeId}
+      category={category}
+      roleId={roleId}
+      computed={computed}
+      sourceId={sourceId}
+      setSourceId={setSourceId}
+      setActivePresetId={setActivePresetId}
+      navigatorSearch={navigatorSearch}
+      setNavigatorSearch={setNavigatorSearch}
+      navigatorFiltersOpen={navigatorFiltersOpen}
+      setNavigatorFiltersOpen={setNavigatorFiltersOpen}
+      advancedMode={advancedMode}
+      slotCaps={slotCaps}
+      composerMode={composerMode}
+      customMode={customMode}
+      addFeature={handleAddFeatureFromNavigator}
+      setDraggedFeatureId={setDraggedFeatureId}
+      getSlotCap={getSlotCap}
+      buildSmartSlotPicks={buildSmartSlotPicks}
+      buildFeatureDecisionProfile={getFeatureDecisionProfile}
+      buildFeatureImpactPreview={buildFeatureImpactPreview}
+    />
+  );
+
+
   return (
     <div
       className="cruor-composer-shell monster-composer monster-shell"
@@ -1989,6 +2031,7 @@ export default function CruorMonsterComposerMvp() {
                 setMonsterTierId={setMonsterTierId}
                 setTempoProfileId={setTempoProfileId}
                 setDangerId={setDangerId}
+                componentNavigatorPanel={componentNavigatorDrawer}
                 guidedFlowPanel={(
                   <GuidedFlowPanel
                     guidedFlow={guidedFlow}
@@ -2148,45 +2191,6 @@ export default function CruorMonsterComposerMvp() {
               />
             );
           })()}
-
-        <ComponentNavigatorModal
-          open={componentNavigatorOpen}
-          mode={componentNavigatorMode}
-          activeSlot={activeSlot}
-          navigatorSlotFilter={navigatorSlotFilter}
-          setNavigatorSlotFilter={setNavigatorSlotFilter}
-          navigatorPackFilter={navigatorPackFilter}
-          setNavigatorPackFilter={setNavigatorPackFilter}
-          navigatorSourceFilters={navigatorSourceFilters}
-          setNavigatorSourceFilters={setNavigatorSourceFilters}
-          contentPackOptions={contentPackOptions}
-          setActiveSlot={setActiveSlot}
-          onClose={() => setComponentNavigatorOpen(false)}
-          visibleFeatures={visibleFeatures}
-          selected={selected}
-          selectedFeatures={selectedFeatures}
-          typeId={typeId}
-          category={category}
-          roleId={roleId}
-          computed={computed}
-          sourceId={sourceId}
-          setSourceId={setSourceId}
-          setActivePresetId={setActivePresetId}
-          navigatorSearch={navigatorSearch}
-          setNavigatorSearch={setNavigatorSearch}
-          navigatorFiltersOpen={navigatorFiltersOpen}
-          setNavigatorFiltersOpen={setNavigatorFiltersOpen}
-          advancedMode={advancedMode}
-          slotCaps={slotCaps}
-          composerMode={composerMode}
-          customMode={customMode}
-          addFeature={handleAddFeatureFromNavigator}
-          setDraggedFeatureId={setDraggedFeatureId}
-          getSlotCap={getSlotCap}
-          buildSmartSlotPicks={buildSmartSlotPicks}
-          buildFeatureDecisionProfile={getFeatureDecisionProfile}
-          buildFeatureImpactPreview={buildFeatureImpactPreview}
-        />
 
         <TemplatePickerModal
           open={templatePickerOpen}

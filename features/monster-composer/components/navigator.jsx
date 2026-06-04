@@ -148,8 +148,8 @@ function ImpactMetaRows({ impact }) {
 }
 
 
-export function ComponentNavigatorModal({
-  open,
+function ComponentNavigatorPanel({
+  surface = "modal",
   mode,
   activeSlot,
   navigatorSlotFilter,
@@ -185,9 +185,6 @@ export function ComponentNavigatorModal({
   buildFeatureImpactPreview,
 }) {
   const [navigatorBestPickFilter, setNavigatorBestPickFilter] = useState("all");
-
-  if (!open) return null;
-
   const slotData = SLOTS.find((slot) => slot.id === activeSlot) || SLOTS[0];
   const filteredSlotData = SLOTS.find((slot) => slot.id === navigatorSlotFilter);
   const modalTitle =
@@ -240,6 +237,11 @@ export function ComponentNavigatorModal({
       bestPickFilterActive ||
       (mode === "global" && navigatorSlotFilter !== "all")
   );
+  const showRail = surface !== "drawer" || navigatorFiltersOpen;
+
+  function toggleFilters() {
+    setNavigatorFiltersOpen((current) => !current);
+  }
 
   function selectContentPackFilter(packId) {
     setNavigatorPackFilter?.(packId);
@@ -274,22 +276,24 @@ export function ComponentNavigatorModal({
     setActivePresetId("");
   }
 
-  const modal = (
+  return (
     <div
-      className="component-navigator-modal"
+      className={`component-navigator-modal component-navigator-modal--${surface}`}
       data-navigator-mode={mode}
       data-filters-open={navigatorFiltersOpen ? "true" : "false"}
       data-has-smart-picks={smartPicks.length > 0 ? "true" : "false"}
-      role="dialog"
-      aria-modal="true"
+      role={surface === "modal" ? "dialog" : "region"}
+      aria-modal={surface === "modal" ? "true" : undefined}
       aria-label={modalTitle}
     >
-      <button
-        className="component-navigator-modal__scrim"
-        type="button"
-        aria-label="Close Component Navigator"
-        onClick={onClose}
-      />
+      {surface === "modal" && (
+        <button
+          className="component-navigator-modal__scrim"
+          type="button"
+          aria-label="Close Component Navigator"
+          onClick={onClose}
+        />
+      )}
       <aside
         className="panel navigator monster-navigator component-navigator-modal__panel"
         aria-label="Component Navigator"
@@ -299,16 +303,18 @@ export function ComponentNavigatorModal({
             <h2>{modalTitle}</h2>
           </div>
           <div className="component-navigator-modal__head-actions">
-            <button
-              className={`icon-btn navigator-filter-btn ${navigatorFiltersOpen ? "active" : ""}`}
-              type="button"
-              aria-label="Filter components"
-              aria-expanded={navigatorFiltersOpen}
-              data-active-count={hasActiveNavigatorFilters ? 1 : 0}
-              onClick={() => setNavigatorFiltersOpen((current) => !current)}
-            >
-              <SlidersHorizontal aria-hidden="true" />
-            </button>
+            {surface === "drawer" && (
+              <button
+                className={`icon-btn navigator-filter-btn ${navigatorFiltersOpen ? "active" : ""}`}
+                type="button"
+                aria-label="Filter components"
+                aria-expanded={navigatorFiltersOpen}
+                data-active-count={hasActiveNavigatorFilters ? 1 : 0}
+                onClick={toggleFilters}
+              >
+                <SlidersHorizontal aria-hidden="true" />
+              </button>
+            )}
             <button
               className="icon-btn"
               type="button"
@@ -320,7 +326,7 @@ export function ComponentNavigatorModal({
           </div>
         </div>
 
-        {navigatorFiltersOpen && (
+        {showRail && (
           <div className="navigator-tools monster-navigator-tools component-navigator-modal__rail">
             <div className="navigator-search-row">
               <div className="search-wrap monster-search-wrap">
@@ -332,98 +338,115 @@ export function ComponentNavigatorModal({
                   onChange={(event) => setNavigatorSearch(event.target.value)}
                 />
               </div>
+              {surface === "modal" && (
+                <button
+                  className={`icon-btn navigator-filter-btn ${navigatorFiltersOpen ? "active" : ""}`}
+                  type="button"
+                  aria-label="Filter components"
+                  aria-expanded={navigatorFiltersOpen}
+                  data-active-count={hasActiveNavigatorFilters ? 1 : 0}
+                  onClick={toggleFilters}
+                >
+                  <SlidersHorizontal aria-hidden="true" />
+                </button>
+              )}
+              <div className="navigator-count" aria-label="Visible component count">
+                {displayedFeatures.length}
+              </div>
             </div>
 
-            <div className="tag-filter-row monster-source-grid-open" aria-label="Filter components">
-              <div className="tag-filter-row__head">
-                <span>Component Filters</span>
-                <button
-                  className="tag-clear-btn"
-                  type="button"
-                  onClick={() => {
-                    setNavigatorSearch("");
-                    setNavigatorSlotFilter(mode === "global" ? "all" : activeSlot);
-                    setNavigatorPackFilter?.("all");
-                    setNavigatorSourceFilters?.([sourceId]);
-                    setNavigatorBestPickFilter("all");
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-              <div className="navigator-filter-panel">
-                <section className="navigator-filter-section">
-                  <strong>Inspiration</strong>
-                  <div className="filter-chip-grid source-filter">
-                    {sourceFilterOptions.map((item) => {
-                      const isActive = activeSourceFilters.includes(item.id);
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className={`navigator-filter-chip navigator-filter-chip--stacked ${isActive ? "active" : ""}`}
-                          aria-pressed={isActive}
-                          onClick={() => toggleSourceFilter(item.id)}
-                        >
-                          <span className="navigator-filter-chip__main">{item.label}</span>
-                          <span className="navigator-filter-chip__meta">{getSourcePackTitle(item)}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-                <section className="navigator-filter-section">
-                  <strong>Content Pack</strong>
-                  <div className="filter-chip-grid source-filter">
-                    {packOptions.map((pack) => (
-                      <button
-                        key={pack.id}
-                        type="button"
-                        className={`navigator-filter-chip ${pack.id === navigatorPackFilter ? "active" : ""}`}
-                        aria-pressed={pack.id === navigatorPackFilter}
-                        onClick={() => selectContentPackFilter(pack.id)}
-                      >
-                        {pack.title}
-                      </button>
-                    ))}
-                  </div>
-                </section>
-                {smartPicks.length > 0 && (
+            {(surface === "drawer" || navigatorFiltersOpen) && (
+              <div className="tag-filter-row monster-source-grid-open" aria-label="Filter components">
+                <div className="tag-filter-row__head">
+                  <span>Component Filters</span>
+                  <button
+                    className="tag-clear-btn"
+                    type="button"
+                    onClick={() => {
+                      setNavigatorSearch("");
+                      setNavigatorSlotFilter(mode === "global" ? "all" : activeSlot);
+                      setNavigatorPackFilter?.("all");
+                      setNavigatorSourceFilters?.([sourceId]);
+                      setNavigatorBestPickFilter("all");
+                    }}
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="navigator-filter-panel">
                   <section className="navigator-filter-section">
-                    <strong>Best Picks</strong>
+                    <strong>Inspiration</strong>
                     <div className="filter-chip-grid source-filter">
-                      <button
-                        type="button"
-                        className={`navigator-filter-chip ${navigatorBestPickFilter === "all" ? "active" : ""}`}
-                        aria-pressed={navigatorBestPickFilter === "all"}
-                        onClick={() => setNavigatorBestPickFilter("all")}
-                      >
-                        All Components
-                      </button>
-                      <button
-                        type="button"
-                        className={`navigator-filter-chip ${navigatorBestPickFilter === "best" ? "active" : ""}`}
-                        aria-pressed={navigatorBestPickFilter === "best"}
-                        onClick={() => setNavigatorBestPickFilter("best")}
-                      >
-                        Best Picks
-                      </button>
-                      {smartPicks.map((pick) => (
+                      {sourceFilterOptions.map((item) => {
+                        const isActive = activeSourceFilters.includes(item.id);
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`navigator-filter-chip navigator-filter-chip--stacked ${isActive ? "active" : ""}`}
+                            aria-pressed={isActive}
+                            onClick={() => toggleSourceFilter(item.id)}
+                          >
+                            <span className="navigator-filter-chip__main">{item.label}</span>
+                            <span className="navigator-filter-chip__meta">{getSourcePackTitle(item)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                  <section className="navigator-filter-section">
+                    <strong>Content Pack</strong>
+                    <div className="filter-chip-grid source-filter">
+                      {packOptions.map((pack) => (
                         <button
-                          key={pick.id}
+                          key={pack.id}
                           type="button"
-                          className={`navigator-filter-chip ${navigatorBestPickFilter === pick.id ? "active" : ""}`}
-                          aria-pressed={navigatorBestPickFilter === pick.id}
-                          onClick={() => setNavigatorBestPickFilter(pick.id)}
+                          className={`navigator-filter-chip ${pack.id === navigatorPackFilter ? "active" : ""}`}
+                          aria-pressed={pack.id === navigatorPackFilter}
+                          onClick={() => selectContentPackFilter(pack.id)}
                         >
-                          {pick.label}
+                          {pack.title}
                         </button>
                       ))}
                     </div>
                   </section>
-                )}
+                  {smartPicks.length > 0 && (
+                    <section className="navigator-filter-section">
+                      <strong>Best Picks</strong>
+                      <div className="filter-chip-grid source-filter">
+                        <button
+                          type="button"
+                          className={`navigator-filter-chip ${navigatorBestPickFilter === "all" ? "active" : ""}`}
+                          aria-pressed={navigatorBestPickFilter === "all"}
+                          onClick={() => setNavigatorBestPickFilter("all")}
+                        >
+                          All Components
+                        </button>
+                        <button
+                          type="button"
+                          className={`navigator-filter-chip ${navigatorBestPickFilter === "best" ? "active" : ""}`}
+                          aria-pressed={navigatorBestPickFilter === "best"}
+                          onClick={() => setNavigatorBestPickFilter("best")}
+                        >
+                          Best Picks
+                        </button>
+                        {smartPicks.map((pick) => (
+                          <button
+                            key={pick.id}
+                            type="button"
+                            className={`navigator-filter-chip ${navigatorBestPickFilter === pick.id ? "active" : ""}`}
+                            aria-pressed={navigatorBestPickFilter === pick.id}
+                            onClick={() => setNavigatorBestPickFilter(pick.id)}
+                          >
+                            {pick.label}
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -505,6 +528,26 @@ export function ComponentNavigatorModal({
       </aside>
     </div>
   );
+}
+
+export function ComponentNavigatorDrawer({ open, ...props }) {
+  if (!open) return null;
+
+  return (
+    <div
+      className={`component-navigator-drawer ${props.navigatorFiltersOpen ? "is-filters-open" : ""}`}
+      data-filters-open={props.navigatorFiltersOpen ? "true" : "false"}
+      data-navigator-mode={props.mode}
+    >
+      <ComponentNavigatorPanel surface="drawer" {...props} />
+    </div>
+  );
+}
+
+export function ComponentNavigatorModal({ open, ...props }) {
+  if (!open) return null;
+
+  const modal = <ComponentNavigatorPanel surface="modal" {...props} />;
 
   if (typeof document === "undefined" || !document.body) {
     return modal;
@@ -520,7 +563,6 @@ export function ComponentNavigatorModal({
     document.body
   );
 }
-
 
 function FeatureCard({
   feature,

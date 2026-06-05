@@ -20,7 +20,7 @@ function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-function LocationMapPreview({ generatedMap, error, viewResetKey }) {
+function LocationMapPreview({ generatedMap, error, viewResetKey, mapRequest }) {
   const previewManualOverrides = useMemo(
     () => ({
       rooms: {},
@@ -32,11 +32,47 @@ function LocationMapPreview({ generatedMap, error, viewResetKey }) {
   );
 
   if (!generatedMap) {
+    const fallbackRegions = mapRequest?.requiredRegions?.length
+      ? mapRequest.requiredRegions
+      : Array.from({ length: Math.max(4, mapRequest?.roomCount || 4) }, (_, index) => ({
+          id: `fallback-${index + 1}`,
+          label: `Region ${index + 1}`,
+        }));
+
     return (
-      <div className="location-map-preview location-map-preview--fallback" aria-label="Map preview fallback">
-        <div className="location-map-preview__fallback-card">
-          <strong>{error ? "Preview unavailable" : "Preview"}</strong>
-        </div>
+      <div className="location-map-preview location-map-preview--fallback location-map-preview--schematic" aria-label="Generated map schematic fallback">
+        <svg className="location-map-schematic" viewBox="0 0 100 64" role="img" aria-label={error ? `Schematic preview. ${error}` : "Schematic preview"}>
+          <defs>
+            <filter id="location-map-glow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {fallbackRegions.slice(0, 8).map((region, index) => {
+            const x = 14 + (index % 4) * 23;
+            const y = 18 + Math.floor(index / 4) * 27;
+            const nextIndex = index + 1;
+            if (nextIndex >= fallbackRegions.length || nextIndex >= 8) return null;
+            const x2 = 14 + (nextIndex % 4) * 23;
+            const y2 = 18 + Math.floor(nextIndex / 4) * 27;
+            return <line className="location-map-schematic__corridor" key={`line-${region.id || index}`} x1={x} y1={y} x2={x2} y2={y2} />;
+          })}
+          {fallbackRegions.slice(0, 8).map((region, index) => {
+            const x = 14 + (index % 4) * 23;
+            const y = 18 + Math.floor(index / 4) * 27;
+            const width = index % 3 === 0 ? 15 : 13;
+            const height = index % 2 === 0 ? 10 : 12;
+            return (
+              <g className="location-map-schematic__room" key={region.id || region.label || index} filter="url(#location-map-glow)">
+                <rect x={x - width / 2} y={y - height / 2} width={width} height={height} rx="0.6" />
+                <text x={x} y={y + 1.2}>{index + 1}</text>
+              </g>
+            );
+          })}
+        </svg>
       </div>
     );
   }
@@ -115,6 +151,7 @@ export function LocationMapStage({
           generatedMap={generatedMapPreview}
           error={previewError}
           viewResetKey={previewResetKey}
+          mapRequest={mapRequest}
         />
 
         <div className="location-stage-title-card" aria-label="Location summary">

@@ -22,7 +22,7 @@ import { createLocationPreviewModel, getLocationPreviewResetKey } from "./model/
 import { LocationBriefPanel } from "./components/LocationBriefPanel.jsx";
 import { LocationDraftControls } from "./components/LocationDraftControls.jsx";
 import { LocationMapStage } from "./components/LocationMapStage.jsx";
-import { LocationSlotRail } from "./components/LocationSlotRail.jsx";
+import { LocationRecapRail, LocationSlotRail } from "./components/LocationSlotRail.jsx";
 
 export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnapshotProviderReady, uiMode = "simple" } = {}) {
   const [state, setState] = useState(() => createInitialLocationComposerState(LOCATION_REGION_TEMPLATES));
@@ -30,6 +30,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   const [draftSummary, setDraftSummary] = useState(() => getStoredDraftSummary());
   const [draftStorageStatus, setDraftStorageStatus] = useState(() => getLocalDraftStorageStatus());
   const [savedDraftFingerprint, setSavedDraftFingerprint] = useState("");
+  const [leftPanelMode, setLeftPanelMode] = useState("setup");
   const draftStatusTimeoutRef = useRef(null);
 
   const selectedComponents = useMemo(() => getSelectedComponents(state), [state]);
@@ -149,25 +150,40 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
     <div className="cruor-composer-shell location-composer" data-cruor-ui-mode={uiMode} data-location-composer-ready="true">
       <div className="cruor-composer-workspace location-composer__workspace">
         <div className="cruor-composer-frame location-composer__frame">
-          <LocationBriefPanel
-            state={state}
-            setState={setState}
-            mapRequest={mapRequest}
-            draftControls={
-              <LocationDraftControls
-                canLoadDraft={Boolean(draftSummary)}
-                draftStorageStatus={draftStorageStatus}
-                draftSummary={draftSummary}
-                draftStatus={draftStatus}
-                hasUnsavedChanges={hasUnsavedChanges}
-                uiMode={uiMode}
-                onClearDraft={clearSavedDraft}
-                onLoadDraft={loadDraft}
-                onResetComposer={resetComposer}
-                onSaveDraft={saveDraft}
+          <aside className="cruor-composer-rail location-composer__rail location-composer__rail--left" aria-label="Location controls">
+            {leftPanelMode === "setup" ? (
+              <LocationBriefPanel
+                state={state}
+                setState={setState}
+                mapRequest={mapRequest}
+                onContinue={() => setLeftPanelMode("components")}
+                draftControls={
+                  <LocationDraftControls
+                    canLoadDraft={Boolean(draftSummary)}
+                    draftStorageStatus={draftStorageStatus}
+                    draftSummary={draftSummary}
+                    draftStatus={draftStatus}
+                    hasUnsavedChanges={hasUnsavedChanges}
+                    uiMode={uiMode}
+                    onClearDraft={clearSavedDraft}
+                    onLoadDraft={loadDraft}
+                    onResetComposer={resetComposer}
+                    onSaveDraft={saveDraft}
+                  />
+                }
               />
-            }
-          />
+            ) : (
+              <LocationSlotRail
+                state={state}
+                setState={setState}
+                selectedComponents={selectedComponents}
+                onOpenMapGenerator={onOpenMapGenerator}
+                onEditSetup={() => setLeftPanelMode("setup")}
+                snapshot={snapshot}
+                generatedMapPreview={previewResult.generatedMap}
+              />
+            )}
+          </aside>
 
           <LocationMapStage
             state={state}
@@ -180,12 +196,9 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
             uiMode={uiMode}
           />
 
-          <LocationSlotRail
+          <LocationRecapRail
             state={state}
-            setState={setState}
-            selectedComponents={selectedComponents}
-            onOpenMapGenerator={onOpenMapGenerator}
-            snapshot={snapshot}
+            digest={digest}
             generatedMapPreview={previewResult.generatedMap}
           />
         </div>

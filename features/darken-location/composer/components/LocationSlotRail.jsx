@@ -4,10 +4,10 @@ import {
   removeComponentFromSlot,
 } from "../model/location-composer-state.js";
 import {
+  getAssignedComponentsForRegion,
   getAssignedComponentsForSlot,
   getComponentsForSlot,
   getLocationSlots,
-  getSlotCapacityLabel,
   getSlotFilledCount,
   getSlotStatus,
 } from "../model/location-composer-selectors.js";
@@ -15,6 +15,7 @@ import {
   getGeneratedRoomForRegion,
 } from "../model/location-composer-map-preview.js";
 import { LocationComponentPickerModal } from "./LocationComponentPickerModal.jsx";
+import { LocationSelectMenu } from "./LocationBriefPanel.jsx";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -28,7 +29,18 @@ function getComponentSummary(component) {
   return component?.summary || component?.description || component?.text || component?.effect || "";
 }
 
-export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot, generatedMapPreview }) {
+function getSlotSummaries(slots) {
+  return slots.reduce((acc, slot) => {
+    acc[slot.id] = slot.description || `${slot.label} component.`;
+    return acc;
+  }, {});
+}
+
+function formatSlotCount(state, slot) {
+  return `${getSlotFilledCount(state, slot.id)}/${slot.max || 1}`;
+}
+
+export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot, generatedMapPreview, onEditSetup }) {
   const slots = getLocationSlots();
   const [pickerSlotId, setPickerSlotId] = useState("");
 
@@ -40,13 +52,8 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
   const activeGeneratedRoom = getGeneratedRoomForRegion(generatedMapPreview, state.activeRegionId);
   const activeSlotFilled = getSlotFilledCount(state, activeSlot?.id);
   const activeSlotIsFull = activeSlotFilled >= (activeSlot?.max || 1);
-
-  const selectedBySlot = useMemo(() => {
-    return slots.reduce((acc, slot) => {
-      acc[slot.id] = getAssignedComponentsForSlot(state, slot.id);
-      return acc;
-    }, {});
-  }, [slots, state]);
+  const slotSummaries = useMemo(() => getSlotSummaries(slots), [slots]);
+  const slotLabels = useMemo(() => slots.reduce((acc, slot) => ({ ...acc, [slot.id]: slot.label }), {}), [slots]);
 
   const chooseSlot = useCallback((slotId) => {
     setState((current) => ({ ...current, activeSlot: slotId }));
@@ -70,30 +77,25 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
   }, [activeSlot, setState]);
 
   return (
-    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--right location-composer__rail--current" aria-label="Current location slot">
-      <section className="cruor-composer-panel location-panel location-current-slot-panel">
+    <>
+      <section className="cruor-composer-panel location-panel location-current-slot-panel" aria-label="Current location slot">
         <div className="location-panel-head location-panel-head--compact">
           <div>
-            <p className="location-kicker">Current Slot</p>
+            <p className="location-kicker">Components</p>
             <h2>{activeSlot?.label || "Slot"}</h2>
           </div>
-          <strong className="location-component-count">{activeSlotFilled}/{activeSlot?.max || 1}</strong>
+          <strong className="location-component-count">{formatSlotCount(state, activeSlot)}</strong>
         </div>
 
-        <label className="location-field location-field--select location-slot-switcher">
-          <span>Slot</span>
-          <select
-            className="cruor-composer-control location-select"
-            value={activeSlot?.id || ""}
-            onChange={(event) => chooseSlot(event.target.value)}
-          >
-            {slots.map((slot) => (
-              <option key={slot.id} value={slot.id}>
-                {slot.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <LocationSelectMenu
+          label="Slot"
+          value={activeSlot?.id || ""}
+          options={slots.map((slot) => slot.id)}
+          summaries={slotSummaries}
+          labels={slotLabels}
+          icon="fa-solid fa-puzzle-piece"
+          onChange={chooseSlot}
+        />
 
         <div className="location-current-slot-panel__target">
           <span>Target Region</span>
@@ -110,7 +112,7 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
                 {getComponentSummary(component) ? <p>{getComponentSummary(component)}</p> : null}
               </div>
               <button
-                className="cruor-composer-control location-icon-btn location-icon-btn--subtle"
+                className="location-icon-btn location-icon-btn--subtle"
                 type="button"
                 aria-label={`Remove ${getComponentTitle(component)}`}
                 onClick={() => removeComponent(component.id)}
@@ -128,40 +130,20 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
 
         <div className="location-current-slot-panel__actions">
           <button
-            className="cruor-composer-control location-primary-action"
+            className="location-primary-action location-primary-action--wide"
             type="button"
             onClick={() => openSlotPicker(activeSlot?.id)}
           >
-            {assignedComponents.length ? "Change" : "Choose"}
+            {assignedComponents.length ? "Change Component" : "Choose Component"}
           </button>
-          <button className="cruor-composer-control location-icon-btn" type="button" onClick={() => onOpenMapGenerator?.(snapshot)} aria-label="Open Map Workspace">
+          <button className="location-icon-btn" type="button" onClick={() => onOpenMapGenerator?.(snapshot)} aria-label="Open Map Workspace">
             <i className="fa-solid fa-map" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="location-slot-progress" aria-label="Slot progress">
-          {slots.map((slot) => {
-            const status = getSlotStatus(state, slot);
-            const assigned = selectedBySlot[slot.id] || [];
-            return (
-              <button
-                className={cx(
-                  "location-slot-progress__item",
-                  activeSlot?.id === slot.id && "is-active",
-                  status === "full" && "is-filled",
-                  status === "partial" && "is-partial",
-                )}
-                key={slot.id}
-                type="button"
-                title={`${slot.label}: ${getSlotCapacityLabel(state, slot)}`}
-                onClick={() => chooseSlot(slot.id)}
-              >
-                <span>{slot.label}</span>
-                <strong>{assigned.length}</strong>
-              </button>
-            );
-          })}
-        </div>
+        <button className="location-ghost-action" type="button" onClick={onEditSetup}>
+          Edit Setup
+        </button>
       </section>
 
       <LocationComponentPickerModal
@@ -178,6 +160,52 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
         onRemoveComponent={removeComponent}
         onSelectRegion={(regionId) => setState((current) => ({ ...current, activeRegionId: regionId }))}
       />
+    </>
+  );
+}
+
+export function LocationRecapRail({ state, digest, generatedMapPreview }) {
+  const slots = getLocationSlots();
+  const regions = state.locationRegions || [];
+  const activeRegion = regions.find((region) => region.id === state.activeRegionId);
+  const activeRegionComponents = activeRegion ? getAssignedComponentsForRegion(state, activeRegion.id) : [];
+
+  return (
+    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--right location-composer__rail--recap" aria-label="Location recap">
+      <section className="cruor-composer-panel location-panel location-recap-panel">
+        <div className="location-panel-head location-panel-head--compact">
+          <div>
+            <p className="location-kicker">Recap</p>
+            <h2>Build</h2>
+          </div>
+          <strong className="location-component-count">{digest.filledSlots}/{digest.totalSlots}</strong>
+        </div>
+
+        <div className="location-recap-frame">
+          <span>{state.context || "Context"}</span>
+          <strong>{state.horror || "Horror"}</strong>
+          <small>{Array.from(state.sourceAnchors || [])[0] || "Source"}</small>
+        </div>
+
+        <div className="location-recap-stack" aria-label="Slot recap">
+          {slots.map((slot) => {
+            const assigned = getAssignedComponentsForSlot(state, slot.id);
+            const status = getSlotStatus(state, slot);
+            return (
+              <article className={cx("location-recap-slot", status !== "empty" && "is-filled")} key={slot.id}>
+                <span>{slot.label}</span>
+                <strong>{assigned[0] ? getComponentTitle(assigned[0]) : "Empty"}</strong>
+              </article>
+            );
+          })}
+        </div>
+
+        <div className="location-recap-region">
+          <span>Active Region</span>
+          <strong>{activeRegion?.name || "No region selected"}</strong>
+          <small>{activeRegionComponents.length} linked components · {generatedMapPreview?.regions?.length || regions.length} map regions</small>
+        </div>
+      </section>
     </aside>
   );
 }

@@ -80,7 +80,7 @@ export function LocationComponentPickerModal({
       >
         <div className="component-navigator-modal__head location-picker-modal__head">
           <div>
-            <p className="location-kicker">Choose Slot Content</p>
+            <p className="location-kicker">Choose Component</p>
             <h2>{slot.label}</h2>
           </div>
           <button
@@ -95,7 +95,7 @@ export function LocationComponentPickerModal({
 
         <div className="location-picker-modal__target">
           <div>
-            <span>Target Region</span>
+            <span>Region</span>
             <strong>{activeRegion?.name || "No region selected"}</strong>
             {generatedRoom ? <small>Room {generatedRoom.number || "—"}</small> : null}
           </div>
@@ -121,7 +121,7 @@ export function LocationComponentPickerModal({
               <input
                 type="search"
                 value={search}
-                placeholder="Search options…"
+                placeholder="Search components…"
                 aria-label="Search location components"
                 onChange={(event) => setSearch(event.target.value)}
               />
@@ -133,8 +133,8 @@ export function LocationComponentPickerModal({
         </div>
 
         {assignedComponents.length ? (
-          <div className="location-picker-modal__assigned" aria-label="Assigned components">
-            <span>Assigned</span>
+          <div className="location-picker-modal__assigned" aria-label="Selected components">
+            <span>Selected</span>
             <div>
               {assignedComponents.map((component) => (
                 <button
@@ -163,7 +163,7 @@ export function LocationComponentPickerModal({
                 <div>
                   <div className="location-picker-option__meta">
                     <span>{component.type || "Component"}</span>
-                    <em>{selected ? "Assigned" : isSlotFull ? "Replace" : "Available"}</em>
+                    <em>{selected ? "Selected" : isSlotFull ? "Replace" : "Available"}</em>
                   </div>
                   <h3>{getComponentTitle(component)}</h3>
                   {getComponentSummary(component) ? <p>{getComponentSummary(component)}</p> : null}

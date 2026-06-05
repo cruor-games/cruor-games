@@ -13,7 +13,7 @@ export function LocationDraftControls({
     <section className="location-draft-strip" aria-label="Draft controls">
       <div className="location-draft-strip__actions">
         <button className="cruor-composer-control location-draft-btn" type="button" onClick={onSaveDraft}>
-          Save Draft
+          Save
         </button>
 
         <button
@@ -22,7 +22,7 @@ export function LocationDraftControls({
           onClick={onLoadDraft}
           disabled={!canLoadDraft}
         >
-          Load Draft
+          Load
         </button>
 
         {!isSimpleMode ? (
@@ -33,7 +33,7 @@ export function LocationDraftControls({
               onClick={onClearDraft}
               disabled={!canLoadDraft}
             >
-              Clear Saved
+              Clear
             </button>
 
             <button
@@ -41,13 +41,13 @@ export function LocationDraftControls({
               type="button"
               onClick={onResetComposer}
             >
-              Reset Current
+              Reset
             </button>
           </>
         ) : null}
       </div>
 
-      {!isSimpleMode && draftStatus ? (
+      {draftStatus ? (
         <p className="location-draft-strip__feedback" aria-live="polite">
           {draftStatus}
         </p>

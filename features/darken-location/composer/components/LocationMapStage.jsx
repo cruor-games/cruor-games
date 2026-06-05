@@ -90,6 +90,7 @@ export function LocationMapStage({
   const activeGeneratedRoom = getGeneratedRoomForRegion(generatedMapPreview, state.activeRegionId);
   const mapSyncStatus = getMapSyncStatus(mapRequest, generatedMapPreview, regions);
   const activeSurfaceLabel = activeGeneratedRoom ? getGeneratedRoomSurfaceLabel(activeGeneratedRoom) : "";
+  const locationSummary = [state.context, selectedHorrors[0], selectedSources[0]].filter(Boolean).join(" · ");
 
   return (
     <main className="cruor-composer-stage location-composer__stage" aria-label="Location map stage">
@@ -116,6 +117,12 @@ export function LocationMapStage({
           viewResetKey={previewResetKey}
         />
 
+        <div className="location-stage-title-card" aria-label="Location summary">
+          <span>Darken</span>
+          <strong>{state.title || "Cursed Location"}</strong>
+          {locationSummary ? <em>{locationSummary}</em> : null}
+        </div>
+
         <div className="location-room-recap-anchor">
           <LocationRoomRecapCard
             activeRegion={activeRegion}
@@ -129,7 +136,7 @@ export function LocationMapStage({
           <div className="location-map-stage__head location-map-stage__head--compact">
             <p className="location-kicker">Map</p>
             <h2>{state.title || "Cursed Location"}</h2>
-            <p>{state.context} · {selectedHorrors[0] || "Horror"} · {selectedSources[0] || "Source"}</p>
+            <p>{locationSummary}</p>
           </div>
         ) : null}
 
@@ -176,24 +183,25 @@ export function LocationMapStage({
 
         {showStageDetails ? (
           <div className="location-stage-footer location-stage-footer--compact">
-            <div><strong>{digest.filledSlots}/{digest.totalSlots}</strong></div>
-            <div><strong>{mapSyncStatus.mode === "synced" ? "Synced" : mapSyncStatus.label}</strong></div>
-            <div><strong>{activeGeneratedRoom ? `Room ${activeGeneratedRoom.number || "—"}` : "Region"}</strong></div>
+            <div><span>Slots</span><strong>{digest.filledSlots}/{digest.totalSlots}</strong></div>
+            <div><span>Map</span><strong>{mapSyncStatus.mode === "synced" ? "Synced" : mapSyncStatus.label}</strong></div>
+            <div><span>Room</span><strong>{activeGeneratedRoom ? `Room ${activeGeneratedRoom.number || "—"}` : "Region"}</strong></div>
           </div>
         ) : null}
       </section>
 
-      {showStageDetails ? (
-        <details className="location-advanced-output">
-          <summary>Output</summary>
-          <LocationCompilePreview
-            state={state}
-            digest={digest}
-            mapRequest={mapRequest}
-            generatedMapPreview={generatedMapPreview}
-          />
-        </details>
-      ) : null}
+      <details className="location-output-drawer">
+        <summary>
+          <span>Preview Output</span>
+          <strong>{digest.filledSlots}/{digest.totalSlots}</strong>
+        </summary>
+        <LocationCompilePreview
+          state={state}
+          digest={digest}
+          mapRequest={mapRequest}
+          generatedMapPreview={generatedMapPreview}
+        />
+      </details>
     </main>
   );
 }

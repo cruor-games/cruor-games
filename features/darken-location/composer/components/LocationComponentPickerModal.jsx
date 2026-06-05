@@ -159,7 +159,7 @@ export function LocationComponentPickerModal({
                         ["assigned", "Assigned"],
                       ].map(([value, label]) => (
                         <button
-                          className={cx("navigator-filter-chip location-component-filter-chip", statusFilter === value && "active")}
+                          className={cx("navigator-filter-chip location-component-filter-chip", statusFilter === value && "active is-active")}
                           key={value}
                           type="button"
                           aria-pressed={statusFilter === value}
@@ -182,7 +182,7 @@ export function LocationComponentPickerModal({
                       <div className="location-component-drawer__region-grid" aria-label="Choose target region">
                         {regions.slice(0, 8).map((region, index) => (
                           <button
-                            className={cx("navigator-filter-chip location-region-inline-btn", activeRegion?.id === region.id && "active")}
+                            className={cx("navigator-filter-chip location-region-inline-btn", activeRegion?.id === region.id && "active is-active")}
                             key={region.id}
                             type="button"
                             title={`Set ${region.name} as target`}

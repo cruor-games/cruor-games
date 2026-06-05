@@ -1,20 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AlertTriangle, Eye, Gem, RotateCcw, Search, Skull, Sparkles } from "lucide-react";
 import {
-  assignComponentToSlot,
-  removeComponentFromSlot,
-} from "../model/location-composer-state.js";
-import {
   getAssignedComponentsForSlot,
-  getComponentsForSlot,
   getLocationSlots,
-  getSlotFilledCount,
   getSlotStatus,
 } from "../model/location-composer-selectors.js";
-import {
-  getGeneratedRoomForRegion,
-} from "../model/location-composer-map-preview.js";
-import { LocationComponentPickerModal } from "./LocationComponentPickerModal.jsx";
 
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -31,18 +21,9 @@ function getSlotIcon(slotId) {
   return Sparkles;
 }
 
-export function LocationSlotRail({ state, setState, generatedMapPreview }) {
-  const slots = getLocationSlots();
-  const [drawerOpen, setDrawerOpen] = useState(true);
-
+export function LocationSlotRail({ state, setState, onFocusSlot }) {
+  const slots = useMemo(() => getLocationSlots(), []);
   const activeSlotId = state.activeSlot || slots[0]?.id;
-  const activeSlot = slots.find((slot) => slot.id === activeSlotId) || slots[0];
-  const compatibleComponents = activeSlot ? getComponentsForSlot(activeSlot.id, state) : [];
-  const assignedComponents = activeSlot ? getAssignedComponentsForSlot(state, activeSlot.id) : [];
-  const activeRegion = state.locationRegions?.find((region) => region.id === state.activeRegionId);
-  const activeGeneratedRoom = getGeneratedRoomForRegion(generatedMapPreview, state.activeRegionId);
-  const activeSlotFilled = getSlotFilledCount(state, activeSlot?.id);
-  const activeSlotIsFull = activeSlotFilled >= (activeSlot?.max || 1);
 
   const selectedBySlot = useMemo(() => {
     return slots.reduce((acc, slot) => {
@@ -51,34 +32,27 @@ export function LocationSlotRail({ state, setState, generatedMapPreview }) {
     }, {});
   }, [slots, state]);
 
-  const focusSlot = useCallback((slotId) => {
+  function focusSlot(slotId) {
     setState((current) => ({ ...current, activeSlot: slotId }));
-    setDrawerOpen(true);
-  }, [setState]);
-
-  const addComponent = useCallback((component) => {
-    if (!activeSlot) return;
-    setState((current) => assignComponentToSlot(current, component, activeSlot, current.activeRegionId));
-    setDrawerOpen(true);
-  }, [activeSlot, setState]);
-
-  const removeComponent = useCallback((componentId) => {
-    if (!activeSlot) return;
-    setState((current) => removeComponentFromSlot(current, componentId, activeSlot.id));
-  }, [activeSlot, setState]);
+    onFocusSlot?.(slotId);
+  }
 
   return (
-    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--left location-composer__rail--picker location-map-slot-rail" aria-label="Location slots and components">
+    <aside
+      className="cruor-composer-rail location-composer__rail location-composer__rail--left location-composer__rail--picker location-map-slot-rail"
+      aria-label="Location slots"
+    >
       <div className="location-slot-stack" aria-label="Location content slots">
-        {slots.map((slot) => {
+        {slots.map((slot, index) => {
           const status = getSlotStatus(state, slot);
           const assigned = selectedBySlot[slot.id] || [];
-          const active = state.activeSlot === slot.id;
+          const active = activeSlotId === slot.id;
           const Icon = getSlotIcon(slot.id);
           return (
             <button
               className={cx(
                 "cruor-composer-slot location-map-slot-card",
+                index < 4 ? "is-right" : "is-left",
                 assigned.length > 0 ? "is-filled" : "is-empty",
                 active && "is-active",
                 status === "partial" && "is-partial",
@@ -113,21 +87,6 @@ export function LocationSlotRail({ state, setState, generatedMapPreview }) {
           );
         })}
       </div>
-
-      <LocationComponentPickerModal
-        activeRegion={activeRegion}
-        assignedComponents={assignedComponents}
-        components={compatibleComponents}
-        generatedRoom={activeGeneratedRoom}
-        isSlotFull={activeSlotIsFull}
-        open={drawerOpen}
-        regions={state.locationRegions || []}
-        slot={activeSlot}
-        onAddComponent={addComponent}
-        onClose={() => setDrawerOpen(false)}
-        onRemoveComponent={removeComponent}
-        onSelectRegion={(regionId) => setState((current) => ({ ...current, activeRegionId: regionId }))}
-      />
     </aside>
   );
 }

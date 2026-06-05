@@ -61,30 +61,15 @@ export function LocationComponentPickerModal({
   if (!open || !slot) return null;
 
   return (
-    <div
-      className="component-navigator-modal location-picker-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Choose ${slot.label}`}
-    >
-      <button
-        className="component-navigator-modal__scrim location-picker-modal__scrim"
-        type="button"
-        aria-label="Close Location Component Picker"
-        onClick={onClose}
-      />
-
-      <aside
-        className="panel navigator monster-navigator component-navigator-modal__panel location-picker-modal__panel"
-        aria-label="Location Component Picker"
-      >
-        <div className="component-navigator-modal__head location-picker-modal__head">
+    <div className="location-component-drawer" role="region" aria-label={`Choose ${slot.label}`}>
+      <aside className="location-component-drawer__panel" aria-label="Location Component Picker">
+        <div className="location-component-drawer__head">
           <div>
-            <p className="location-kicker">Choose Component</p>
+            <p className="location-kicker">Choose Slot Content</p>
             <h2>{slot.label}</h2>
           </div>
           <button
-            className="icon-btn location-picker-modal__close"
+            className="cruor-composer-control location-icon-btn location-component-drawer__close"
             type="button"
             aria-label="Close Location Component Picker"
             onClick={onClose}
@@ -93,14 +78,14 @@ export function LocationComponentPickerModal({
           </button>
         </div>
 
-        <div className="location-picker-modal__target">
+        <div className="location-component-drawer__target">
           <div>
-            <span>Region</span>
+            <span>Target Region</span>
             <strong>{activeRegion?.name || "No region selected"}</strong>
             {generatedRoom ? <small>Room {generatedRoom.number || "—"}</small> : null}
           </div>
 
-          <div className="location-picker-modal__region-grid" aria-label="Choose target region">
+          <div className="location-component-drawer__region-grid" aria-label="Choose target region">
             {regions.slice(0, 8).map((region, index) => (
               <button
                 className={cx("cruor-composer-control location-region-inline-btn", activeRegion?.id === region.id && "is-active")}
@@ -115,30 +100,30 @@ export function LocationComponentPickerModal({
           </div>
         </div>
 
-        <div className="navigator-tools monster-navigator-tools location-picker-modal__tools">
-          <div className="navigator-search-row">
-            <div className="search-wrap monster-search-wrap">
+        <div className="location-component-drawer__tools">
+          <div className="location-component-search-row">
+            <div className="location-component-search">
               <input
                 type="search"
                 value={search}
-                placeholder="Search components…"
+                placeholder="Search options…"
                 aria-label="Search location components"
                 onChange={(event) => setSearch(event.target.value)}
               />
             </div>
-            <div className="navigator-count" aria-label="Visible option count">
+            <div className="location-component-count" aria-label="Visible option count">
               {visibleComponents.length}
             </div>
           </div>
         </div>
 
         {assignedComponents.length ? (
-          <div className="location-picker-modal__assigned" aria-label="Selected components">
-            <span>Selected</span>
+          <div className="location-component-drawer__assigned" aria-label="Assigned components">
+            <span>Assigned</span>
             <div>
               {assignedComponents.map((component) => (
                 <button
-                  className="cruor-composer-control location-picker-modal__assigned-pill"
+                  className="cruor-composer-control location-component-drawer__assigned-pill"
                   key={`assigned-${getComponentKey(component)}`}
                   type="button"
                   onClick={() => onRemoveComponent?.(component.id)}
@@ -151,26 +136,26 @@ export function LocationComponentPickerModal({
           </div>
         ) : null}
 
-        <div className="component-navigator-modal__list location-picker-modal__list">
+        <div className="location-component-list">
           {visibleComponents.length ? visibleComponents.map((component) => {
             const componentKey = getComponentKey(component);
             const selected = assignedIds.has(component.id);
             return (
               <article
-                className={cx("cruor-composer-card location-picker-option", selected && "is-active")}
+                className={cx("cruor-composer-card location-component-option", selected && "is-active")}
                 key={componentKey}
               >
                 <div>
-                  <div className="location-picker-option__meta">
+                  <div className="location-component-option__meta">
                     <span>{component.type || "Component"}</span>
-                    <em>{selected ? "Selected" : isSlotFull ? "Replace" : "Available"}</em>
+                    <em>{selected ? "Assigned" : isSlotFull ? "Replace" : "Available"}</em>
                   </div>
                   <h3>{getComponentTitle(component)}</h3>
                   {getComponentSummary(component) ? <p>{getComponentSummary(component)}</p> : null}
                 </div>
 
                 <button
-                  className="cruor-composer-control location-picker-option__action"
+                  className="cruor-composer-control location-component-option__action"
                   type="button"
                   onClick={() => (selected ? onRemoveComponent?.(component.id) : onAddComponent?.(component))}
                 >

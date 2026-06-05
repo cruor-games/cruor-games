@@ -1,5 +1,34 @@
 function normalizeText(value) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  if (value == null || value === false) return "";
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value).replace(/\s+/g, " ").trim();
+  }
+  if (typeof value === "boolean") return value ? "Yes" : "";
+  if (Array.isArray(value)) {
+    return value.map(normalizeText).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  }
+  if (typeof value === "object") {
+    const preferredKeys = [
+      "compact",
+      "short",
+      "extended",
+      "long",
+      "text",
+      "summary",
+      "description",
+      "read",
+      "readAloud",
+      "label",
+      "name",
+      "value",
+    ];
+    for (const key of preferredKeys) {
+      const normalized = normalizeText(value[key]);
+      if (normalized) return normalized;
+    }
+    return Object.values(value).map(normalizeText).filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+  }
+  return "";
 }
 
 function pickText(...values) {
@@ -26,12 +55,13 @@ function getRoomIcon(region, generatedRoom) {
 }
 
 function Fact({ label, value }) {
-  if (!value) return null;
+  const normalizedValue = normalizeText(value);
+  if (!normalizedValue) return null;
 
   return (
     <div className="region-fact-list__item">
       <dt>{label}</dt>
-      <dd>{value}</dd>
+      <dd>{normalizedValue}</dd>
     </div>
   );
 }

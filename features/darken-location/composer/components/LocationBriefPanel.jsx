@@ -5,112 +5,81 @@ const CONTEXT_OPTIONS = ["Crypt", "Chapel", "Cave", "Mine", "Ruins", "Noble Hous
 const HORROR_OPTIONS = ["Religious Horror", "Body Horror", "Gothic", "Folk Horror", "Psychological Horror", "Cosmic Horror", "Disease Horror"];
 const INTRUSION_OPTIONS = ["Low", "Medium", "High"];
 
-const CONTEXT_SUMMARY = {
-  Crypt: "Tombs, thresholds, ossuaries.",
-  Chapel: "Rites, relics, profaned altars.",
-  Cave: "Depth, pressure, organic darkness.",
-  Mine: "Industry, collapse, buried labor.",
-  Ruins: "Broken history and unsafe memory.",
-  "Noble House": "Domestic rot, inheritance, etiquette.",
-  Village: "Community pressure and folk dread.",
-  Forest: "Paths, predators, and old beliefs.",
-};
-
-const HORROR_SUMMARY = {
-  "Religious Horror": "Sacred language turned invasive.",
-  "Body Horror": "Matter, flesh, mutation, violation.",
-  Gothic: "Decay, guilt, bloodlines, obsession.",
-  "Folk Horror": "Customs, isolation, local law.",
-  "Psychological Horror": "Memory, identity, perception.",
-  "Cosmic Horror": "Scale, insignificance, revelation.",
-  "Disease Horror": "Contagion, corruption, symptoms.",
-};
-
-const INTRUSION_SUMMARY = {
-  Low: "Mostly atmospheric.",
-  Medium: "Strong table pressure.",
-  High: "Aggressive supernatural intrusion.",
-};
-
-function getSourceOptions() {
-  return SOURCE_ANCHORS.filter((source) => source !== "Any Source").slice(0, 12);
-}
-
 function cx(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
-function optionSummary(option, summaries) {
-  return summaries?.[option] || "Cruor source option.";
+function toChoiceArray(value) {
+  if (value instanceof Set) return Array.from(value);
+  if (Array.isArray(value)) return value;
+  if (value) return [value];
+  return [];
 }
 
-export function LocationSelectMenu({
-  label,
-  value,
-  options = [],
-  summaries = {},
-  icon = "fa-solid fa-diamond",
-  labels = {},
-  onChange,
-}) {
+function getOptionValue(option) {
+  return typeof option === "string" ? option : option.value;
+}
+
+function getOptionLabel(option) {
+  return typeof option === "string" ? option : option.label || option.value;
+}
+
+function LocationChoiceField({ icon = "fa-circle-dot", label, meta, onChange, options, placeholder = "Choose option", value }) {
   const [open, setOpen] = useState(false);
-  const rootRef = useRef(null);
-  const activeValue = value || options[0] || "";
-  const getLabel = (option) => labels?.[option] || option;
+  const fieldRef = useRef(null);
+  const selectedOption = useMemo(
+    () => options.find((option) => String(getOptionValue(option)) === String(value)),
+    [options, value],
+  );
+  const selectedLabel = selectedOption ? getOptionLabel(selectedOption) : placeholder;
 
   useEffect(() => {
     if (!open) return undefined;
-    const handlePointerDown = (event) => {
-      if (!rootRef.current?.contains(event.target)) setOpen(false);
-    };
-    const handleKeyDown = (event) => {
-      if (event.key === "Escape") setOpen(false);
-    };
+
+    function handlePointerDown(event) {
+      if (!fieldRef.current?.contains(event.target)) setOpen(false);
+    }
+
     document.addEventListener("pointerdown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [open]);
 
   return (
-    <div className="location-field location-field--menu" ref={rootRef}>
+    <div className="location-field location-choice-field" ref={fieldRef}>
       <span>{label}</span>
       <button
-        className="location-frame-select-trigger"
+        className="cruor-composer-control location-choice-trigger"
         type="button"
+        aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
       >
-        <i className={icon} aria-hidden="true" />
-        <span>
-          <strong>{getLabel(activeValue)}</strong>
-          <small>{optionSummary(activeValue, summaries)}</small>
-        </span>
-        <i className="fa-solid fa-chevron-down" aria-hidden="true" />
+        <i className={`fa-solid ${icon}`} aria-hidden="true" />
+        <strong>{selectedLabel}</strong>
+        {meta ? <small>{meta}</small> : null}
       </button>
-
       {open ? (
-        <div className="location-frame-select-menu" role="listbox" aria-label={label}>
+        <div className="location-choice-menu" role="listbox" aria-label={label}>
           {options.map((option) => {
-            const active = option === activeValue;
+            const optionValue = getOptionValue(option);
+            const optionLabel = getOptionLabel(option);
+            const active = String(optionValue) === String(value);
             return (
               <button
-                className={cx("location-frame-select-option", active && "is-active")}
-                key={option}
+                className={cx("location-choice-option", active && "is-active")}
+                key={optionValue}
                 type="button"
                 role="option"
                 aria-selected={active}
                 onClick={() => {
-                  onChange?.(option);
+                  onChange(optionValue);
                   setOpen(false);
                 }}
               >
-                <i className={icon} aria-hidden="true" />
+                <i className={`fa-solid ${icon}`} aria-hidden="true" />
                 <span>
-                  <strong>{getLabel(option)}</strong>
-                  <small>{optionSummary(option, summaries)}</small>
+                  <strong>{optionLabel}</strong>
+                  {typeof option !== "string" && option.description ? <small>{option.description}</small> : null}
                 </span>
               </button>
             );
@@ -121,72 +90,75 @@ export function LocationSelectMenu({
   );
 }
 
-export function LocationBriefPanel({ state, setState, mapRequest, draftControls, onContinue }) {
-  const sourceOptions = useMemo(() => getSourceOptions(), []);
-  const selectedSource = Array.isArray(state.sourceAnchors) ? state.sourceAnchors[0] || "" : state.sourceAnchors || "";
-  const selectedHorror = Array.isArray(state.horrors) ? state.horrors[0] || state.horror || "" : state.horror || "";
-  const regionCount = mapRequest?.requiredRegions?.length || 0;
+export function LocationBriefPanel({ state, setState, mapRequest, draftControls }) {
+  const sourceOptions = SOURCE_ANCHORS.filter((source) => source !== "Any Source").slice(0, 12);
+  const selectedSource = toChoiceArray(state.sourceAnchors)[0] || "";
+  const selectedHorror = toChoiceArray(state.horrors)[0] || state.horror || "";
 
   return (
-    <section className="cruor-composer-panel location-panel location-brief-panel" aria-label="Location frame">
-      <div className="location-panel-head location-panel-head--compact location-brief-panel__head">
-        <div>
-          <p className="location-kicker">Frame</p>
-          <h2>Setup</h2>
+    <aside className="cruor-composer-rail location-composer__rail location-composer__rail--left location-map-frame-rail" aria-label="Location frame">
+      <section className="cruor-composer-panel location-panel location-brief-panel">
+        <div className="location-panel-head location-panel-head--compact location-brief-panel__head">
+          <div>
+            <p className="location-kicker">Frame</p>
+            <h2>Location</h2>
+          </div>
+          <strong className="location-brief-panel__meta">{mapRequest.requiredRegions.length || 0} regions</strong>
         </div>
-        <strong className="location-brief-panel__meta">{regionCount}</strong>
-      </div>
 
-      <div className="location-brief-panel__fields">
-        <LocationSelectMenu
-          label="Context"
-          value={state.context || ""}
-          options={CONTEXT_OPTIONS}
-          summaries={CONTEXT_SUMMARY}
-          icon="fa-solid fa-map-location-dot"
-          onChange={(context) => setState((current) => ({ ...current, context }))}
-        />
+        {draftControls ? (
+          <div className="location-brief-panel__draft">
+            {draftControls}
+          </div>
+        ) : null}
 
-        <LocationSelectMenu
-          label="Horror"
-          value={selectedHorror}
-          options={HORROR_OPTIONS}
-          summaries={HORROR_SUMMARY}
-          icon="fa-solid fa-skull"
-          onChange={(horror) =>
-            setState((current) => ({
-              ...current,
-              horror,
-              horrors: new Set([horror]),
-            }))
-          }
-        />
+        <div className="location-brief-panel__fields">
+          <LocationChoiceField
+            icon="fa-dungeon"
+            label="Context"
+            value={state.context || ""}
+            options={CONTEXT_OPTIONS}
+            onChange={(context) => setState((current) => ({ ...current, context }))}
+          />
 
-        <LocationSelectMenu
-          label="Source"
-          value={selectedSource}
-          options={sourceOptions}
-          icon="fa-solid fa-book-skull"
-          onChange={(sourceAnchor) =>
-            setState((current) => ({
-              ...current,
-              sourceAnchors: new Set([sourceAnchor]),
-            }))
-          }
-        />
-      </div>
+          <LocationChoiceField
+            icon="fa-skull"
+            label="Horror"
+            value={selectedHorror}
+            placeholder="Choose horror direction"
+            options={HORROR_OPTIONS}
+            onChange={(horror) =>
+              setState((current) => ({
+                ...current,
+                horror,
+                horrors: horror ? [horror] : [],
+              }))
+            }
+          />
 
-      <details className="location-brief-panel__advanced">
-        <summary>Advanced Setup</summary>
+          <LocationChoiceField
+            icon="fa-book-dead"
+            label="Source"
+            value={selectedSource}
+            placeholder="Choose source anchor"
+            options={sourceOptions}
+            onChange={(source) =>
+              setState((current) => ({
+                ...current,
+                sourceAnchors: source ? [source] : [],
+              }))
+            }
+          />
+        </div>
+
         <div className="location-field">
           <span>Intrusion</span>
-          <div className="location-segment-row" role="group" aria-label="Intrusion level">
+          <div className="location-segment-row" role="list" aria-label="Intrusion level">
             {INTRUSION_OPTIONS.map((intrusion) => (
               <button
-                className={cx("location-segment", state.intrusion === intrusion && "is-active")}
+                className={`cruor-composer-control location-segment${state.intrusion === intrusion ? " is-active" : ""}`}
                 key={intrusion}
                 type="button"
-                title={INTRUSION_SUMMARY[intrusion]}
                 onClick={() => setState((current) => ({ ...current, intrusion }))}
               >
                 {intrusion}
@@ -197,16 +169,9 @@ export function LocationBriefPanel({ state, setState, mapRequest, draftControls,
 
         <div className="location-map-request-card location-map-request-card--compact">
           <span>Map</span>
-          <strong>{mapRequest?.mapType || state.context || "Location"}</strong>
-          <small>{regionCount} regions</small>
+          <strong>{mapRequest.mapType}</strong>
         </div>
-
-        {draftControls}
-      </details>
-
-      <button className="location-primary-action location-primary-action--wide" type="button" onClick={onContinue}>
-        Compose Location
-      </button>
-    </section>
+      </section>
+    </aside>
   );
 }

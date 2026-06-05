@@ -22,7 +22,108 @@ import { createLocationPreviewModel, getLocationPreviewResetKey } from "./model/
 import { LocationBriefPanel } from "./components/LocationBriefPanel.jsx";
 import { LocationDraftControls } from "./components/LocationDraftControls.jsx";
 import { LocationMapStage } from "./components/LocationMapStage.jsx";
-import { LocationRecapRail, LocationSlotRail } from "./components/LocationSlotRail.jsx";
+import { LocationSlotRail } from "./components/LocationSlotRail.jsx";
+
+function cx(...classes) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function LocationRecapPanel({
+  builderMode,
+  digest,
+  generatedMapPreview,
+  mapRequest,
+  onOpenMapGenerator,
+  setBuilderMode,
+  snapshot,
+  state,
+}) {
+  const assignedBySlot = digest.assignedBySlot || [];
+  const activeRegion = digest.activeRegion;
+  const activeRoom = generatedMapPreview?.regions?.find(
+    (room) =>
+      room.sourceRegionId === state.activeRegionId ||
+      room.requestMetadata?.sourceRegionId === state.activeRegionId ||
+      room.id === state.activeRegionId,
+  );
+
+  return (
+    <aside
+      className="cruor-composer-rail location-composer__rail location-composer__rail--right location-map-recap-rail"
+      aria-label="Location build recap"
+    >
+      <section className="cruor-composer-panel location-panel location-map-recap-panel">
+        <div className="location-panel-head location-panel-head--compact">
+          <div>
+            <p className="location-kicker">Recap</p>
+            <h2>Current Build</h2>
+          </div>
+          <button
+            className="cruor-composer-control location-icon-btn"
+            type="button"
+            onClick={() => onOpenMapGenerator?.(snapshot)}
+            aria-label="Open Map Workspace"
+          >
+            <i className="fa-solid fa-map" aria-hidden="true" />
+          </button>
+        </div>
+
+        <div className="location-map-mode-switch" role="group" aria-label="Composer mode">
+          <button
+            className={cx("location-map-mode-button", builderMode === "frame" && "is-active")}
+            type="button"
+            aria-pressed={builderMode === "frame"}
+            onClick={() => setBuilderMode("frame")}
+          >
+            Frame
+          </button>
+          <button
+            className={cx("location-map-mode-button", builderMode === "slots" && "is-active")}
+            type="button"
+            aria-pressed={builderMode === "slots"}
+            onClick={() => setBuilderMode("slots")}
+          >
+            Slots
+          </button>
+        </div>
+
+        <div className="location-recap-stack">
+          <article className="location-recap-frame">
+            <span>Frame</span>
+            <strong>{state.context || "Context"}</strong>
+            <small>{state.horror || "Horror"} · {state.intrusion || "Intrusion"}</small>
+          </article>
+
+          <article className="location-recap-region">
+            <span>Target Region</span>
+            <strong>{activeRegion?.name || "No region selected"}</strong>
+            <small>{activeRoom ? `Room ${activeRoom.number || "—"}` : `${mapRequest.requiredRegions.length || 0} regions`}</small>
+          </article>
+
+          <article className="location-recap-frame">
+            <span>Progress</span>
+            <strong>{digest.filledSlots}/{digest.totalSlots} slots</strong>
+            <small>{generatedMapPreview ? "Preview generated" : "Preview pending"}</small>
+          </article>
+        </div>
+
+        <div className="location-recap-slot-list" aria-label="Slot progress">
+          {assignedBySlot.map(({ slot, components }) => (
+            <button
+              className={cx("location-recap-slot", components.length > 0 && "is-filled", state.activeSlot === slot.id && "is-active")}
+              key={slot.id}
+              type="button"
+              onClick={() => setBuilderMode("slots")}
+            >
+              <span>{slot.label}</span>
+              <strong>{components[0]?.title || components[0]?.name || "Empty"}</strong>
+            </button>
+          ))}
+        </div>
+      </section>
+    </aside>
+  );
+}
 
 export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnapshotProviderReady, uiMode = "simple" } = {}) {
   const [state, setState] = useState(() => createInitialLocationComposerState(LOCATION_REGION_TEMPLATES));
@@ -30,7 +131,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   const [draftSummary, setDraftSummary] = useState(() => getStoredDraftSummary());
   const [draftStorageStatus, setDraftStorageStatus] = useState(() => getLocalDraftStorageStatus());
   const [savedDraftFingerprint, setSavedDraftFingerprint] = useState("");
-  const [leftPanelMode, setLeftPanelMode] = useState("setup");
+  const [builderMode, setBuilderMode] = useState("slots");
   const draftStatusTimeoutRef = useRef(null);
 
   const selectedComponents = useMemo(() => getSelectedComponents(state), [state]);
@@ -112,6 +213,7 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
     const resetState = createInitialLocationComposerState(LOCATION_REGION_TEMPLATES);
     setState(resetState);
     setSavedDraftFingerprint(createDraftFingerprint(resetState));
+    setBuilderMode("frame");
     setTransientDraftStatus("Composer reset");
   }, [setTransientDraftStatus]);
 
@@ -147,43 +249,44 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
   }, [onSnapshotProviderReady, snapshot]);
 
   return (
-    <div className="cruor-composer-shell location-composer" data-cruor-ui-mode={uiMode} data-location-composer-ready="true">
+    <div
+      className="cruor-composer-shell location-composer"
+      data-cruor-ui-mode={uiMode}
+      data-location-builder-mode={builderMode}
+      data-location-composer-ready="true"
+    >
       <div className="cruor-composer-workspace location-composer__workspace">
-        <div className="cruor-composer-frame location-composer__frame">
-          <aside className="cruor-composer-rail location-composer__rail location-composer__rail--left" aria-label="Location controls">
-            {leftPanelMode === "setup" ? (
-              <LocationBriefPanel
-                state={state}
-                setState={setState}
-                mapRequest={mapRequest}
-                onContinue={() => setLeftPanelMode("components")}
-                draftControls={
-                  <LocationDraftControls
-                    canLoadDraft={Boolean(draftSummary)}
-                    draftStorageStatus={draftStorageStatus}
-                    draftSummary={draftSummary}
-                    draftStatus={draftStatus}
-                    hasUnsavedChanges={hasUnsavedChanges}
-                    uiMode={uiMode}
-                    onClearDraft={clearSavedDraft}
-                    onLoadDraft={loadDraft}
-                    onResetComposer={resetComposer}
-                    onSaveDraft={saveDraft}
-                  />
-                }
-              />
-            ) : (
-              <LocationSlotRail
-                state={state}
-                setState={setState}
-                selectedComponents={selectedComponents}
-                onOpenMapGenerator={onOpenMapGenerator}
-                onEditSetup={() => setLeftPanelMode("setup")}
-                snapshot={snapshot}
-                generatedMapPreview={previewResult.generatedMap}
-              />
-            )}
-          </aside>
+        <div className="cruor-composer-frame location-composer__frame location-map-workbench">
+          {builderMode === "frame" ? (
+            <LocationBriefPanel
+              state={state}
+              setState={setState}
+              mapRequest={mapRequest}
+              draftControls={
+                <LocationDraftControls
+                  canLoadDraft={Boolean(draftSummary)}
+                  draftStorageStatus={draftStorageStatus}
+                  draftSummary={draftSummary}
+                  draftStatus={draftStatus}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  uiMode={uiMode}
+                  onClearDraft={clearSavedDraft}
+                  onLoadDraft={loadDraft}
+                  onResetComposer={resetComposer}
+                  onSaveDraft={saveDraft}
+                />
+              }
+            />
+          ) : (
+            <LocationSlotRail
+              state={state}
+              setState={setState}
+              selectedComponents={selectedComponents}
+              onOpenMapGenerator={onOpenMapGenerator}
+              snapshot={snapshot}
+              generatedMapPreview={previewResult.generatedMap}
+            />
+          )}
 
           <LocationMapStage
             state={state}
@@ -196,10 +299,15 @@ export default function DarkenLocationComposerPage({ onOpenMapGenerator, onSnaps
             uiMode={uiMode}
           />
 
-          <LocationRecapRail
-            state={state}
+          <LocationRecapPanel
+            builderMode={builderMode}
             digest={digest}
             generatedMapPreview={previewResult.generatedMap}
+            mapRequest={mapRequest}
+            onOpenMapGenerator={onOpenMapGenerator}
+            setBuilderMode={setBuilderMode}
+            snapshot={snapshot}
+            state={state}
           />
         </div>
       </div>

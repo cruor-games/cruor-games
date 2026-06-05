@@ -1780,3 +1780,475 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Step 32 — Exact Location stage sizing and matched composer styling.
+   This section recreates the visual measurements using Location-only selectors. */
+.location-composer {
+  --location-workspace-max: 100%;
+  --location-shell-bar-height: var(--cruor-shell-bar-height, 62px);
+  --location-stage-min-height: clamp(720px, 74vh, 900px);
+  --location-stage-padding: clamp(14px, 2vw, 22px);
+  --location-stage-grid-min-height: calc(clamp(720px, 74vh, 900px) - clamp(28px, 4vw, 44px));
+  --location-card-gap: 12px;
+  --location-side-column-width: minmax(220px, 0.82fr);
+  --location-center-width: minmax(300px, 1.08fr);
+  --location-meter-height: 54px;
+  min-height: 100dvh;
+}
+
+.location-composer__workspace {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100dvh - var(--location-shell-bar-height));
+  padding: 0 clamp(18px, 3vw, 30px) 34px;
+}
+
+.location-map-workbench.location-composer__frame {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--location-side-column-width) var(--location-center-width) var(--location-side-column-width);
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-areas: "left center right";
+  gap: var(--location-card-gap) clamp(14px, 2vw, 24px);
+  width: min(var(--location-workspace-max), 100%);
+  min-height: var(--location-stage-min-height);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 238, 242, .06);
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, .028) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, .022) 1px, transparent 1px),
+    radial-gradient(circle at 50% 36%, rgba(95, 7, 22, .28), transparent 16rem),
+    rgba(0, 0, 0, .18);
+  background-size: 34px 34px, 34px 34px, auto, auto;
+  padding: var(--location-stage-padding);
+}
+
+.location-composer[data-location-builder-mode="slots"] .location-map-workbench.location-composer__frame {
+  grid-template-columns: minmax(280px, 355px) minmax(360px, 1fr) minmax(280px, 340px);
+}
+
+.location-composer[data-location-builder-mode="frame"] .location-map-workbench.location-composer__frame {
+  grid-template-columns: var(--location-side-column-width) var(--location-center-width) var(--location-side-column-width);
+}
+
+.location-map-workbench .location-composer__rail--left {
+  grid-area: left;
+}
+
+.location-map-workbench .location-composer__stage,
+.location-map-workbench .location-map-stage {
+  grid-area: center;
+}
+
+.location-map-workbench .location-composer__rail--right {
+  grid-area: right;
+}
+
+.location-map-workbench .location-composer__rail,
+.location-map-workbench .location-composer__stage,
+.location-map-workbench .location-map-stage {
+  min-height: 0;
+}
+
+.location-map-workbench .location-composer__rail--left,
+.location-map-workbench .location-composer__rail--right {
+  position: relative;
+  top: auto;
+  z-index: 12;
+  align-self: stretch;
+  overflow: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 26, 40, .52) rgba(0, 0, 0, .18);
+}
+
+.location-map-workbench .location-composer__rail--picker {
+  overflow: visible;
+  z-index: 32;
+}
+
+.location-map-frame-rail,
+.location-map-recap-rail,
+.location-map-slot-rail {
+  min-height: var(--location-stage-grid-min-height);
+}
+
+.location-map-stage {
+  position: relative;
+  min-height: var(--location-stage-grid-min-height);
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.location-map-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 26%, rgba(190, 64, 82, .13), transparent 20rem),
+    radial-gradient(circle at 50% 86%, rgba(95, 7, 22, .18), transparent 22rem);
+}
+
+.location-map-preview,
+.location-region-board,
+.location-map-stage__backdrop,
+.location-stage-title-card,
+.location-region-attachment-strip,
+.location-room-recap-anchor,
+.location-stage-footer {
+  z-index: 2;
+}
+
+.location-map-preview {
+  padding: clamp(10px, 1.4vw, 18px);
+}
+
+.location-map-preview--live {
+  opacity: .86;
+}
+
+.location-map-preview--live .cruor-map-viewport,
+.location-map-preview--live .map-viewport,
+.location-map-preview--live .map-pan-layer,
+.location-map-preview--live canvas,
+.location-map-preview--live svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  max-height: none;
+}
+
+.location-panel,
+.location-map-recap-panel,
+.location-slot-panel,
+.location-brief-panel,
+.location-current-slot-panel {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid rgba(255, 238, 242, .07);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, .03), transparent 70%),
+    rgba(5, 5, 6, .54);
+  padding: 11px;
+  box-shadow: inset 0 1px 0 rgba(255, 238, 242, .035);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.location-panel-head,
+.location-panel-head--compact,
+.location-brief-panel__head,
+.location-component-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  border-bottom: 1px solid rgba(255, 238, 242, .055);
+  padding-bottom: 8px;
+}
+
+.location-panel-head > div,
+.location-component-drawer__head > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.location-panel-head .location-kicker,
+.location-component-drawer__head .location-kicker,
+.location-field > span,
+.location-map-request-card > span,
+.location-recap-frame span,
+.location-recap-region span,
+.location-recap-slot span,
+.location-component-drawer__target span,
+.location-component-drawer__assigned > span,
+.location-component-option__meta span,
+.location-component-option__meta em {
+  margin: 0;
+  color: #8f7278;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.location-panel-head h2,
+.location-panel-head--compact h2,
+.location-component-drawer__head h2 {
+  overflow: hidden;
+  margin: 0;
+  color: #d0a2aa;
+  font-family: var(--cruor-font-body, Inter, ui-sans-serif, system-ui, sans-serif);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .07em;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.location-brief-panel__meta,
+.location-component-count,
+.location-output-drawer > summary strong {
+  border: 1px solid rgba(190, 64, 82, .34);
+  background: rgba(0, 0, 0, .2);
+  color: #d0a2aa;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.location-brief-panel__fields,
+.location-frame-selector-stack {
+  display: grid;
+  gap: 7px;
+}
+
+.location-field,
+.location-choice-field,
+.location-map-request-card,
+.location-current-slot-panel__target {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  border: 1px solid rgba(255, 238, 242, .06);
+  background:
+    linear-gradient(180deg, rgba(255, 238, 242, .026), transparent 72%),
+    rgba(0, 0, 0, .18);
+  padding: 9px;
+}
+
+.location-choice-trigger,
+.location-choice-option,
+.location-map-mode-button,
+.location-icon-btn,
+.location-primary-action,
+.location-component-option__action,
+.location-component-drawer__assigned-pill,
+.location-segment,
+.location-region-inline-btn {
+  border: 1px solid rgba(95, 7, 22, .56);
+  background:
+    linear-gradient(180deg, rgba(122, 26, 40, .07), transparent 68%),
+    rgba(0, 0, 0, .32);
+  color: #c8a2a8;
+  transition: border-color .12s ease, background .12s ease, color .12s ease, box-shadow .12s ease, transform .12s ease;
+}
+
+.location-choice-trigger {
+  min-height: 38px;
+}
+
+.location-choice-trigger:hover,
+.location-choice-trigger[aria-expanded="true"],
+.location-choice-option:hover,
+.location-choice-option.is-active,
+.location-map-mode-button:hover,
+.location-map-mode-button.is-active,
+.location-icon-btn:hover,
+.location-primary-action:hover,
+.location-component-option__action:hover,
+.location-component-drawer__assigned-pill:hover,
+.location-segment:hover,
+.location-segment.is-active,
+.location-region-inline-btn:hover,
+.location-region-inline-btn.is-active {
+  border-color: rgba(190, 64, 82, .78);
+  background:
+    radial-gradient(circle at 50% 18%, rgba(190, 64, 82, .18), transparent 72%),
+    linear-gradient(180deg, rgba(30, 7, 11, .92), rgba(9, 5, 7, .9));
+  color: #fff0f2;
+  box-shadow: 0 0 0 1px rgba(190, 64, 82, .13), 0 0 20px rgba(122, 26, 40, .22), inset 0 1px 0 rgba(255, 238, 242, .06);
+}
+
+.location-slot-panel--picker {
+  height: 100%;
+  min-height: 0;
+}
+
+.location-slot-stack {
+  align-content: start;
+  gap: 8px;
+  min-height: 0;
+}
+
+.location-map-slot-card {
+  min-height: 76px;
+  height: 76px;
+  padding: 9px;
+}
+
+.location-map-slot-card__body em {
+  -webkit-line-clamp: 1;
+}
+
+.location-component-drawer {
+  top: 0;
+  left: calc(100% + 10px);
+  width: min(clamp(320px, 29vw, 430px), calc(100vw - 48px));
+  height: 100%;
+  max-height: var(--location-stage-grid-min-height);
+  filter: drop-shadow(0 28px 70px rgba(0, 0, 0, .68));
+}
+
+.location-component-drawer__panel {
+  grid-template-rows: auto auto auto auto minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  overflow: hidden;
+  border-color: rgba(240, 185, 194, .16);
+  background:
+    radial-gradient(circle at 14% 0%, rgba(190, 64, 82, .14), transparent 42%),
+    linear-gradient(180deg, rgba(2, 2, 3, .985), rgba(10, 4, 6, .96));
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, .74),
+    0 0 0 1px rgba(255, 238, 242, .04),
+    0 0 42px rgba(122, 26, 40, .2),
+    inset 0 1px 0 rgba(255, 238, 242, .055);
+  padding: 14px;
+}
+
+.location-component-drawer__target,
+.location-component-drawer__assigned,
+.location-component-option,
+.location-recap-frame,
+.location-recap-region,
+.location-recap-slot {
+  border: 1px solid rgba(255, 238, 242, .065);
+  background: rgba(255, 255, 255, .02);
+}
+
+.location-map-mode-switch {
+  border: 1px solid rgba(255, 238, 242, .06);
+  background: rgba(0, 0, 0, .18);
+  padding: 6px;
+}
+
+.location-room-recap-anchor {
+  display: block;
+  left: 14px;
+  right: auto;
+  bottom: 14px;
+  top: auto;
+  width: min(360px, calc(100% - 28px));
+}
+
+@media (max-width: 1380px) {
+  .location-map-workbench.location-composer__frame,
+  .location-composer[data-location-builder-mode="slots"] .location-map-workbench.location-composer__frame,
+  .location-composer[data-location-builder-mode="frame"] .location-map-workbench.location-composer__frame {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "left"
+      "center"
+      "right";
+  }
+
+  .location-component-drawer {
+    position: static;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin-top: 10px;
+  }
+}
+
+@media (max-width: 980px) {
+  .location-map-workbench.location-composer__frame {
+    padding: 12px;
+  }
+}
+
+
+/* Step 33 — Match the fullscreen tabpanel sizing used by the widest composer view. */
+#darkenComposerPanel {
+  width: 100% !important;
+  max-width: none !important;
+  min-height: calc(100dvh - var(--app-shell-bar-height) - clamp(10px, 1vw, 16px)) !important;
+  margin-inline: 0 !important;
+}
+
+#darkenComposerPanel > .cruor-composer-shell.location-composer,
+#darkenComposerPanel .cruor-composer-workspace.location-composer__workspace,
+#darkenComposerPanel .location-map-workbench.location-composer__frame {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+#darkenComposerPanel > .cruor-composer-shell.location-composer {
+  min-height: 100% !important;
+  background: transparent;
+  background-image: none;
+}
+
+#darkenComposerPanel .cruor-composer-workspace.location-composer__workspace {
+  box-sizing: border-box;
+  min-height: 100% !important;
+  padding-inline: 0 !important;
+}
+
+#darkenComposerPanel .location-map-workbench.location-composer__frame {
+  height: 100% !important;
+  min-height: calc(100dvh - var(--app-shell-bar-height) - clamp(10px, 1vw, 16px)) !important;
+  margin-inline: 0 !important;
+}
+
+@supports selector(:has(*)) {
+  body:has(#darkenComposerPanel:not([hidden])) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell:has(#darkenComposerPanel:not([hidden])) {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell:has(#darkenComposerPanel:not([hidden])) .app-shell__workspace {
+    height: calc(100dvh - var(--app-shell-bar-height));
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .app-shell:has(#darkenComposerPanel:not([hidden])) .darken-workspace {
+    --darken-workspace-topbar-height: 0px !important;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding-top: clamp(10px, 1vw, 16px) !important;
+  }
+
+  .app-shell:has(#darkenComposerPanel:not([hidden])) #darkenComposerPanel {
+    height: calc(100dvh - var(--app-shell-bar-height) - clamp(10px, 1vw, 16px)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-inline: 0 !important;
+  }
+
+  .app-shell:has(#darkenComposerPanel:not([hidden])) #darkenComposerPanel > .cruor-composer-shell.location-composer,
+  .app-shell:has(#darkenComposerPanel:not([hidden])) #darkenComposerPanel .cruor-composer-workspace.location-composer__workspace,
+  .app-shell:has(#darkenComposerPanel:not([hidden])) #darkenComposerPanel .location-map-workbench.location-composer__frame {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+}

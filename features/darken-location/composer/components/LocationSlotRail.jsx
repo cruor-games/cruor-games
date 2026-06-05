@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { AlertTriangle, Eye, Gem, RotateCcw, Search, Skull, Sparkles } from "lucide-react";
 import {
   assignComponentToSlot,
   removeComponentFromSlot,
@@ -7,7 +8,6 @@ import {
   getAssignedComponentsForSlot,
   getComponentsForSlot,
   getLocationSlots,
-  getSlotCapacityLabel,
   getSlotFilledCount,
   getSlotStatus,
 } from "../model/location-composer-selectors.js";
@@ -21,17 +21,17 @@ function cx(...classes) {
 }
 
 function getSlotIcon(slotId) {
-  if (slotId === "horrorPremise") return "fa-skull";
-  if (slotId === "sensoryLayer") return "fa-eye";
-  if (slotId === "visibleAnomaly") return "fa-wand-sparkles";
-  if (slotId === "hazard") return "fa-triangle-exclamation";
-  if (slotId === "clue") return "fa-magnifying-glass";
-  if (slotId === "encounterTwist") return "fa-arrows-spin";
-  if (slotId === "reward") return "fa-gem";
-  return "fa-diamond";
+  if (slotId === "horrorPremise") return Skull;
+  if (slotId === "sensoryLayer") return Eye;
+  if (slotId === "visibleAnomaly") return Sparkles;
+  if (slotId === "hazard") return AlertTriangle;
+  if (slotId === "clue") return Search;
+  if (slotId === "encounterTwist") return RotateCcw;
+  if (slotId === "reward") return Gem;
+  return Sparkles;
 }
 
-export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot, generatedMapPreview }) {
+export function LocationSlotRail({ state, setState, generatedMapPreview }) {
   const slots = getLocationSlots();
   const [drawerOpen, setDrawerOpen] = useState(true);
 
@@ -69,60 +69,50 @@ export function LocationSlotRail({ state, setState, onOpenMapGenerator, snapshot
 
   return (
     <aside className="cruor-composer-rail location-composer__rail location-composer__rail--left location-composer__rail--picker location-map-slot-rail" aria-label="Location slots and components">
-      <section className="cruor-composer-panel location-panel location-slot-panel location-slot-panel--picker">
-        <div className="location-panel-head location-panel-head--compact">
-          <div>
-            <p className="location-kicker">Build</p>
-            <h2>Slots</h2>
-          </div>
-          <button className="cruor-composer-control location-icon-btn" type="button" onClick={() => onOpenMapGenerator?.(snapshot)} aria-label="Open Map Workspace">
-            <i className="fa-solid fa-map" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="location-slot-stack" aria-label="Location content slots">
-          {slots.map((slot) => {
-            const status = getSlotStatus(state, slot);
-            const assigned = selectedBySlot[slot.id] || [];
-            const active = state.activeSlot === slot.id;
-            return (
-              <button
-                className={cx(
-                  "cruor-composer-slot location-map-slot-card",
-                  active && "is-active",
-                  status === "full" && "is-filled",
-                  status === "partial" && "is-partial",
+      <div className="location-slot-stack" aria-label="Location content slots">
+        {slots.map((slot) => {
+          const status = getSlotStatus(state, slot);
+          const assigned = selectedBySlot[slot.id] || [];
+          const active = state.activeSlot === slot.id;
+          const Icon = getSlotIcon(slot.id);
+          return (
+            <button
+              className={cx(
+                "cruor-composer-slot location-map-slot-card",
+                assigned.length > 0 ? "is-filled" : "is-empty",
+                active && "is-active",
+                status === "partial" && "is-partial",
+              )}
+              key={slot.id}
+              type="button"
+              aria-label={`Focus ${slot.label}`}
+              aria-pressed={active}
+              onClick={() => focusSlot(slot.id)}
+            >
+              <span className="location-map-slot-card__head">
+                <span>
+                  <Icon aria-hidden="true" />
+                  {slot.label}
+                </span>
+                <strong>{assigned.length || "—"}</strong>
+              </span>
+              <span className="location-map-slot-card__body">
+                {assigned[0] ? (
+                  <>
+                    <strong>{assigned[0].title || assigned[0].name}</strong>
+                    <em>{assigned[0].summary || assigned[0].description || "Assigned component"}</em>
+                  </>
+                ) : (
+                  <>
+                    <strong>Empty Slot</strong>
+                    <em>{slot.description || "Pick a component for this part of the location."}</em>
+                  </>
                 )}
-                key={slot.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => focusSlot(slot.id)}
-              >
-                <span className="location-map-slot-card__head">
-                  <span>
-                    <i className={`fa-solid ${getSlotIcon(slot.id)}`} aria-hidden="true" />
-                    {slot.label}
-                  </span>
-                  <strong>{getSlotCapacityLabel(state, slot)}</strong>
-                </span>
-                <span className="location-map-slot-card__body">
-                  {assigned[0] ? (
-                    <>
-                      <strong>{assigned[0].title || assigned[0].name}</strong>
-                      <em>{assigned[0].summary || assigned[0].description || "Assigned component"}</em>
-                    </>
-                  ) : (
-                    <>
-                      <strong>Empty Slot</strong>
-                      <em>{slot.description || "Pick a component for this part of the location."}</em>
-                    </>
-                  )}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </section>
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
       <LocationComponentPickerModal
         activeRegion={activeRegion}

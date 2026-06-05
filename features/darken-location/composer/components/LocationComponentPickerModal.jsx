@@ -16,6 +16,7 @@ function getComponentSummary(component) {
   return component?.summary || component?.description || component?.text || component?.effect || "";
 }
 
+
 export function LocationComponentPickerModal({
   activeRegion,
   assignedComponents = [],
@@ -31,17 +32,26 @@ export function LocationComponentPickerModal({
   slot,
 }) {
   const [search, setSearch] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const assignedIds = useMemo(
     () => new Set(assignedComponents.map((component) => component.id).filter(Boolean)),
     [assignedComponents],
   );
 
+  const hasActiveFilters = Boolean(search.trim()) || statusFilter !== "all";
+
   const visibleComponents = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return components;
 
     return components.filter((component) => {
+      const selected = assignedIds.has(component.id);
+      if (statusFilter === "available" && selected) return false;
+      if (statusFilter === "assigned" && !selected) return false;
+
+      if (!query) return true;
+
       const haystack = [
         component.title,
         component.name,
@@ -56,118 +66,185 @@ export function LocationComponentPickerModal({
 
       return haystack.includes(query);
     });
-  }, [components, search]);
+  }, [assignedIds, components, search, statusFilter]);
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+  }
 
   if (!open || !slot) return null;
 
+  const drawerTitle = `Choose ${slot.label} Component`;
+
   return (
-    <div className="location-component-drawer" role="region" aria-label={`Choose ${slot.label}`}>
-      <aside className="location-component-drawer__panel" aria-label="Location Component Picker">
-        <div className="location-component-drawer__head">
-          <div>
-            <p className="location-kicker">Choose Slot Content</p>
-            <h2>{slot.label}</h2>
-          </div>
-          <button
-            className="cruor-composer-control location-icon-btn location-component-drawer__close"
-            type="button"
-            aria-label="Close Location Component Picker"
-            onClick={onClose}
-          >
-            <i className="fa-solid fa-xmark" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="location-component-drawer__target">
-          <div>
-            <span>Target Region</span>
-            <strong>{activeRegion?.name || "No region selected"}</strong>
-            {generatedRoom ? <small>Room {generatedRoom.number || "—"}</small> : null}
-          </div>
-
-          <div className="location-component-drawer__region-grid" aria-label="Choose target region">
-            {regions.slice(0, 8).map((region, index) => (
+    <div
+      className={cx("component-navigator-drawer location-component-drawer", filtersOpen && "is-filters-open")}
+      data-filters-open={filtersOpen ? "true" : "false"}
+      data-navigator-mode="slot"
+    >
+      <div
+        className="component-navigator-modal component-navigator-modal--drawer location-component-modal"
+        data-navigator-mode="slot"
+        data-filters-open={filtersOpen ? "true" : "false"}
+        role="region"
+        aria-label={drawerTitle}
+      >
+        <aside
+          className="panel navigator location-navigator component-navigator-modal__panel location-component-drawer__panel"
+          aria-label="Location Component Navigator"
+        >
+          <div className="component-navigator-modal__head location-component-drawer__head">
+            <div className="component-navigator-modal__head-copy location-component-drawer__head-copy">
+              <h2>{drawerTitle}</h2>
+            </div>
+            <div className="component-navigator-modal__head-actions location-component-drawer__head-actions">
               <button
-                className={cx("cruor-composer-control location-region-inline-btn", activeRegion?.id === region.id && "is-active")}
-                key={region.id}
+                className={cx("icon-btn navigator-filter-btn location-navigator-filter-btn", filtersOpen && "active")}
                 type="button"
-                title={`Set ${region.name} as target`}
-                onClick={() => onSelectRegion?.(region.id)}
+                aria-label="Filter components"
+                aria-expanded={filtersOpen}
+                data-active-count={hasActiveFilters ? 1 : 0}
+                onClick={() => setFiltersOpen((current) => !current)}
               >
-                {index + 1}
+                <i className="fa-solid fa-sliders" aria-hidden="true" />
               </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="location-component-drawer__tools">
-          <div className="location-component-search-row">
-            <div className="location-component-search">
-              <input
-                type="search"
-                value={search}
-                placeholder="Search options…"
-                aria-label="Search location components"
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </div>
-            <div className="location-component-count" aria-label="Visible option count">
-              {visibleComponents.length}
-            </div>
-          </div>
-        </div>
-
-        {assignedComponents.length ? (
-          <div className="location-component-drawer__assigned" aria-label="Assigned components">
-            <span>Assigned</span>
-            <div>
-              {assignedComponents.map((component) => (
-                <button
-                  className="cruor-composer-control location-component-drawer__assigned-pill"
-                  key={`assigned-${getComponentKey(component)}`}
-                  type="button"
-                  onClick={() => onRemoveComponent?.(component.id)}
-                >
-                  {getComponentTitle(component)}
-                  <i className="fa-solid fa-xmark" aria-hidden="true" />
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="location-component-list">
-          {visibleComponents.length ? visibleComponents.map((component) => {
-            const componentKey = getComponentKey(component);
-            const selected = assignedIds.has(component.id);
-            return (
-              <article
-                className={cx("cruor-composer-card location-component-option", selected && "is-active")}
-                key={componentKey}
+              <button
+                className="icon-btn location-component-drawer__close"
+                type="button"
+                aria-label="Close Component Navigator"
+                onClick={onClose}
               >
-                <div>
-                  <div className="location-component-option__meta">
-                    <span>{component.type || "Component"}</span>
-                    <em>{selected ? "Assigned" : isSlotFull ? "Replace" : "Available"}</em>
-                  </div>
-                  <h3>{getComponentTitle(component)}</h3>
-                  {getComponentSummary(component) ? <p>{getComponentSummary(component)}</p> : null}
-                </div>
+                <i className="fa-solid fa-xmark" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
 
-                <button
-                  className="cruor-composer-control location-component-option__action"
-                  type="button"
-                  onClick={() => (selected ? onRemoveComponent?.(component.id) : onAddComponent?.(component))}
+          {filtersOpen ? (
+            <div className="navigator-tools location-navigator-tools component-navigator-modal__rail">
+              <div className="navigator-search-row location-component-search-row">
+                <div className="search-wrap location-component-search">
+                  <input
+                    type="search"
+                    value={search}
+                    placeholder="Search components…"
+                    aria-label="Search location components"
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </div>
+                <div className="navigator-count location-component-count" aria-label="Visible component count">
+                  {visibleComponents.length}
+                </div>
+              </div>
+
+              <div className="tag-filter-row location-component-filter-row" aria-label="Filter location components">
+                <div className="tag-filter-row__head location-component-filter-row__head">
+                  <span>Component Filters</span>
+                  <button
+                    className="tag-clear-btn location-component-filter-clear"
+                    type="button"
+                    disabled={!hasActiveFilters}
+                    onClick={clearFilters}
+                  >
+                    Clear
+                  </button>
+                </div>
+                <div className="navigator-filter-panel location-component-filter-panel">
+                  <section className="navigator-filter-section location-component-filter-section">
+                    <strong>Status</strong>
+                    <div className="filter-chip-grid location-component-filter-chip-grid">
+                      {[
+                        ["all", "All"],
+                        ["available", "Available"],
+                        ["assigned", "Assigned"],
+                      ].map(([value, label]) => (
+                        <button
+                          className={cx("navigator-filter-chip location-component-filter-chip", statusFilter === value && "active")}
+                          key={value}
+                          type="button"
+                          aria-pressed={statusFilter === value}
+                          onClick={() => setStatusFilter(value)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="navigator-filter-section location-component-filter-section">
+                    <strong>Target Region</strong>
+                    <div className="location-component-drawer__target">
+                      <div className="location-component-drawer__target-copy">
+                        <span>Target</span>
+                        <strong>{activeRegion?.name || "No region selected"}</strong>
+                        {generatedRoom ? <small>Room {generatedRoom.number || "—"}</small> : null}
+                      </div>
+                      <div className="location-component-drawer__region-grid" aria-label="Choose target region">
+                        {regions.slice(0, 8).map((region, index) => (
+                          <button
+                            className={cx("navigator-filter-chip location-region-inline-btn", activeRegion?.id === region.id && "active")}
+                            key={region.id}
+                            type="button"
+                            title={`Set ${region.name} as target`}
+                            aria-pressed={activeRegion?.id === region.id}
+                            onClick={() => onSelectRegion?.(region.id)}
+                          >
+                            {index + 1}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="component-list location-component-list component-navigator-modal__list cruor-scroll-surface">
+            {visibleComponents.length ? visibleComponents.map((component) => {
+              const componentKey = getComponentKey(component);
+              const selected = assignedIds.has(component.id);
+              const slotFull = isSlotFull && !selected;
+              const actionLabel = selected ? "Added" : slotFull ? "Full" : "Add";
+              return (
+                <article
+                  className={cx(
+                    "component-card cruor-composer-card location-component-option",
+                    selected && "in-build is-active",
+                    slotFull && "slot-full",
+                  )}
+                  data-decision-tier={selected ? "recommended" : slotFull ? "blocked" : "recommended"}
+                  draggable={!selected && !slotFull}
+                  key={componentKey}
                 >
-                  {selected ? "Remove" : isSlotFull ? "Replace" : "Add"}
-                </button>
-              </article>
-            );
-          }) : (
-            <p className="location-empty location-empty--quiet">No compatible options.</p>
-          )}
-        </div>
-      </aside>
+                  <button
+                    className="component-toggle-btn location-component-toggle-btn"
+                    type="button"
+                    aria-label={selected ? `Remove ${getComponentTitle(component)}` : `${actionLabel} ${getComponentTitle(component)}`}
+                    disabled={slotFull}
+                    onClick={() => (selected ? onRemoveComponent?.(component.id) : onAddComponent?.(component))}
+                  >
+                    <i className={cx("fa-solid", selected ? "fa-check" : "fa-plus")} aria-hidden="true" />
+                    <span>{actionLabel}</span>
+                  </button>
+
+                  <div className="card-top location-component-card-top">
+                    <div className="component-title-stack location-component-title-stack">
+                      <h3>{getComponentTitle(component)}</h3>
+                    </div>
+                  </div>
+
+                  {getComponentSummary(component) ? (
+                    <p className="summary location-component-summary">{getComponentSummary(component)}</p>
+                  ) : null}
+                </article>
+              );
+            }) : (
+              <p className="location-empty location-empty--quiet">No compatible options.</p>
+            )}
+          </div>
+        </aside>
+      </div>
     </div>
   );
 }
